@@ -1,0 +1,21 @@
+Import(Split('libs'))
+
+env = CoreEnvironment(LIBS=[
+        ],
+                      DEBUG=1,
+                      PKGS=[
+        ],
+                      )
+
+
+
+cpp_files = env.Glob('*.cpp')
+
+libs += env['LIBS'][:]
+logsvcd = env.Program('logsvcd', cpp_files, LIBS=libs)
+installed_logsvcd = env.Install(dir="#/build", source=logsvcd)
+
+env.Alias("build", installed_logsvcd)
+env.Default("build")
+
+Return("installed_logsvcd")

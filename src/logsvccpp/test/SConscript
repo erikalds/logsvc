@@ -1,0 +1,18 @@
+
+Import("logsvccpp")
+
+env = CoreEnvironment(DEBUG=1,
+                      LIBS=[
+        "boost_unit_test_framework",
+        ])
+env['CPPDEFINES'] = { 'BOOST_TEST_DYN_LINK': None }
+cpp_files = env.Glob('*.cpp')
+libs = [logsvccpp] + env['LIBS']
+
+test_logsvccpp = env.Program("test_logsvccpp", cpp_files, LIBS=libs)
+installed_test = env.Install(source = test_logsvccpp, dir = "#/build")
+env.AddPostAction(installed_test, Action("@build/%s" % test_logsvccpp[0]))
+
+env.Alias("build", installed_test)
+env.Default("build")
+

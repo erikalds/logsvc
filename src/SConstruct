@@ -1,0 +1,21 @@
+import os
+
+libs = []
+for library in [
+    "log",
+    "logsvccpp",
+    "logsvc_daemon",
+    ]:
+    path_to_SConscript = os.path.join(library, "SConscript")
+    if os.path.exists(path_to_SConscript):
+        libs.extend(SConscript(path_to_SConscript))
+    else:
+        print("warning: Missing SConscript file in folder: %s" % library)
+
+Export("libs")
+
+SConscript(os.path.join("logsvc_daemon_main", "SConscript"))
+
+# SConscript(os.path.join("logsvcc", "SConscript"))
+# SConscript(os.path.join("logsvcpy", "SConscript"))
+# SConscript(os.path.join("logsvcj", "SConscript"))

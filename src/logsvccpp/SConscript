@@ -1,0 +1,16 @@
+import os
+
+env = CoreEnvironment(LIBS=[
+        ],
+                      DEBUG=1)
+
+cpp_files = env.Glob('*.cpp')
+liblogsvccpp = env.SharedLibrary("logsvccpp", cpp_files)
+logsvccpp = env.Install(dir = '#/build', source = liblogsvccpp)
+
+Export("logsvccpp")
+SConscript(os.path.join("test", "SConscript"))
+#env.Depends(logsvccpp, run_tests)
+
+Return("logsvccpp")
+

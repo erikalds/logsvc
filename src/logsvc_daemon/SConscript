@@ -1,0 +1,16 @@
+import os
+
+env = CoreEnvironment(LIBS=[
+        ],
+                      DEBUG=1)
+
+cpp_files = env.Glob('*.cpp')
+liblogsvc_daemon = env.SharedLibrary("logsvc_daemon", cpp_files)
+logsvc_daemon = env.Install(dir = '#/build', source = liblogsvc_daemon)
+
+Export("logsvc_daemon")
+SConscript(os.path.join("test", "SConscript"))
+#env.Depends(logsvc_daemon, run_tests)
+
+Return("logsvc_daemon")
+
