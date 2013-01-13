@@ -11,3 +11,6 @@
 *.lai
 *.la
 *.a
+
+# Emacs desktop files
+.emacs.desktop*
