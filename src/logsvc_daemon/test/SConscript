@@ -3,6 +3,8 @@ Import("logsvc_daemon")
 
 env = CoreEnvironment(DEBUG=1,
                       LIBS=[
+        "boost_filesystem",
+        "boost_system",
         "boost_unit_test_framework",
         ])
 env['CPPDEFINES'] = { 'BOOST_TEST_DYN_LINK': None }
