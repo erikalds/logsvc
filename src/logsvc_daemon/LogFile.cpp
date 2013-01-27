@@ -45,7 +45,7 @@ namespace logsvc
 
     void LogFile::write(const std::string& s)
     {
-      boost::filesystem::ofstream ost(filepath);
+      boost::filesystem::ofstream ost(filepath, std::ios_base::app);
       ost << s;
     }
 

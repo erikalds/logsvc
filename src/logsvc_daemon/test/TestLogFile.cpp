@@ -89,6 +89,15 @@ BOOST_FIXTURE_TEST_CASE(writeString_StringIsWritten, F)
   BOOST_CHECK_EQUAL("asdf", read_file_contents());
 }
 
+BOOST_FIXTURE_TEST_CASE(writeStrings_StringsAreAppended, F)
+{
+  create_tempfile();
+  logsvc::daemon::LogFile lf(filename());
+  lf.write("foo");
+  lf.write("bar");
+  BOOST_CHECK_EQUAL("foobar", read_file_contents());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
