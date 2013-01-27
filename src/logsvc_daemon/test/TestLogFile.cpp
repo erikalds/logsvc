@@ -52,6 +52,13 @@ struct F
     close(fd);
   }
 
+  /// Does not create tempfilename
+  void generate_tempfilename()
+  {
+    tempfilename = "./TestLogFile_XXXXXX";
+    tempfilename = mktemp(&tempfilename[0]);
+  }
+
   boost::filesystem::path filename() const
   { return boost::filesystem::path(tempfilename); }
 
@@ -68,9 +75,7 @@ struct F
 
 BOOST_FIXTURE_TEST_CASE(notExistingFileGivenToCtor_FileIsCreated, F)
 {
-  tempfilename = "./TestLogFile_XXXXXX";
-  tempfilename = mktemp(&tempfilename[0]);
-
+  generate_tempfilename();
   logsvc::daemon::LogFile lf(filename());
   BOOST_REQUIRE(boost::filesystem::exists(filename()));
 }
@@ -96,6 +101,15 @@ BOOST_FIXTURE_TEST_CASE(writeStrings_StringsAreAppended, F)
   lf.write("foo");
   lf.write("bar");
   BOOST_CHECK_EQUAL("foobar", read_file_contents());
+}
+
+BOOST_FIXTURE_TEST_CASE(writeStringsToNotExistingFile_CreatedFileIsUsed, F)
+{
+  generate_tempfilename();
+  logsvc::daemon::LogFile lf(filename());
+  lf.write("as");
+  lf.write("df");
+  BOOST_CHECK_EQUAL("asdf", read_file_contents());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
