@@ -51,6 +51,17 @@ BOOST_FIXTURE_TEST_CASE(notExistingFileGivenToCtor_FileIsCreated, F)
   unlink(tempfilename.c_str());
 }
 
+BOOST_FIXTURE_TEST_CASE(existingFileGivenToCtor_noProblem, F)
+{
+  std::string tempfilename("./TestLogFile_XXXXXX");
+  int fd = mkstemp(&tempfilename[0]);
+  close(fd);
+
+  boost::filesystem::path filename(tempfilename);
+  logsvc::daemon::LogFile lf(filename);
+  unlink(tempfilename.c_str());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
