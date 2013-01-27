@@ -37,29 +37,38 @@ BOOST_AUTO_TEST_SUITE(testLogFile)
 
 struct F
 {
-  F() {}
-  ~F() {}
+  F() : tempfilename() {}
+  ~F()
+  {
+    if (boost::filesystem::exists(tempfilename))
+      unlink(tempfilename.c_str());
+  }
+
+  void create_tempfile()
+  {
+    tempfilename = "./TestLogFile_XXXXXX";
+    int fd = mkstemp(&tempfilename[0]);
+    close(fd);
+  }
+
+  std::string tempfilename;
 };
 
 BOOST_FIXTURE_TEST_CASE(notExistingFileGivenToCtor_FileIsCreated, F)
 {
-  std::string tempfilename("./TestLogFile_XXXXXX");
+  tempfilename = "./TestLogFile_XXXXXX";
   tempfilename = mktemp(&tempfilename[0]);
+
   boost::filesystem::path filename(tempfilename);
   logsvc::daemon::LogFile lf(filename);
   BOOST_REQUIRE(boost::filesystem::exists(filename));
-  unlink(tempfilename.c_str());
 }
 
 BOOST_FIXTURE_TEST_CASE(existingFileGivenToCtor_noProblem, F)
 {
-  std::string tempfilename("./TestLogFile_XXXXXX");
-  int fd = mkstemp(&tempfilename[0]);
-  close(fd);
-
+  create_tempfile();
   boost::filesystem::path filename(tempfilename);
   logsvc::daemon::LogFile lf(filename);
-  unlink(tempfilename.c_str());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
