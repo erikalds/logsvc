@@ -36,7 +36,7 @@ namespace logsvc
     class LogFile
     {
     public:
-      explicit LogFile(boost::filesystem::path& p);
+      explicit LogFile(const boost::filesystem::path& p);
     };
   } // namespace daemon
 } // namespace logsvc

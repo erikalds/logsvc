@@ -51,6 +51,9 @@ struct F
     close(fd);
   }
 
+  boost::filesystem::path filename() const
+  { return boost::filesystem::path(tempfilename); }
+
   std::string tempfilename;
 };
 
@@ -59,16 +62,14 @@ BOOST_FIXTURE_TEST_CASE(notExistingFileGivenToCtor_FileIsCreated, F)
   tempfilename = "./TestLogFile_XXXXXX";
   tempfilename = mktemp(&tempfilename[0]);
 
-  boost::filesystem::path filename(tempfilename);
-  logsvc::daemon::LogFile lf(filename);
-  BOOST_REQUIRE(boost::filesystem::exists(filename));
+  logsvc::daemon::LogFile lf(filename());
+  BOOST_REQUIRE(boost::filesystem::exists(filename()));
 }
 
 BOOST_FIXTURE_TEST_CASE(existingFileGivenToCtor_noProblem, F)
 {
   create_tempfile();
-  boost::filesystem::path filename(tempfilename);
-  logsvc::daemon::LogFile lf(filename);
+  logsvc::daemon::LogFile lf(filename());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

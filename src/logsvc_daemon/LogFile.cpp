@@ -33,7 +33,7 @@ namespace logsvc
   namespace daemon
   {
 
-    LogFile::LogFile(boost::filesystem::path& p)
+    LogFile::LogFile(const boost::filesystem::path& p)
     {
       if (!boost::filesystem::exists(p))
       {
