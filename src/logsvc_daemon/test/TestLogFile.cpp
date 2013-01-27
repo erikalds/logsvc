@@ -25,6 +25,7 @@
 */
 
 #include "logsvc_daemon/LogFile.h"
+#include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
@@ -54,6 +55,14 @@ struct F
   boost::filesystem::path filename() const
   { return boost::filesystem::path(tempfilename); }
 
+  std::string read_file_contents() const
+  {
+    boost::filesystem::ifstream in(filename());
+    std::ostringstream ost;
+    ost << in.rdbuf();
+    return ost.str();
+  }
+
   std::string tempfilename;
 };
 
@@ -69,7 +78,15 @@ BOOST_FIXTURE_TEST_CASE(notExistingFileGivenToCtor_FileIsCreated, F)
 BOOST_FIXTURE_TEST_CASE(existingFileGivenToCtor_noProblem, F)
 {
   create_tempfile();
+  BOOST_CHECK_NO_THROW(logsvc::daemon::LogFile(filename()));
+}
+
+BOOST_FIXTURE_TEST_CASE(writeString_StringIsWritten, F)
+{
+  create_tempfile();
   logsvc::daemon::LogFile lf(filename());
+  lf.write("asdf");
+  BOOST_CHECK_EQUAL("asdf", read_file_contents());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

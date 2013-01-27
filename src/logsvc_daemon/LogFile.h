@@ -28,6 +28,7 @@
 */
 
 #include <boost/filesystem/path.hpp>
+#include <string>
 
 namespace logsvc
 {
@@ -37,6 +38,11 @@ namespace logsvc
     {
     public:
       explicit LogFile(const boost::filesystem::path& p);
+
+      void write(const std::string& s);
+
+    private:
+      boost::filesystem::path filepath;
     };
   } // namespace daemon
 } // namespace logsvc

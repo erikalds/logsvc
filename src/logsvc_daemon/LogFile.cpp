@@ -33,13 +33,20 @@ namespace logsvc
   namespace daemon
   {
 
-    LogFile::LogFile(const boost::filesystem::path& p)
+    LogFile::LogFile(const boost::filesystem::path& p) :
+      filepath(p)
     {
       if (!boost::filesystem::exists(p))
       {
         boost::filesystem::ofstream ost;
         ost.open(p);
       }
+    }
+
+    void LogFile::write(const std::string& s)
+    {
+      boost::filesystem::ofstream ost(filepath);
+      ost << s;
     }
 
  } // namespace daemon
