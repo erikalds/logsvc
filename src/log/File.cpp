@@ -31,7 +31,7 @@ namespace logsvc
   namespace prot
   {
 
-    File::File(boost::filesystem::path fname) :
+    File::File(const boost::filesystem::path& fname) :
       filename(fname)
     {
     }

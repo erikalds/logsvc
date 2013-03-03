@@ -1,5 +1,5 @@
-#ifndef FILE_H_
-#define FILE_H_
+#ifndef PROT_FILE_H_
+#define PROT_FILE_H_
 
 /* Header created: 2013-03-03
 
@@ -37,7 +37,7 @@ namespace logsvc
     class File
     {
     public:
-      File(boost::filesystem::path fname);
+      explicit File(const boost::filesystem::path& fname);
 
       boost::filesystem::path get_name() const;
 
@@ -48,4 +48,4 @@ namespace logsvc
   } // namespace prot
 } // namespace logsvc
 
-#endif // FILE_H_
+#endif // PROT_FILE_H_
