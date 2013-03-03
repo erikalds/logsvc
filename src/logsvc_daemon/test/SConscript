@@ -1,5 +1,5 @@
 
-Import("logsvc_daemon")
+Import("logsvc_daemon log")
 
 env = CoreEnvironment(DEBUG=1,
                       LIBS=[
@@ -9,7 +9,7 @@ env = CoreEnvironment(DEBUG=1,
         ])
 env['CPPDEFINES'] = { 'BOOST_TEST_DYN_LINK': None }
 cpp_files = env.Glob('*.cpp')
-libs = [logsvc_daemon] + env['LIBS']
+libs = [logsvc_daemon, log] + env['LIBS']
 
 test_logsvc_daemon = env.Program("test_logsvc_daemon", cpp_files, LIBS=libs)
 installed_test = env.Install(source = test_logsvc_daemon, dir = "#/build")
