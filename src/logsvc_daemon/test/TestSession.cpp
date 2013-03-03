@@ -58,28 +58,32 @@ private:
 
 struct F
 {
-  F() {}
+  F() : ff(), session(ff) {}
   ~F() {}
+
+  DummyFileFactory ff;
+  Session session;
+
+  logsvc::prot::FileHandle open_file(const char* filename)
+  {
+    logsvc::prot::File f(filename);
+    return session.open_file(f);
+  }
 };
 
 BOOST_FIXTURE_TEST_CASE(openFile_OpensCorrectFile, F)
 {
-  DummyFileFactory ff;
-  Session session(ff);
-  logsvc::prot::File f("asdf.txt");
-  session.open_file(f);
+  open_file("asdf.txt");
   BOOST_CHECK(ff.has_opened("asdf.txt"));
 }
 
 BOOST_FIXTURE_TEST_CASE(openFile_returnsFileHandle, F)
 {
-  DummyFileFactory ff;
-  Session session(ff);
-  logsvc::prot::FileHandle fh0 = session.open_file(logsvc::prot::File("asdf.txt"));
+  logsvc::prot::FileHandle fh0 = open_file("asdf.txt");
   // let's define FileHandle(0) as an invalid FileHandle, don't know
   // yet if that will be useful
   BOOST_CHECK(fh0 != logsvc::prot::FileHandle(0));
-  logsvc::prot::FileHandle fh1 = session.open_file(logsvc::prot::File("foobar.txt"));
+  logsvc::prot::FileHandle fh1 = open_file("foobar.txt");
   BOOST_CHECK(fh1 != logsvc::prot::FileHandle(0));
   BOOST_CHECK(fh0 != fh1);
 }
