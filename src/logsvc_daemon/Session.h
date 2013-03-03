@@ -27,6 +27,9 @@
     NORWAY
 */
 
+#include <boost/filesystem/path.hpp>
+#include <map>
+
 namespace logsvc
 {
   namespace prot
@@ -52,6 +55,7 @@ namespace logsvc
     private:
       FileFactory& file_factory;
       unsigned int file_handle_counter;
+      std::map<boost::filesystem::path, unsigned int> open_files;
     };
 
   } // namespace daemon

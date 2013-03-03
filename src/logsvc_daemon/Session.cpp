@@ -37,14 +37,21 @@ namespace logsvc
 
     Session::Session(FileFactory& ff) :
       file_factory(ff),
-      file_handle_counter(1)
+      file_handle_counter(1),
+      open_files()
     {
     }
 
     prot::FileHandle Session::open_file(const prot::File& f)
     {
+      auto iter = open_files.find(f.get_name());
+      if (iter != open_files.end())
+        return prot::FileHandle(iter->second);
+
       file_factory.open_file(f.get_name());
-      return prot::FileHandle(file_handle_counter++);
+      unsigned int fh = file_handle_counter++;
+      open_files.insert(std::make_pair(f.get_name(), fh));
+      return prot::FileHandle(fh);
     }
 
   } // namespace daemon

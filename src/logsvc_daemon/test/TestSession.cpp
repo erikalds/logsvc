@@ -88,6 +88,11 @@ BOOST_FIXTURE_TEST_CASE(openFile_returnsFileHandle, F)
   BOOST_CHECK(fh0 != fh1);
 }
 
+BOOST_FIXTURE_TEST_CASE(openSameFileTwice_sameFileHandle, F)
+{
+  BOOST_CHECK(open_file("foo.txt") == open_file("foo.txt"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
