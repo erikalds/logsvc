@@ -28,6 +28,7 @@
 
 #include "logsvc_daemon/FileFactory.h"
 #include "log/File.h"
+#include "log/FileHandle.h"
 
 namespace logsvc
 {
@@ -35,13 +36,15 @@ namespace logsvc
   {
 
     Session::Session(FileFactory& ff) :
-      file_factory(ff)
+      file_factory(ff),
+      file_handle_counter(1)
     {
     }
 
-    void Session::open_file(const prot::File& f)
+    prot::FileHandle Session::open_file(const prot::File& f)
     {
       file_factory.open_file(f.get_name());
+      return prot::FileHandle(file_handle_counter++);
     }
 
   } // namespace daemon

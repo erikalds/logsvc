@@ -33,6 +33,7 @@ namespace logsvc
   {
 
     class File;
+    class FileHandle;
 
   } // namespace prot
 
@@ -46,10 +47,11 @@ namespace logsvc
     public:
       Session(FileFactory& ff);
 
-      void open_file(const prot::File& f);
+      prot::FileHandle open_file(const prot::File& f);
 
     private:
       FileFactory& file_factory;
+      unsigned int file_handle_counter;
     };
 
   } // namespace daemon

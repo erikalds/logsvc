@@ -28,6 +28,7 @@
 #include "logsvc_daemon/Session.h"
 #include "logsvc_daemon/File.h"
 #include "log/File.h"
+#include "log/FileHandle.h"
 #include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 #include <set>
@@ -68,6 +69,19 @@ BOOST_FIXTURE_TEST_CASE(openFile_OpensCorrectFile, F)
   logsvc::prot::File f("asdf.txt");
   session.open_file(f);
   BOOST_CHECK(ff.has_opened("asdf.txt"));
+}
+
+BOOST_FIXTURE_TEST_CASE(openFile_returnsFileHandle, F)
+{
+  DummyFileFactory ff;
+  Session session(ff);
+  logsvc::prot::FileHandle fh0 = session.open_file(logsvc::prot::File("asdf.txt"));
+  // let's define FileHandle(0) as an invalid FileHandle, don't know
+  // yet if that will be useful
+  BOOST_CHECK(fh0 != logsvc::prot::FileHandle(0));
+  logsvc::prot::FileHandle fh1 = session.open_file(logsvc::prot::File("foobar.txt"));
+  BOOST_CHECK(fh1 != logsvc::prot::FileHandle(0));
+  BOOST_CHECK(fh0 != fh1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
