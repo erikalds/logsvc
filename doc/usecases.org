@@ -1,0 +1,7 @@
+* write string to log
+** actor: client application
+** Actor must first have opened the log file.
+**
+* open log file
+** actor: client application
+** The client application opens the log file, telling it the filename and optionally the hostname.
