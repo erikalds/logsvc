@@ -27,6 +27,7 @@
     NORWAY
 */
 
+#include "logsvc_daemon/File.h"
 #include <boost/filesystem/path.hpp>
 #include <string>
 
@@ -34,12 +35,12 @@ namespace logsvc
 {
   namespace daemon
   {
-    class LogFile
+    class LogFile : public File
     {
     public:
       explicit LogFile(const boost::filesystem::path& p);
 
-      void write(const std::string& s);
+      virtual void write(const std::string& s);
 
     private:
       boost::filesystem::path filepath;
