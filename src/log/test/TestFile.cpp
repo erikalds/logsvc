@@ -31,13 +31,7 @@
 
 BOOST_AUTO_TEST_SUITE(testFile)
 
-struct F
-{
-  F() {}
-  ~F() {}
-};
-
-BOOST_FIXTURE_TEST_CASE(get_name_test, F)
+BOOST_AUTO_TEST_CASE(get_name_test)
 {
   logsvc::prot::File f1(boost::filesystem::path("asdf.txt"));
   BOOST_CHECK_EQUAL(boost::filesystem::path("asdf.txt"), f1.get_name());
