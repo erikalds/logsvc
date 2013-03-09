@@ -27,6 +27,8 @@
     NORWAY
 */
 
+#include <string>
+
 namespace logsvc
 {
   namespace daemon
@@ -34,7 +36,13 @@ namespace logsvc
 
     class File
     {
+    public:
+      virtual ~File() = 0;
+
+      virtual void write(const std::string& message) = 0;
     };
+
+    inline File::~File() {}
 
   } // namespace daemon
 } // namespace logsvc

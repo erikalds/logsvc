@@ -29,6 +29,7 @@
 #include "logsvc_daemon/File.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
+#include <egen/lookup.h>
 #include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 #include <set>
@@ -39,6 +40,11 @@ BOOST_AUTO_TEST_SUITE(testService)
 
 class DummyFile : public logsvc::daemon::File
 {
+public:
+  virtual void write(const std::string& message)
+  { contents += message; }
+
+  std::string contents;
 };
 
 class DummyFileFactory : public FileFactory
@@ -47,13 +53,19 @@ public:
   DummyFileFactory() : opened_files() {}
 
   virtual std::shared_ptr<File> open_file(const boost::filesystem::path& p)
-  { opened_files.insert(p); return std::shared_ptr<File>(new DummyFile); }
+  {
+    auto inserted = opened_files.insert(std::make_pair(p, std::make_shared<DummyFile>()));
+    return inserted.first->second;
+  }
 
   bool has_opened(const boost::filesystem::path& p)
   { return opened_files.count(p); }
 
+  DummyFile* get_file(const boost::filesystem::path& p) const
+  { return egen::lookup(p, opened_files, std::shared_ptr<DummyFile>()).get(); }
+
 private:
-  std::set<boost::filesystem::path> opened_files;
+  std::map<boost::filesystem::path, std::shared_ptr<DummyFile> > opened_files;
 };
 
 struct F
@@ -91,6 +103,16 @@ BOOST_FIXTURE_TEST_CASE(openFile_returnsFileHandle, F)
 BOOST_FIXTURE_TEST_CASE(openSameFileTwice_sameFileHandle, F)
 {
   BOOST_CHECK(open_file("foo.txt") == open_file("foo.txt"));
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_stringIsAdded, F)
+{
+  logsvc::prot::FileHandle fh = open_file("asdf.txt");
+  session.write_message(fh, "hallo");
+  DummyFile* dummy = ff.get_file("asdf.txt");
+  BOOST_REQUIRE(dummy != nullptr);
+  BOOST_CHECK_MESSAGE(dummy->contents.find("hallo") != std::string::npos,
+                      dummy->contents);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -42,7 +42,7 @@ namespace logsvc
 
   namespace daemon
   {
-
+    class File;
     class FileFactory;
 
     class Session
@@ -51,11 +51,13 @@ namespace logsvc
       Session(FileFactory& ff);
 
       prot::FileHandle open_file(const prot::File& f);
+      void write_message(const prot::FileHandle& fh, const std::string& message);
 
     private:
       FileFactory& file_factory;
       unsigned int file_handle_counter;
-      std::map<boost::filesystem::path, unsigned int> open_files;
+      std::map<boost::filesystem::path, prot::FileHandle> open_filehandles;
+      std::map<prot::FileHandle, std::shared_ptr<File> > open_files;
     };
 
   } // namespace daemon
