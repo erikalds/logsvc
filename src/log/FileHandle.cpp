@@ -41,5 +41,10 @@ namespace logsvc
       return fh == other.fh;
     }
 
+    bool FileHandle::operator<(const FileHandle& other) const
+    {
+      return fh < other.fh;
+    }
+
   } // namespace prot
 } // namespace logsvc

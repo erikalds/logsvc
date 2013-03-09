@@ -52,6 +52,34 @@ BOOST_FIXTURE_TEST_CASE(FileHandle_ineq_op, F)
   BOOST_CHECK(logsvc::prot::FileHandle(42) != logsvc::prot::FileHandle(234));
 }
 
+BOOST_FIXTURE_TEST_CASE(FileHandle_lt_op, F)
+{
+  BOOST_CHECK(logsvc::prot::FileHandle(123) < logsvc::prot::FileHandle(124));
+  BOOST_CHECK(!(logsvc::prot::FileHandle(125) < logsvc::prot::FileHandle(124)));
+  BOOST_CHECK(!(logsvc::prot::FileHandle(125) < logsvc::prot::FileHandle(125)));
+}
+
+BOOST_FIXTURE_TEST_CASE(FileHandle_le_op, F)
+{
+  BOOST_CHECK(logsvc::prot::FileHandle(223) <= logsvc::prot::FileHandle(224));
+  BOOST_CHECK(!(logsvc::prot::FileHandle(225) <= logsvc::prot::FileHandle(224)));
+  BOOST_CHECK(logsvc::prot::FileHandle(225) <= logsvc::prot::FileHandle(225));
+}
+
+BOOST_FIXTURE_TEST_CASE(FileHandle_gt_op, F)
+{
+  BOOST_CHECK(!(logsvc::prot::FileHandle(323) > logsvc::prot::FileHandle(324)));
+  BOOST_CHECK(logsvc::prot::FileHandle(325) > logsvc::prot::FileHandle(324));
+  BOOST_CHECK(!(logsvc::prot::FileHandle(325) > logsvc::prot::FileHandle(325)));
+}
+
+BOOST_FIXTURE_TEST_CASE(FileHandle_ge_op, F)
+{
+  BOOST_CHECK(!(logsvc::prot::FileHandle(423) >= logsvc::prot::FileHandle(424)));
+  BOOST_CHECK(logsvc::prot::FileHandle(425) >= logsvc::prot::FileHandle(424));
+  BOOST_CHECK(logsvc::prot::FileHandle(425) >= logsvc::prot::FileHandle(425));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

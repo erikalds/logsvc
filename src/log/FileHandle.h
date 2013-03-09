@@ -38,6 +38,7 @@ namespace logsvc
       explicit FileHandle(unsigned int handle);
 
       bool operator==(const FileHandle& other) const;
+      bool operator<(const FileHandle& other) const;
 
     private:
       unsigned int fh;
@@ -46,6 +47,14 @@ namespace logsvc
     inline bool operator!=(const FileHandle& lhs, const FileHandle& rhs)
     { return !(lhs == rhs); }
 
+    inline bool operator<=(const FileHandle& lhs, const FileHandle& rhs)
+    { return lhs < rhs || lhs == rhs; }
+
+    inline bool operator>(const FileHandle& lhs, const FileHandle& rhs)
+    { return !(lhs <= rhs); }
+
+    inline bool operator>=(const FileHandle& lhs, const FileHandle& rhs)
+    { return !(lhs < rhs); }
   } // namespace prot
 } // namespace logsvc
 
