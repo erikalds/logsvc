@@ -36,6 +36,8 @@ namespace logsvc
     {
     public:
       explicit FileHandle(unsigned int handle);
+      FileHandle(const FileHandle&) = default;
+      FileHandle& operator=(const FileHandle&) = default;
 
       bool operator==(const FileHandle& other) const;
       bool operator<(const FileHandle& other) const;
