@@ -68,7 +68,7 @@ namespace logsvc
     void Session::write_message(const prot::FileHandle& fh, const std::string& message)
     {
       std::shared_ptr<File> f = egen::lookup(fh, open_files, std::shared_ptr<File>());
-      f->write("[" + client->get_name() + "]" + message);
+      f->write("[" + client->get_name() + "] " + message);
     }
 
   } // namespace daemon

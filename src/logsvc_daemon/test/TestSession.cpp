@@ -148,6 +148,19 @@ BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_bracketsAreAddedAroundClient, F)
   BOOST_CHECK_LT(bracket_close_pos, msgpos);
 }
 
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_whitespaceAfterBracket, F)
+{
+  logsvc::prot::FileHandle fh = open_file("asdf.txt");
+  session.write_message(fh, "hallo");
+  DummyFile* dummy = ff.get_file("asdf.txt");
+  BOOST_REQUIRE(dummy != nullptr);
+  std::size_t bracket_close_pos = dummy->contents.find("]");
+  std::size_t msgpos = dummy->contents.find("hallo");
+
+  BOOST_CHECK_LT(bracket_close_pos + 1, msgpos);
+  BOOST_CHECK_EQUAL(' ', dummy->contents[bracket_close_pos + 1]);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
