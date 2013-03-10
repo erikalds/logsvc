@@ -52,5 +52,6 @@ namespace logsvc
     {
       return its_ip;
     }
+
   } // namespace prot
 } // namespace logsvc
