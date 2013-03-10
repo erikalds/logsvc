@@ -71,17 +71,37 @@ private:
 
 struct F
 {
-  F() : ff(), client("client"), session(client, ff) {}
+  F() : ff(), client("client"), session(client, ff),
+        bracket_open_pos(std::string::npos), clientpos(std::string::npos),
+        bracket_close_pos(std::string::npos), msgpos(std::string::npos) {}
   ~F() {}
 
   DummyFileFactory ff;
   logsvc::prot::Client client;
   Session session;
+  std::size_t bracket_open_pos;
+  std::size_t clientpos;
+  std::size_t bracket_close_pos;
+  std::size_t msgpos;
+  std::string contents;
 
-  logsvc::prot::FileHandle open_file(const char* filename)
+  logsvc::prot::FileHandle open_file(const std::string& filename)
   {
     logsvc::prot::File f(filename);
     return session.open_file(f);
+  }
+
+  void write_message_and_find_line_positions()
+  {
+    logsvc::prot::FileHandle fh = open_file("asdf.txt");
+    session.write_message(fh, "hallo");
+    DummyFile* dummy = ff.get_file("asdf.txt");
+    BOOST_REQUIRE(dummy != nullptr);
+    contents = dummy->contents;
+    bracket_open_pos = contents.find("[");
+    clientpos = contents.find("client");
+    bracket_close_pos = contents.find("]");
+    msgpos = contents.find("hallo");
   }
 };
 
@@ -109,36 +129,20 @@ BOOST_FIXTURE_TEST_CASE(openSameFileTwice_sameFileHandle, F)
 
 BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_stringIsAdded, F)
 {
-  logsvc::prot::FileHandle fh = open_file("asdf.txt");
-  session.write_message(fh, "hallo");
-  DummyFile* dummy = ff.get_file("asdf.txt");
-  BOOST_REQUIRE(dummy != nullptr);
-  BOOST_CHECK_MESSAGE(dummy->contents.find("hallo") != std::string::npos,
-                      dummy->contents);
+  write_message_and_find_line_positions();
+  BOOST_CHECK(msgpos != std::string::npos);
 }
 
 BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_clientIsAddedBeforeMessage, F)
 {
-  logsvc::prot::FileHandle fh = open_file("asdf.txt");
-  session.write_message(fh, "hallo");
-  DummyFile* dummy = ff.get_file("asdf.txt");
-  BOOST_REQUIRE(dummy != nullptr);
-  std::size_t clientpos = dummy->contents.find("client");
-  BOOST_CHECK_MESSAGE(clientpos != std::string::npos, dummy->contents);
-  std::size_t msgpos = dummy->contents.find("hallo");
+  write_message_and_find_line_positions();
+  BOOST_CHECK(clientpos != std::string::npos);
   BOOST_CHECK_LT(clientpos, msgpos);
 }
 
 BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_bracketsAreAddedAroundClient, F)
 {
-  logsvc::prot::FileHandle fh = open_file("asdf.txt");
-  session.write_message(fh, "hallo");
-  DummyFile* dummy = ff.get_file("asdf.txt");
-  BOOST_REQUIRE(dummy != nullptr);
-  std::size_t bracket_open_pos = dummy->contents.find("[");
-  std::size_t clientpos = dummy->contents.find("client");
-  std::size_t bracket_close_pos = dummy->contents.find("]");
-  std::size_t msgpos = dummy->contents.find("hallo");
+  write_message_and_find_line_positions();
 
   BOOST_CHECK(bracket_open_pos != std::string::npos);
   BOOST_CHECK(bracket_close_pos != std::string::npos);
@@ -150,15 +154,10 @@ BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_bracketsAreAddedAroundClient, F)
 
 BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_whitespaceAfterBracket, F)
 {
-  logsvc::prot::FileHandle fh = open_file("asdf.txt");
-  session.write_message(fh, "hallo");
-  DummyFile* dummy = ff.get_file("asdf.txt");
-  BOOST_REQUIRE(dummy != nullptr);
-  std::size_t bracket_close_pos = dummy->contents.find("]");
-  std::size_t msgpos = dummy->contents.find("hallo");
+  write_message_and_find_line_positions();
 
   BOOST_CHECK_LT(bracket_close_pos + 1, msgpos);
-  BOOST_CHECK_EQUAL(' ', dummy->contents[bracket_close_pos + 1]);
+  BOOST_CHECK_EQUAL(' ', contents[bracket_close_pos + 1]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
