@@ -28,6 +28,7 @@
 
 #include "logsvc_daemon/FileFactory.h"
 #include "logsvc_daemon/File.h"
+#include "logsvc_daemon/TimestampFactory.h"
 #include "log/Client.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
@@ -38,9 +39,12 @@ namespace logsvc
   namespace daemon
   {
 
-    Session::Session(const prot::Client& c, FileFactory& ff) :
+    Session::Session(const prot::Client& c,
+                     TimestampFactory& tsfac,
+                     FileFactory& ff) :
       client(new prot::Client(c)),
       file_factory(ff),
+      timestamp_factory(tsfac),
       file_handle_counter(1),
       open_filehandles(),
       open_files()
@@ -69,7 +73,8 @@ namespace logsvc
     {
       std::shared_ptr<File> f = egen::lookup(fh, open_files, std::shared_ptr<File>());
       std::ostringstream ost;
-      ost << "[" << client->get_name() << ":"
+      ost << "[" << timestamp_factory.get_timestamp() << ":"
+          << client->get_name() << ":"
           << client->get_ip_address() << "] "
           << message << "\n";
       f->write(ost.str());

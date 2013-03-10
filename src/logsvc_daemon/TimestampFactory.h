@@ -1,7 +1,7 @@
-#ifndef SESSION_H_
-#define SESSION_H_
+#ifndef TIMESTAMPFACTORY_H_
+#define TIMESTAMPFACTORY_H_
 
-/* Header created: 2013-03-03
+/* Header created: 2013-03-10
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -27,45 +27,24 @@
     NORWAY
 */
 
-#include <boost/filesystem/path.hpp>
-#include <map>
+#include <string>
 
 namespace logsvc
 {
-  namespace prot
-  {
-
-    class Client;
-    class File;
-    class FileHandle;
-
-  } // namespace prot
-
   namespace daemon
   {
-    class File;
-    class FileFactory;
-    class TimestampFactory;
 
-    class Session
+    class TimestampFactory
     {
     public:
-      Session(const prot::Client& c, TimestampFactory& tsfac, FileFactory& ff);
-      ~Session();
+      virtual ~TimestampFactory() = 0;
 
-      prot::FileHandle open_file(const prot::File& f);
-      void write_message(const prot::FileHandle& fh, const std::string& message);
-
-    private:
-      std::unique_ptr<prot::Client> client;
-      FileFactory& file_factory;
-      TimestampFactory& timestamp_factory;
-      unsigned int file_handle_counter;
-      std::map<boost::filesystem::path, prot::FileHandle> open_filehandles;
-      std::map<prot::FileHandle, std::shared_ptr<File> > open_files;
+      virtual std::string get_timestamp() = 0;
     };
+
+    inline TimestampFactory::~TimestampFactory() {}
 
   } // namespace daemon
 } // namespace logsvc
 
-#endif // SESSION_H_
+#endif // TIMESTAMPFACTORY_H_

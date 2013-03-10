@@ -24,9 +24,10 @@
     NORWAY
 */
 
+#include "logsvc_daemon/File.h"
 #include "logsvc_daemon/FileFactory.h"
 #include "logsvc_daemon/Session.h"
-#include "logsvc_daemon/File.h"
+#include "logsvc_daemon/TimestampFactory.h"
 #include "log/Client.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
@@ -38,6 +39,17 @@
 using namespace logsvc::daemon;
 
 BOOST_AUTO_TEST_SUITE(testService)
+
+class DummyTimestampFactory : public TimestampFactory
+{
+public:
+  DummyTimestampFactory() : stamp() {}
+
+  virtual std::string get_timestamp()
+  { return stamp; }
+
+  std::string stamp;
+};
 
 class DummyFile : public logsvc::daemon::File
 {
@@ -71,15 +83,17 @@ private:
 
 struct F
 {
-  F() : ff(), client("client"), session(client, ff),
+  F() : ff(), tsfac(), client("client"), session(client, tsfac, ff),
         bracket_open_pos(std::string::npos), clientpos(std::string::npos),
         bracket_close_pos(std::string::npos), msgpos(std::string::npos) {}
   ~F() {}
 
   DummyFileFactory ff;
+  DummyTimestampFactory tsfac;
   logsvc::prot::Client client;
   Session session;
   std::size_t bracket_open_pos;
+  std::size_t timestamp_pos;
   std::size_t clientpos;
   std::size_t ip_pos;
   std::size_t bracket_close_pos;
@@ -95,11 +109,13 @@ struct F
   void write_message_and_find_line_positions()
   {
     logsvc::prot::FileHandle fh = open_file("asdf.txt");
+    tsfac.stamp = "the timestamp";
     session.write_message(fh, "hallo");
     DummyFile* dummy = ff.get_file("asdf.txt");
     BOOST_REQUIRE(dummy != nullptr);
     contents = dummy->contents;
     bracket_open_pos = contents.find("[");
+    timestamp_pos = contents.find(tsfac.stamp);
     clientpos = contents.find("client");
 
     std::ostringstream ost;
@@ -190,6 +206,31 @@ BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_clientIPIsAfterColon, F)
 {
   write_message_and_find_line_positions();
   BOOST_CHECK_EQUAL(':', contents[ip_pos - 1]);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_timestampIsAdded, F)
+{
+  write_message_and_find_line_positions();
+  BOOST_CHECK_NE(timestamp_pos, std::string::npos);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_timestampIsWithinBrackets, F)
+{
+  write_message_and_find_line_positions();
+  BOOST_CHECK_LT(bracket_open_pos, timestamp_pos);
+  BOOST_CHECK_LT(timestamp_pos, bracket_close_pos);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_timestampIsBeforeClient, F)
+{
+  write_message_and_find_line_positions();
+  BOOST_CHECK_LT(timestamp_pos, clientpos);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_colonBeforeClient, F)
+{
+  write_message_and_find_line_positions();
+  BOOST_CHECK_EQUAL(':', contents[clientpos - 1]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
