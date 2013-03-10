@@ -81,6 +81,7 @@ struct F
   Session session;
   std::size_t bracket_open_pos;
   std::size_t clientpos;
+  std::size_t ip_pos;
   std::size_t bracket_close_pos;
   std::size_t msgpos;
   std::string contents;
@@ -100,6 +101,11 @@ struct F
     contents = dummy->contents;
     bracket_open_pos = contents.find("[");
     clientpos = contents.find("client");
+
+    std::ostringstream ost;
+    ost << client.get_ip_address();
+    ip_pos = contents.find(ost.str());
+
     bracket_close_pos = contents.find("]");
     msgpos = contents.find("hallo");
   }
@@ -158,6 +164,32 @@ BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_whitespaceAfterBracket, F)
 
   BOOST_CHECK_LT(bracket_close_pos + 1, msgpos);
   BOOST_CHECK_EQUAL(' ', contents[bracket_close_pos + 1]);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_newLineAtEndOfFile, F)
+{
+  write_message_and_find_line_positions();
+  BOOST_CHECK_EQUAL('\n', contents.back());
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_clientIPIsAddedAfterClient, F)
+{
+  write_message_and_find_line_positions();
+  BOOST_CHECK_NE(ip_pos, std::string::npos);
+  BOOST_CHECK_LT(clientpos, ip_pos);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_clientIPIsWithinBrackets, F)
+{
+  write_message_and_find_line_positions();
+  BOOST_CHECK_LT(bracket_open_pos, ip_pos);
+  BOOST_CHECK_LT(ip_pos, bracket_close_pos);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_clientIPIsAfterColon, F)
+{
+  write_message_and_find_line_positions();
+  BOOST_CHECK_EQUAL(':', contents[ip_pos - 1]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
