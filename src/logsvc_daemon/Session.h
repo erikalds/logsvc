@@ -35,6 +35,7 @@ namespace logsvc
   namespace prot
   {
 
+    class Client;
     class File;
     class FileHandle;
 
@@ -48,12 +49,14 @@ namespace logsvc
     class Session
     {
     public:
-      Session(FileFactory& ff);
+      Session(const prot::Client& c, FileFactory& ff);
+      ~Session();
 
       prot::FileHandle open_file(const prot::File& f);
       void write_message(const prot::FileHandle& fh, const std::string& message);
 
     private:
+      std::unique_ptr<prot::Client> client;
       FileFactory& file_factory;
       unsigned int file_handle_counter;
       std::map<boost::filesystem::path, prot::FileHandle> open_filehandles;

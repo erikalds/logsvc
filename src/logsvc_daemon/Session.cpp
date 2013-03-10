@@ -28,6 +28,7 @@
 
 #include "logsvc_daemon/FileFactory.h"
 #include "logsvc_daemon/File.h"
+#include "log/Client.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include <egen/lookup.h>
@@ -37,11 +38,16 @@ namespace logsvc
   namespace daemon
   {
 
-    Session::Session(FileFactory& ff) :
+    Session::Session(const prot::Client& c, FileFactory& ff) :
+      client(new prot::Client(c)),
       file_factory(ff),
       file_handle_counter(1),
       open_filehandles(),
       open_files()
+    {
+    }
+
+    Session::~Session()
     {
     }
 
@@ -62,7 +68,7 @@ namespace logsvc
     void Session::write_message(const prot::FileHandle& fh, const std::string& message)
     {
       std::shared_ptr<File> f = egen::lookup(fh, open_files, std::shared_ptr<File>());
-      f->write(message);
+      f->write("[" + client->get_name() + "]" + message);
     }
 
   } // namespace daemon

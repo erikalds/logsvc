@@ -27,6 +27,7 @@
 #include "logsvc_daemon/FileFactory.h"
 #include "logsvc_daemon/Session.h"
 #include "logsvc_daemon/File.h"
+#include "log/Client.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include <egen/lookup.h>
@@ -70,10 +71,11 @@ private:
 
 struct F
 {
-  F() : ff(), session(ff) {}
+  F() : ff(), client("client"), session(client, ff) {}
   ~F() {}
 
   DummyFileFactory ff;
+  logsvc::prot::Client client;
   Session session;
 
   logsvc::prot::FileHandle open_file(const char* filename)
@@ -113,6 +115,37 @@ BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_stringIsAdded, F)
   BOOST_REQUIRE(dummy != nullptr);
   BOOST_CHECK_MESSAGE(dummy->contents.find("hallo") != std::string::npos,
                       dummy->contents);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_clientIsAddedBeforeMessage, F)
+{
+  logsvc::prot::FileHandle fh = open_file("asdf.txt");
+  session.write_message(fh, "hallo");
+  DummyFile* dummy = ff.get_file("asdf.txt");
+  BOOST_REQUIRE(dummy != nullptr);
+  std::size_t clientpos = dummy->contents.find("client");
+  BOOST_CHECK_MESSAGE(clientpos != std::string::npos, dummy->contents);
+  std::size_t msgpos = dummy->contents.find("hallo");
+  BOOST_CHECK_LT(clientpos, msgpos);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_bracketsAreAddedAroundClient, F)
+{
+  logsvc::prot::FileHandle fh = open_file("asdf.txt");
+  session.write_message(fh, "hallo");
+  DummyFile* dummy = ff.get_file("asdf.txt");
+  BOOST_REQUIRE(dummy != nullptr);
+  std::size_t bracket_open_pos = dummy->contents.find("[");
+  std::size_t clientpos = dummy->contents.find("client");
+  std::size_t bracket_close_pos = dummy->contents.find("]");
+  std::size_t msgpos = dummy->contents.find("hallo");
+
+  BOOST_CHECK(bracket_open_pos != std::string::npos);
+  BOOST_CHECK(bracket_close_pos != std::string::npos);
+
+  BOOST_CHECK_LT(bracket_open_pos, clientpos);
+  BOOST_CHECK_LT(clientpos, bracket_close_pos);
+  BOOST_CHECK_LT(bracket_close_pos, msgpos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
