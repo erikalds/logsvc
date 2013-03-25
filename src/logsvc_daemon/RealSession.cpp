@@ -24,7 +24,7 @@
     NORWAY
 */
 
-#include "logsvc_daemon/Session.h"
+#include "logsvc_daemon/RealSession.h"
 
 #include "logsvc_daemon/FileFactory.h"
 #include "logsvc_daemon/File.h"
@@ -39,9 +39,9 @@ namespace logsvc
   namespace daemon
   {
 
-    Session::Session(const prot::Client& c,
-                     TimestampFactory& tsfac,
-                     FileFactory& ff) :
+    RealSession::RealSession(const prot::Client& c,
+                             TimestampFactory& tsfac,
+                             FileFactory& ff) :
       client(new prot::Client(c)),
       file_factory(ff),
       timestamp_factory(tsfac),
@@ -51,11 +51,11 @@ namespace logsvc
     {
     }
 
-    Session::~Session()
+    RealSession::~RealSession()
     {
     }
 
-    prot::FileHandle Session::open_file(const prot::File& prot_file)
+    prot::FileHandle RealSession::open_file(const prot::File& prot_file)
     {
       auto iter = open_filehandles.find(prot_file.get_name());
       if (iter != open_filehandles.end())
@@ -69,7 +69,8 @@ namespace logsvc
       return fh;
     }
 
-    void Session::write_message(const prot::FileHandle& fh, const std::string& message)
+    void RealSession::write_message(const prot::FileHandle& fh,
+                                    const std::string& message)
     {
       std::shared_ptr<File> f = egen::lookup(fh, open_files, std::shared_ptr<File>());
       std::ostringstream ost;

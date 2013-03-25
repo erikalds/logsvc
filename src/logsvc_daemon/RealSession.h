@@ -1,5 +1,5 @@
-#ifndef SESSION_H_
-#define SESSION_H_
+#ifndef REALSESSION_H_
+#define REALSESSION_H_
 
 /* Header created: 2013-03-03
 
@@ -27,13 +27,16 @@
     NORWAY
 */
 
-#include <string>
+#include "logsvc_daemon/Session.h"
+#include <boost/filesystem/path.hpp>
+#include <map>
 
 namespace logsvc
 {
   namespace prot
   {
 
+    class Client;
     class File;
     class FileHandle;
 
@@ -41,18 +44,29 @@ namespace logsvc
 
   namespace daemon
   {
-    class Session
+    class File;
+    class FileFactory;
+    class TimestampFactory;
+
+    class RealSession : public Session
     {
     public:
-      virtual ~Session() = 0;
+      RealSession(const prot::Client& c, TimestampFactory& tsfac, FileFactory& ff);
+      ~RealSession();
 
-      virtual prot::FileHandle open_file(const prot::File& f) = 0;
-      virtual void write_message(const prot::FileHandle& fh,
-                                 const std::string& message) = 0;
+      prot::FileHandle open_file(const prot::File& f);
+      void write_message(const prot::FileHandle& fh, const std::string& message);
+
+    private:
+      std::unique_ptr<prot::Client> client;
+      FileFactory& file_factory;
+      TimestampFactory& timestamp_factory;
+      unsigned int file_handle_counter;
+      std::map<boost::filesystem::path, prot::FileHandle> open_filehandles;
+      std::map<prot::FileHandle, std::shared_ptr<File> > open_files;
     };
 
-    inline Session::~Session() {}
   } // namespace daemon
 } // namespace logsvc
 
-#endif // SESSION_H_
+#endif // REALSESSION_H_

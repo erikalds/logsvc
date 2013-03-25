@@ -26,7 +26,7 @@
 
 #include "logsvc_daemon/File.h"
 #include "logsvc_daemon/FileFactory.h"
-#include "logsvc_daemon/Session.h"
+#include "logsvc_daemon/RealSession.h"
 #include "logsvc_daemon/TimestampFactory.h"
 #include "log/Client.h"
 #include "log/File.h"
@@ -91,7 +91,7 @@ struct F
   DummyFileFactory ff;
   DummyTimestampFactory tsfac;
   logsvc::prot::Client client;
-  Session session;
+  RealSession session;
   std::size_t bracket_open_pos;
   std::size_t timestamp_pos;
   std::size_t clientpos;
