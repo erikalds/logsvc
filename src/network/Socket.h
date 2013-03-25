@@ -34,6 +34,8 @@ namespace network
   {
   public:
     virtual ~Socket() = 0;
+
+    virtual void async_read() = 0;
   };
 
   inline Socket::~Socket() {}

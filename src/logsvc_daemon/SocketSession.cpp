@@ -26,13 +26,21 @@
 
 #include "logsvc_daemon/SocketSession.h"
 
+#include "network/Socket.h"
+
 namespace logsvc
 {
   namespace daemon
   {
 
-    SocketSession::SocketSession(network::Socket& socket, Session& session)
+    SocketSession::SocketSession(network::Socket& socket, Session& session) :
+      the_socket(socket)
     {
+    }
+
+    void SocketSession::start_listen()
+    {
+      the_socket.async_read();
     }
 
   } // namespace daemon

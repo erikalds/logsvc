@@ -36,6 +36,11 @@ BOOST_AUTO_TEST_SUITE(testSocketSession)
 class DummySocket : public network::Socket
 {
 public:
+  DummySocket() : async_read_call_count(0) {}
+
+  virtual void async_read() { ++async_read_call_count; }
+
+  int async_read_call_count;
 };
 
 class DummySession : public logsvc::daemon::Session
@@ -58,6 +63,16 @@ BOOST_FIXTURE_TEST_CASE(canCreate, F)
   DummySocket socket;
   DummySession session;
   logsvc::daemon::SocketSession ss(socket, session);
+}
+
+BOOST_FIXTURE_TEST_CASE(createdSession_startsListeningToSocket, F)
+{
+  DummySocket socket;
+  DummySession session;
+  logsvc::daemon::SocketSession ss(socket, session);
+  BOOST_REQUIRE_EQUAL(0, socket.async_read_call_count);
+  ss.start_listen();
+  BOOST_CHECK_EQUAL(1, socket.async_read_call_count);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

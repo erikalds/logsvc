@@ -43,6 +43,11 @@ namespace logsvc
     {
     public:
       SocketSession(network::Socket& socket, Session& session);
+
+      void start_listen();
+
+    private:
+      network::Socket& the_socket;
     };
 
   } // namespace daemon
