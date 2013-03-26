@@ -1,0 +1,21 @@
+header := "logs" prot-obj-type length
+
+prot-obj-type :=
+       "open" # open file, prot::File, return prot::FileHandle, nack
+    || "clos" # close file, prot::FileHandle, return ackn, nack
+    || "clnt" # client description, prot::Client, return ackn, nack
+    || "mesg" # message to write to open log file, prot::Message, return ackn, nack
+    || "filh" # Handle to open file, prot::FileHandle
+    || "clnh" # Handle for client to present, prot::ClientHandle
+    || "ackn" # Acknowledged, prot::Ack
+    || "nack" # Not Acknowledged, prot::Nack
+
+length := [32bit unsigned integer, LE]
+
+length decides how many bytes to read/write after header, i.e.,
+the payload of the command.
+
+prot::ProtocolObjectFactory knows how to make protocol objects from headers.
+Any prot::ProtocolObject is able to perform its action on a Session object.
+Any prot::ProtocolObject can be serialized.
+The prot::ProtocolObject can create itself from serialization data.
