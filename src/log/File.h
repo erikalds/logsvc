@@ -37,9 +37,12 @@ namespace logsvc
     class File
     {
     public:
+      File();
       explicit File(const boost::filesystem::path& fname);
 
       boost::filesystem::path get_name() const;
+
+      void read_payload(const std::string& payload);
 
     private:
       boost::filesystem::path filename;

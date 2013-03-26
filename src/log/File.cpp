@@ -31,6 +31,11 @@ namespace logsvc
   namespace prot
   {
 
+    File::File() :
+      filename("invalid path")
+    {
+    }
+
     File::File(const boost::filesystem::path& fname) :
       filename(fname)
     {
@@ -38,7 +43,15 @@ namespace logsvc
 
     boost::filesystem::path File::get_name() const
     {
+      if (filename == "invalid path")
+        throw std::logic_error("Cannot get file path from half created File object.");
+
       return filename;
+    }
+
+    void File::read_payload(const std::string& payload)
+    {
+      filename = boost::filesystem::path(payload);
     }
 
   } // namespace prot

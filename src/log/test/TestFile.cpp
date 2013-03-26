@@ -40,6 +40,18 @@ BOOST_AUTO_TEST_CASE(get_name_test)
   BOOST_CHECK_EQUAL(boost::filesystem::path("../path/asdf.txt"), f2.get_name());
 }
 
+BOOST_AUTO_TEST_CASE(read_payload)
+{
+  logsvc::prot::File f;
+  BOOST_CHECK_THROW(f.get_name(), std::logic_error);
+
+  f.read_payload("asdf.txt");
+  BOOST_CHECK_EQUAL(boost::filesystem::path("asdf.txt"), f.get_name());
+
+  f.read_payload("../path/asdf.txt");
+  BOOST_CHECK_EQUAL(boost::filesystem::path("../path/asdf.txt"), f.get_name());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
