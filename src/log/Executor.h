@@ -1,7 +1,7 @@
-#ifndef PROT_FILE_H_
-#define PROT_FILE_H_
+#ifndef EXECUTOR_H_
+#define EXECUTOR_H_
 
-/* Header created: 2013-03-03
+/* Header created: 2013-03-26
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -34,25 +34,19 @@ namespace logsvc
   namespace prot
   {
 
-    class Deliverable;
-    class Executor;
+    class FileHandle;
 
-    class File
+    class Executor
     {
     public:
-      File();
-      explicit File(const boost::filesystem::path& fname);
+      virtual ~Executor() = 0;
 
-      boost::filesystem::path get_name() const;
-
-      void read_payload(const std::string& payload);
-      std::unique_ptr<Deliverable> act(Executor& exec);
-
-    private:
-      boost::filesystem::path filename;
+      virtual FileHandle open_file(const boost::filesystem::path& filename) = 0;
     };
+
+    inline Executor::~Executor() {}
 
   } // namespace prot
 } // namespace logsvc
 
-#endif // PROT_FILE_H_
+#endif // EXECUTOR_H_

@@ -26,6 +26,10 @@
 
 #include "log/File.h"
 
+#include "log/Deliverable.h"
+#include "log/Executor.h"
+#include "log/FileHandle.h"
+
 namespace logsvc
 {
   namespace prot
@@ -52,6 +56,12 @@ namespace logsvc
     void File::read_payload(const std::string& payload)
     {
       filename = boost::filesystem::path(payload);
+    }
+
+    std::unique_ptr<Deliverable> File::act(Executor& exec)
+    {
+      FileHandle fh = exec.open_file(get_name());
+      return std::unique_ptr<Deliverable>(new FileHandle(fh));
     }
 
   } // namespace prot

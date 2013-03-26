@@ -24,10 +24,28 @@
     NORWAY
 */
 
+#include "log/Deliverable.h"
+#include "log/Executor.h"
 #include "log/File.h"
+#include "log/FileHandle.h"
 
 #define BOOST_TEST_MODULE "log test suite"
 #include <boost/test/unit_test.hpp>
+
+class DummyExecutor : public logsvc::prot::Executor
+{
+public:
+  DummyExecutor() : fh_counter(0) {}
+
+  virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& filename)
+  {
+    opened_file = filename;
+    return logsvc::prot::FileHandle(++fh_counter);
+  }
+
+  boost::filesystem::path opened_file;
+  unsigned int fh_counter;
+};
 
 BOOST_AUTO_TEST_SUITE(testFile)
 
@@ -50,6 +68,32 @@ BOOST_AUTO_TEST_CASE(read_payload)
 
   f.read_payload("../path/asdf.txt");
   BOOST_CHECK_EQUAL(boost::filesystem::path("../path/asdf.txt"), f.get_name());
+}
+
+BOOST_AUTO_TEST_CASE(act_positive)
+{
+  logsvc::prot::File f(boost::filesystem::path("asdf.txt"));
+  DummyExecutor exec;
+  std::unique_ptr<logsvc::prot::Deliverable> first_deliverable = f.act(exec);
+  BOOST_CHECK_EQUAL(boost::filesystem::path("asdf.txt"), exec.opened_file);
+
+  f.read_payload("../path/asdf.txt");
+  std::unique_ptr<logsvc::prot::Deliverable> second_deliverable = f.act(exec);
+  BOOST_CHECK_EQUAL(boost::filesystem::path("../path/asdf.txt"), exec.opened_file);
+
+  BOOST_CHECK(first_deliverable != second_deliverable);
+  BOOST_REQUIRE(first_deliverable != nullptr);
+
+  BOOST_CHECK_EQUAL(std::string("logsfilh\x04\x00\x00\x00", 12),
+                    first_deliverable->get_header());
+  BOOST_CHECK_EQUAL(std::string("\x01\x00\x00\x00", 4),
+                    first_deliverable->get_payload());
+
+  BOOST_REQUIRE(second_deliverable != nullptr);
+  BOOST_CHECK_EQUAL(std::string("logsfilh\x04\x00\x00\x00", 12),
+                    second_deliverable->get_header());
+  BOOST_CHECK_EQUAL(std::string("\x02\x00\x00\x00", 4),
+                    second_deliverable->get_payload());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
