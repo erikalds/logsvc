@@ -27,12 +27,14 @@
     NORWAY
 */
 
+#include "log/Deliverable.h"
+
 namespace logsvc
 {
   namespace prot
   {
 
-    class FileHandle
+    class FileHandle : public Deliverable
     {
     public:
       explicit FileHandle(unsigned int handle);
@@ -41,6 +43,9 @@ namespace logsvc
 
       bool operator==(const FileHandle& other) const;
       bool operator<(const FileHandle& other) const;
+
+      virtual std::string get_header() const;
+      virtual std::string get_payload() const;
 
     private:
       unsigned int fh;

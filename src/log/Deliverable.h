@@ -1,4 +1,7 @@
-/* Source file created: 2013-03-03
+#ifndef DELIVERABLE_H_
+#define DELIVERABLE_H_
+
+/* Header created: 2013-03-26
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -24,42 +27,25 @@
     NORWAY
 */
 
-#include "log/FileHandle.h"
+#include <string>
 
 namespace logsvc
 {
   namespace prot
   {
 
-    FileHandle::FileHandle(unsigned int handle) :
-      fh(handle)
+    class Deliverable
     {
-    }
+    public:
+      virtual ~Deliverable() = 0;
 
-    bool FileHandle::operator==(const FileHandle& other) const
-    {
-      return fh == other.fh;
-    }
+      virtual std::string get_header() const = 0;
+      virtual std::string get_payload() const = 0;
+    };
 
-    bool FileHandle::operator<(const FileHandle& other) const
-    {
-      return fh < other.fh;
-    }
-
-    std::string FileHandle::get_header() const
-    {
-      return std::string("logsfilh\x04\x00\x00\x00", 12);
-    }
-
-    std::string FileHandle::get_payload() const
-    {
-      std::string payload(4, '\x00');
-      payload[0] = fh & 0xFF;
-      payload[1] = (fh >> 8) & 0xFF;
-      payload[2] = (fh >> 16) & 0xFF;
-      payload[3] = (fh >> 24) & 0xFF;
-      return payload;
-    }
+    inline Deliverable::~Deliverable() {}
 
   } // namespace prot
 } // namespace logsvc
+
+#endif // DELIVERABLE_H_

@@ -80,6 +80,20 @@ BOOST_FIXTURE_TEST_CASE(FileHandle_ge_op, F)
   BOOST_CHECK(logsvc::prot::FileHandle(425) >= logsvc::prot::FileHandle(425));
 }
 
+BOOST_FIXTURE_TEST_CASE(get_header, F)
+{
+  logsvc::prot::FileHandle fh(0x4242);
+  BOOST_CHECK_EQUAL(std::string("logsfilh\x04\x00\x00\x00", 12), fh.get_header());
+}
+
+BOOST_FIXTURE_TEST_CASE(get_payload, F)
+{
+  logsvc::prot::FileHandle fh0(0x4242);
+  BOOST_CHECK_EQUAL(std::string("\x42\x42\x00\x00", 4), fh0.get_payload());
+  logsvc::prot::FileHandle fh1(0x4342);
+  BOOST_CHECK_EQUAL(std::string("\x42\x43\x00\x00", 4), fh1.get_payload());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
