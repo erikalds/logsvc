@@ -27,6 +27,7 @@
 #include <boost/test/unit_test.hpp>
 #include "log/FileHandle.h"
 #include "log/Message.h"
+#include "log/Receivable.h"
 #include "log/test/DummyExecutor.h"
 #include <egen/lookup.h>
 
@@ -100,6 +101,11 @@ BOOST_FIXTURE_TEST_CASE(act_negative, F)
   BOOST_REQUIRE(deliverable != nullptr);
   BOOST_CHECK_EQUAL(std::string("logsnack\4\0\0\0", 12), deliverable->get_header());
   BOOST_CHECK_EQUAL("fail", deliverable->get_payload());
+}
+
+BOOST_FIXTURE_TEST_CASE(is_a_Receivable, F)
+{
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&msg0) != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

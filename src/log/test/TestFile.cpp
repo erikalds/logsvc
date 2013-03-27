@@ -27,6 +27,7 @@
 #include "log/Deliverable.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
+#include "log/Receivable.h"
 #include "log/test/DummyExecutor.h"
 
 #define BOOST_TEST_MODULE "log test suite"
@@ -100,6 +101,12 @@ BOOST_AUTO_TEST_CASE(act_negative)
                     deliverable->get_header());
   BOOST_CHECK_EQUAL(std::string("failed to open file"),
                     deliverable->get_payload());
+}
+
+BOOST_AUTO_TEST_CASE(is_a_Receivable)
+{
+  logsvc::prot::File f;
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&f) != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

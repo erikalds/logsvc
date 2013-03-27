@@ -1,5 +1,5 @@
-#ifndef MESSAGE_H_
-#define MESSAGE_H_
+#ifndef RECEIVABLE_H_
+#define RECEIVABLE_H_
 
 /* Header created: 2013-03-27
 
@@ -27,9 +27,6 @@
     NORWAY
 */
 
-#include "log/FileHandle.h"
-#include "log/Receivable.h"
-
 #include <memory>
 #include <string>
 
@@ -41,24 +38,17 @@ namespace logsvc
     class Deliverable;
     class Executor;
 
-    class Message : public Receivable
+    class Receivable
     {
     public:
-      Message();
-      Message(const std::string& msg, const FileHandle& fh);
+      virtual ~Receivable() = 0;
 
-      std::string get_message() const;
-      FileHandle get_filehandle() const;
-
-      virtual void read_payload(const std::string& payload);
-      virtual std::unique_ptr<Deliverable> act(Executor& exec);
-
-    private:
-      std::string message;
-      FileHandle fh;
+      virtual void read_payload(const std::string& payload) = 0;
+      virtual std::unique_ptr<Deliverable> act(Executor& exec) = 0;
     };
 
-  } //   namespace prot
+    inline Receivable::~Receivable() {}
+  } // namespace prot
 } // namespace logsvc
 
-#endif // MESSAGE_H_
+#endif // RECEIVABLE_H_
