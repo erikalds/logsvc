@@ -28,6 +28,7 @@
 
 #include "log/Executor.h"
 #include "log/Acknowledged.h"
+#include "log/NotAcknowledged.h"
 #include <cassert>
 
 namespace logsvc
@@ -71,8 +72,15 @@ namespace logsvc
 
     std::unique_ptr<Deliverable> Message::act(Executor& exec)
     {
-      exec.write_message(fh, message);
-      return std::unique_ptr<Deliverable>(new Acknowledged);
+      try
+      {
+        exec.write_message(fh, message);
+        return std::unique_ptr<Deliverable>(new Acknowledged);
+      }
+      catch (const std::exception& e)
+      {
+        return std::unique_ptr<Deliverable>(new NotAcknowledged(e.what()));
+      }
     }
 
   } // namespace prot

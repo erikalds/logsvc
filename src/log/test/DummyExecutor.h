@@ -36,7 +36,10 @@ namespace mock
   class DummyExecutor : public logsvc::prot::Executor
   {
   public:
-    DummyExecutor() : fh_counter(0), open_file_fails(false), error_string("error") {}
+    DummyExecutor() :
+      fh_counter(0), open_file_fails(false), error_string("error"), messages(),
+      write_message_fails(false)
+    {}
 
     virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& filename)
     {
@@ -50,6 +53,8 @@ namespace mock
     virtual void write_message(const logsvc::prot::FileHandle& fh,
                                const std::string& message)
     {
+      if (write_message_fails)
+        throw std::runtime_error(error_string);
       messages[fh] += message;
     }
 
@@ -59,6 +64,7 @@ namespace mock
     std::string error_string;
 
     std::map<logsvc::prot::FileHandle, std::string> messages;
+    bool write_message_fails;
   };
 
 } // namespace mock

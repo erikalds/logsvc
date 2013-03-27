@@ -86,6 +86,22 @@ BOOST_FIXTURE_TEST_CASE(act_positive, F)
   BOOST_CHECK_EQUAL(std::string("logsackn\0\0\0\0", 12), deliverable->get_header());
 }
 
+BOOST_FIXTURE_TEST_CASE(act_negative, F)
+{
+  mock::DummyExecutor exec;
+  exec.write_message_fails = true;
+  std::unique_ptr<logsvc::prot::Deliverable> deliverable = msg0.act(exec);
+  BOOST_REQUIRE(deliverable != nullptr);
+  BOOST_CHECK_EQUAL(std::string("logsnack\5\0\0\0", 12), deliverable->get_header());
+  BOOST_CHECK_EQUAL("error", deliverable->get_payload());
+
+  exec.error_string = "fail";
+  deliverable = msg0.act(exec);
+  BOOST_REQUIRE(deliverable != nullptr);
+  BOOST_CHECK_EQUAL(std::string("logsnack\4\0\0\0", 12), deliverable->get_header());
+  BOOST_CHECK_EQUAL("fail", deliverable->get_payload());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
