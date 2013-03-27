@@ -78,6 +78,14 @@ BOOST_FIXTURE_TEST_CASE(act_writes_message_with_filehandle, F)
                     "another message");
 }
 
+BOOST_FIXTURE_TEST_CASE(act_positive, F)
+{
+  mock::DummyExecutor exec;
+  std::unique_ptr<logsvc::prot::Deliverable> deliverable = msg0.act(exec);
+  BOOST_REQUIRE(deliverable != nullptr);
+  BOOST_CHECK_EQUAL(std::string("logsackn\0\0\0\0", 12), deliverable->get_header());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

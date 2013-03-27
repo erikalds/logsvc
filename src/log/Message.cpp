@@ -27,6 +27,7 @@
 #include "log/Message.h"
 
 #include "log/Executor.h"
+#include "log/Acknowledged.h"
 #include <cassert>
 
 namespace logsvc
@@ -71,7 +72,7 @@ namespace logsvc
     std::unique_ptr<Deliverable> Message::act(Executor& exec)
     {
       exec.write_message(fh, message);
-      return std::unique_ptr<Deliverable>();
+      return std::unique_ptr<Deliverable>(new Acknowledged);
     }
 
   } // namespace prot
