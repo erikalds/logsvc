@@ -31,6 +31,12 @@ namespace logsvc
   namespace prot
   {
 
+    Message::Message() :
+      message("a message"),
+      fh(0x3456)
+    {
+    }
+
     Message::Message(const std::string& msg, const FileHandle& fh) :
       message(msg),
       fh(fh)
@@ -45,6 +51,17 @@ namespace logsvc
     FileHandle Message::get_filehandle() const
     {
       return fh;
+    }
+
+    void Message::read_payload(const std::string& payload)
+    {
+      unsigned int handle(0);
+      handle |= payload[0];
+      handle |= payload[1] << 8;
+      handle |= payload[2] << 16;
+      handle |= payload[3] << 24;
+      fh = FileHandle(handle);
+      message = payload.substr(4);
     }
 
   } // namespace prot

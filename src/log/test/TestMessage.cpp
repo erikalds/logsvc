@@ -32,24 +32,35 @@ BOOST_AUTO_TEST_SUITE(testMessage)
 
 struct F
 {
-  F() {}
+  F() : msg0("message", logsvc::prot::FileHandle(0x1234)),
+        msg1("another message", logsvc::prot::FileHandle(0x2345)) {}
   ~F() {}
+
+  logsvc::prot::Message msg0, msg1;
 };
 
 BOOST_FIXTURE_TEST_CASE(can_get_message, F)
 {
-  logsvc::prot::Message msg("message", logsvc::prot::FileHandle(0x1234));
-  BOOST_CHECK_EQUAL("message", msg.get_message());
-  msg = logsvc::prot::Message("another message", logsvc::prot::FileHandle(0x2345));
-  BOOST_CHECK_EQUAL("another message", msg.get_message());
+  BOOST_CHECK_EQUAL("message", msg0.get_message());
+  BOOST_CHECK_EQUAL("another message", msg1.get_message());
 }
 
 BOOST_FIXTURE_TEST_CASE(can_get_filehandle, F)
 {
-  logsvc::prot::Message msg("message", logsvc::prot::FileHandle(0x1234));
-  BOOST_CHECK(logsvc::prot::FileHandle(0x1234) == msg.get_filehandle());
-  msg = logsvc::prot::Message("another message", logsvc::prot::FileHandle(0x2345));
-  BOOST_CHECK(logsvc::prot::FileHandle(0x2345) == msg.get_filehandle());
+  BOOST_CHECK(logsvc::prot::FileHandle(0x1234) == msg0.get_filehandle());
+  BOOST_CHECK(logsvc::prot::FileHandle(0x2345) == msg1.get_filehandle());
+}
+
+BOOST_FIXTURE_TEST_CASE(can_read_payload, F)
+{
+  logsvc::prot::Message msg;
+  msg.read_payload(std::string("\x56\x34\0\0a message", 13));
+  BOOST_CHECK_EQUAL("a message", msg.get_message());
+  BOOST_CHECK(logsvc::prot::FileHandle(0x3456) == msg.get_filehandle());
+
+  msg.read_payload(std::string("\x67\x45\0\0stuff", 9));
+  BOOST_CHECK_EQUAL("stuff", msg.get_message());
+  BOOST_CHECK(logsvc::prot::FileHandle(0x4567) == msg.get_filehandle());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

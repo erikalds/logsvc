@@ -39,10 +39,13 @@ namespace logsvc
     class Message
     {
     public:
+      Message();
       Message(const std::string& msg, const FileHandle& fh);
 
       std::string get_message() const;
       FileHandle get_filehandle() const;
+
+      virtual void read_payload(const std::string& payload);
 
     private:
       std::string message;
