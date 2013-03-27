@@ -35,16 +35,21 @@
 class DummyExecutor : public logsvc::prot::Executor
 {
 public:
-  DummyExecutor() : fh_counter(0) {}
+  DummyExecutor() : fh_counter(0), open_file_fails(false), error_string("error") {}
 
   virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& filename)
   {
+    if (open_file_fails)
+      throw std::runtime_error(error_string);
+
     opened_file = filename;
     return logsvc::prot::FileHandle(++fh_counter);
   }
 
   boost::filesystem::path opened_file;
   unsigned int fh_counter;
+  bool open_file_fails;
+  std::string error_string;
 };
 
 BOOST_AUTO_TEST_SUITE(testFile)
@@ -94,6 +99,27 @@ BOOST_AUTO_TEST_CASE(act_positive)
                     second_deliverable->get_header());
   BOOST_CHECK_EQUAL(std::string("\x02\x00\x00\x00", 4),
                     second_deliverable->get_payload());
+}
+
+BOOST_AUTO_TEST_CASE(act_negative)
+{
+  logsvc::prot::File f(boost::filesystem::path("asdf.txt"));
+  DummyExecutor exec;
+  exec.open_file_fails = true;
+  std::unique_ptr<logsvc::prot::Deliverable> deliverable = f.act(exec);
+  BOOST_REQUIRE(deliverable != nullptr);
+  BOOST_CHECK_EQUAL(std::string("logsnack\x05\x00\x00\x00", 12),
+                    deliverable->get_header());
+  BOOST_CHECK_EQUAL(std::string("error", 5),
+                    deliverable->get_payload());
+
+  exec.error_string = "failed to open file";
+  deliverable = f.act(exec);
+  BOOST_REQUIRE(deliverable != nullptr);
+  BOOST_CHECK_EQUAL(std::string("logsnack\x13\x00\x00\x00", 12),
+                    deliverable->get_header());
+  BOOST_CHECK_EQUAL(std::string("failed to open file"),
+                    deliverable->get_payload());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -29,6 +29,7 @@
 #include "log/Deliverable.h"
 #include "log/Executor.h"
 #include "log/FileHandle.h"
+#include "log/NotAcknowledged.h"
 
 namespace logsvc
 {
@@ -60,8 +61,15 @@ namespace logsvc
 
     std::unique_ptr<Deliverable> File::act(Executor& exec)
     {
-      FileHandle fh = exec.open_file(get_name());
-      return std::unique_ptr<Deliverable>(new FileHandle(fh));
+      try
+      {
+        FileHandle fh = exec.open_file(get_name());
+        return std::unique_ptr<Deliverable>(new FileHandle(fh));
+      }
+      catch (const std::exception& e)
+      {
+        return std::unique_ptr<Deliverable>(new NotAcknowledged(e.what()));
+      }
     }
 
   } // namespace prot
