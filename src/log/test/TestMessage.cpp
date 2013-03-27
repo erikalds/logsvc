@@ -27,6 +27,8 @@
 #include <boost/test/unit_test.hpp>
 #include "log/FileHandle.h"
 #include "log/Message.h"
+#include "log/test/DummyExecutor.h"
+#include <egen/lookup.h>
 
 BOOST_AUTO_TEST_SUITE(testMessage)
 
@@ -61,6 +63,19 @@ BOOST_FIXTURE_TEST_CASE(can_read_payload, F)
   msg.read_payload(std::string("\x67\x45\0\0stuff", 9));
   BOOST_CHECK_EQUAL("stuff", msg.get_message());
   BOOST_CHECK(logsvc::prot::FileHandle(0x4567) == msg.get_filehandle());
+}
+
+BOOST_FIXTURE_TEST_CASE(act_writes_message_with_filehandle, F)
+{
+  mock::DummyExecutor exec;
+  msg0.act(exec);
+  BOOST_CHECK_EQUAL(egen::lookup(logsvc::prot::FileHandle(0x1234),
+                                 exec.messages, std::string("not written")),
+                    "message");
+  msg1.act(exec);
+  BOOST_CHECK_EQUAL(egen::lookup(logsvc::prot::FileHandle(0x2345),
+                                 exec.messages, std::string("not written")),
+                    "another message");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

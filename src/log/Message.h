@@ -27,14 +27,18 @@
     NORWAY
 */
 
-#include <string>
-
 #include "log/FileHandle.h"
+
+#include <memory>
+#include <string>
 
 namespace logsvc
 {
   namespace prot
   {
+
+    class Deliverable;
+    class Executor;
 
     class Message
     {
@@ -46,6 +50,7 @@ namespace logsvc
       FileHandle get_filehandle() const;
 
       virtual void read_payload(const std::string& payload);
+      virtual std::unique_ptr<Deliverable> act(Executor& exec);
 
     private:
       std::string message;

@@ -26,6 +26,9 @@
 
 #include "log/Message.h"
 
+#include "log/Executor.h"
+#include <cassert>
+
 namespace logsvc
 {
   namespace prot
@@ -55,6 +58,7 @@ namespace logsvc
 
     void Message::read_payload(const std::string& payload)
     {
+      assert(payload.size() >= 4);
       unsigned int handle(0);
       handle |= payload[0];
       handle |= payload[1] << 8;
@@ -62,6 +66,12 @@ namespace logsvc
       handle |= payload[3] << 24;
       fh = FileHandle(handle);
       message = payload.substr(4);
+    }
+
+    std::unique_ptr<Deliverable> Message::act(Executor& exec)
+    {
+      exec.write_message(fh, message);
+      return std::unique_ptr<Deliverable>();
     }
 
   } // namespace prot

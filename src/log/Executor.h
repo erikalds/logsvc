@@ -28,6 +28,7 @@
 */
 
 #include <boost/filesystem/path.hpp>
+#include <string>
 
 namespace logsvc
 {
@@ -42,6 +43,8 @@ namespace logsvc
       virtual ~Executor() = 0;
 
       virtual FileHandle open_file(const boost::filesystem::path& filename) = 0;
+      virtual void write_message(const FileHandle& fh,
+                                 const std::string& message) = 0;
     };
 
     inline Executor::~Executor() {}

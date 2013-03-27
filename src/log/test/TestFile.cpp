@@ -25,32 +25,12 @@
 */
 
 #include "log/Deliverable.h"
-#include "log/Executor.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
+#include "log/test/DummyExecutor.h"
 
 #define BOOST_TEST_MODULE "log test suite"
 #include <boost/test/unit_test.hpp>
-
-class DummyExecutor : public logsvc::prot::Executor
-{
-public:
-  DummyExecutor() : fh_counter(0), open_file_fails(false), error_string("error") {}
-
-  virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& filename)
-  {
-    if (open_file_fails)
-      throw std::runtime_error(error_string);
-
-    opened_file = filename;
-    return logsvc::prot::FileHandle(++fh_counter);
-  }
-
-  boost::filesystem::path opened_file;
-  unsigned int fh_counter;
-  bool open_file_fails;
-  std::string error_string;
-};
 
 BOOST_AUTO_TEST_SUITE(testFile)
 
@@ -78,7 +58,7 @@ BOOST_AUTO_TEST_CASE(read_payload)
 BOOST_AUTO_TEST_CASE(act_positive)
 {
   logsvc::prot::File f(boost::filesystem::path("asdf.txt"));
-  DummyExecutor exec;
+  mock::DummyExecutor exec;
   std::unique_ptr<logsvc::prot::Deliverable> first_deliverable = f.act(exec);
   BOOST_CHECK_EQUAL(boost::filesystem::path("asdf.txt"), exec.opened_file);
 
@@ -104,7 +84,7 @@ BOOST_AUTO_TEST_CASE(act_positive)
 BOOST_AUTO_TEST_CASE(act_negative)
 {
   logsvc::prot::File f(boost::filesystem::path("asdf.txt"));
-  DummyExecutor exec;
+  mock::DummyExecutor exec;
   exec.open_file_fails = true;
   std::unique_ptr<logsvc::prot::Deliverable> deliverable = f.act(exec);
   BOOST_REQUIRE(deliverable != nullptr);
