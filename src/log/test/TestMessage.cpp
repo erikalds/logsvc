@@ -40,8 +40,16 @@ BOOST_FIXTURE_TEST_CASE(can_get_message, F)
 {
   logsvc::prot::Message msg("message", logsvc::prot::FileHandle(0x1234));
   BOOST_CHECK_EQUAL("message", msg.get_message());
-  msg = logsvc::prot::Message("another message", logsvc::prot::FileHandle(0x1234));
+  msg = logsvc::prot::Message("another message", logsvc::prot::FileHandle(0x2345));
   BOOST_CHECK_EQUAL("another message", msg.get_message());
+}
+
+BOOST_FIXTURE_TEST_CASE(can_get_filehandle, F)
+{
+  logsvc::prot::Message msg("message", logsvc::prot::FileHandle(0x1234));
+  BOOST_CHECK(logsvc::prot::FileHandle(0x1234) == msg.get_filehandle());
+  msg = logsvc::prot::Message("another message", logsvc::prot::FileHandle(0x2345));
+  BOOST_CHECK(logsvc::prot::FileHandle(0x2345) == msg.get_filehandle());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -29,12 +29,12 @@
 
 #include <string>
 
+#include "log/FileHandle.h"
+
 namespace logsvc
 {
   namespace prot
   {
-
-    class FileHandle;
 
     class Message
     {
@@ -42,9 +42,11 @@ namespace logsvc
       Message(const std::string& msg, const FileHandle& fh);
 
       std::string get_message() const;
+      FileHandle get_filehandle() const;
 
     private:
       std::string message;
+      FileHandle fh;
     };
 
   } //   namespace prot

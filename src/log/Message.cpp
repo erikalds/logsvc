@@ -32,13 +32,19 @@ namespace logsvc
   {
 
     Message::Message(const std::string& msg, const FileHandle& fh) :
-      message(msg)
+      message(msg),
+      fh(fh)
     {
     }
 
     std::string Message::get_message() const
     {
       return message;
+    }
+
+    FileHandle Message::get_filehandle() const
+    {
+      return fh;
     }
 
   } // namespace prot
