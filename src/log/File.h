@@ -28,6 +28,7 @@
 */
 
 #include "log/AbstractReceivable.h"
+#include "log/Deliverable.h"
 #include <boost/filesystem/path.hpp>
 
 namespace logsvc
@@ -35,10 +36,10 @@ namespace logsvc
   namespace prot
   {
 
-    class Deliverable;
     class Executor;
 
-    class File : public AbstractReceivable
+    class File : public AbstractReceivable,
+                 public Deliverable
     {
     public:
       explicit File(std::size_t payload_length);
@@ -48,6 +49,9 @@ namespace logsvc
 
       virtual void read_payload(const std::string& payload);
       virtual std::unique_ptr<Deliverable> act(Executor& exec);
+
+      virtual std::string get_header() const;
+      virtual std::string get_payload() const;
 
     private:
       boost::filesystem::path filename;

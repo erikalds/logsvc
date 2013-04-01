@@ -74,5 +74,21 @@ namespace logsvc
       }
     }
 
+    std::string File::get_header() const
+    {
+      std::string header("logsopen");
+      std::size_t size = filename.string().size();
+      header.push_back(size & 0xff);
+      header.push_back((size >> 8) & 0xff);
+      header.push_back((size >> 16) & 0xff);
+      header.push_back((size >> 24) & 0xff);
+      return header;
+    }
+
+    std::string File::get_payload() const
+    {
+      return filename.string();
+    }
+
   } // namespace prot
 } // namespace logsvc

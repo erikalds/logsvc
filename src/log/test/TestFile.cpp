@@ -119,6 +119,28 @@ BOOST_AUTO_TEST_CASE(is_a_Receivable)
   BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&f) != nullptr);
 }
 
+BOOST_AUTO_TEST_CASE(is_a_Deliverable)
+{
+  logsvc::prot::File f(4);
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Deliverable*>(&f) != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(get_header)
+{
+  logsvc::prot::File f0("path.txt");
+  BOOST_CHECK_EQUAL(std::string("logsopen\x08\0\0\0", 12), f0.get_header());
+  logsvc::prot::File f1("path/to/file.txt");
+  BOOST_CHECK_EQUAL(std::string("logsopen\x10\0\0\0", 12), f1.get_header());
+}
+
+BOOST_AUTO_TEST_CASE(get_payload)
+{
+  logsvc::prot::File f0("path.txt");
+  BOOST_CHECK_EQUAL("path.txt", f0.get_payload());
+  logsvc::prot::File f1("path/to/file.txt");
+  BOOST_CHECK_EQUAL("path/to/file.txt", f1.get_payload());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
