@@ -51,8 +51,9 @@ public:
   void receive_bytes(const std::string& bytes)
   {
     BOOST_REQUIRE(current_listener != nullptr);
-    current_listener->receive_bytes(bytes);
-    current_listener = nullptr;
+    network::SocketListener* this_listener = nullptr;
+    std::swap(current_listener, this_listener);
+    this_listener->receive_bytes(bytes);
   }
 
   int async_read_call_count;
@@ -68,16 +69,41 @@ public:
                              const std::string& /*message*/) {}
 };
 
+class DummyReceivable : public logsvc::prot::Receivable
+{
+public:
+  DummyReceivable(const std::string& expected_payload) :
+    expected_payload(expected_payload), received_payload(false) {}
+  ~DummyReceivable()
+  {
+    if (!expected_payload.empty())
+      BOOST_CHECK(received_payload == true);
+  }
+
+  virtual void read_payload(const std::string& payload)
+  {
+    BOOST_CHECK_EQUAL(expected_payload, payload);
+    received_payload = true;
+  }
+  virtual std::unique_ptr<logsvc::prot::Deliverable> act(logsvc::prot::Executor& /*exec*/)
+  { return std::unique_ptr<logsvc::prot::Deliverable>(); }
+
+private:
+  std::string expected_payload;
+  bool received_payload;
+};
+
 class DummyReceivableFactory : public logsvc::prot::ReceivableFactory
 {
 public:
   std::unique_ptr<logsvc::prot::Receivable> create(const std::string& header)
   {
     received_bytes += header;
-    return std::unique_ptr<logsvc::prot::Receivable>();
+    return std::unique_ptr<logsvc::prot::Receivable>(new DummyReceivable(expected_payload));
   }
 
   std::string received_bytes;
+  std::string expected_payload;
 };
 
 struct F
@@ -110,6 +136,18 @@ BOOST_FIXTURE_TEST_CASE(receive_bytes_sends_bytes_to_ReceivableFactory, F)
   std::string header("logsmesg\x09\0\0\0", 12);
   socket.receive_bytes(header);
   BOOST_CHECK_EQUAL(header, drf.received_bytes);
+}
+
+BOOST_FIXTURE_TEST_CASE(received_bytes_after_header_sends_bytes_to_Receivable, F)
+{
+  logsvc::daemon::SocketSession ss(socket, session, drf);
+  ss.start_listen();
+  std::string header("logsmesg\x09\0\0\0", 12);
+  std::string payload("\x42\0\0\0Hello", 9);
+  drf.expected_payload = payload;
+
+  socket.receive_bytes(header);
+  socket.receive_bytes(payload);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

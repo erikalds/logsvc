@@ -38,7 +38,8 @@ namespace logsvc
     SocketSession::SocketSession(network::Socket& socket, Session& session,
                                  prot::ReceivableFactory& rf) :
       the_socket(socket),
-      the_receivable_factory(rf)
+      the_receivable_factory(rf),
+      current_receivable(nullptr)
     {
     }
 
@@ -49,7 +50,12 @@ namespace logsvc
 
     void SocketSession::receive_bytes(const std::string& bytes)
     {
-      the_receivable_factory.create(bytes);
+      if (!current_receivable)
+        current_receivable = the_receivable_factory.create(bytes);
+      else
+        current_receivable->read_payload(bytes);
+
+      the_socket.async_read(*this);
     }
 
   } // namespace daemon

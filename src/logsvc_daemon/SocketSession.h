@@ -28,6 +28,7 @@
 */
 
 #include "network/SocketListener.h"
+#include <memory>
 
 namespace network
 {
@@ -38,6 +39,7 @@ namespace logsvc
 {
   namespace prot
   {
+    class Receivable;
     class ReceivableFactory;
   } // namespace prot
 
@@ -60,6 +62,7 @@ namespace logsvc
     private:
       network::Socket& the_socket;
       prot::ReceivableFactory& the_receivable_factory;
+      std::unique_ptr<prot::Receivable> current_receivable;
     };
 
   } // namespace daemon
