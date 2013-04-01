@@ -64,6 +64,7 @@ namespace logsvc
       network::Socket& the_socket;
       prot::ReceivableFactory& the_receivable_factory;
       std::unique_ptr<prot::Receivable> current_receivable;
+      prot::Executor& executor;
     };
 
   } // namespace daemon

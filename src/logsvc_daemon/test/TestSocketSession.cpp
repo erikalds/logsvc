@@ -34,6 +34,7 @@
 #include "log/FileHandle.h"
 #include "log/Receivable.h"
 #include "log/ReceivableFactory.h"
+#include <egen/lookup.h>
 
 BOOST_AUTO_TEST_SUITE(testSocketSession)
 
@@ -77,8 +78,11 @@ public:
     BOOST_CHECK_EQUAL(expected_payload, payload);
     received_payload = true;
   }
-  virtual std::unique_ptr<logsvc::prot::Deliverable> act(logsvc::prot::Executor& /*exec*/)
-  { return std::unique_ptr<logsvc::prot::Deliverable>(); }
+  virtual std::unique_ptr<logsvc::prot::Deliverable> act(logsvc::prot::Executor& exec)
+  {
+    exec.write_message(logsvc::prot::FileHandle(0x42), "Hello");
+    return std::unique_ptr<logsvc::prot::Deliverable>();
+  }
 
 private:
   std::string expected_payload;
@@ -140,6 +144,22 @@ BOOST_FIXTURE_TEST_CASE(received_bytes_after_header_sends_bytes_to_Receivable, F
 
   socket.receive_bytes(header);
   socket.receive_bytes(payload);
+}
+
+BOOST_FIXTURE_TEST_CASE(after_bytes_sent_to_Receivable_it_is_allowed_to_act, F)
+{
+  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  ss.start_listen();
+  std::string header("logsmesg\x09\0\0\0", 12);
+  std::string payload("\x42\0\0\0Hello", 9);
+  drf.expected_payload = payload;
+
+  socket.receive_bytes(header);
+  socket.receive_bytes(payload);
+
+  BOOST_CHECK_EQUAL(egen::lookup(logsvc::prot::FileHandle(0x42), exec.messages,
+                                 std::string("file not written")),
+                    "Hello");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
