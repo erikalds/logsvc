@@ -32,6 +32,7 @@
 #include "logsvc_daemon/Session.h"
 #include "logsvc_daemon/SocketSession.h"
 #include "log/FileHandle.h"
+#include "log/NotAcknowledged.h"
 #include "log/Receivable.h"
 #include "log/ReceivableFactory.h"
 #include <egen/lookup.h>
@@ -41,13 +42,19 @@ BOOST_AUTO_TEST_SUITE(testSocketSession)
 class DummySocket : public network::Socket
 {
 public:
-  DummySocket() : async_read_call_count(0), current_listener(nullptr) {}
+  DummySocket() : async_read_call_count(0), current_listener(nullptr), written_bytes() {}
 
-  virtual void async_read(network::SocketListener& listener)
+  virtual void async_read(network::SocketListener& listener, std::size_t read_bytes)
   {
     BOOST_REQUIRE(current_listener == nullptr);
     current_listener = &listener;
     ++async_read_call_count;
+    async_read_byte_count = read_bytes;
+  }
+
+  virtual void async_write(const std::string& data)
+  {
+    written_bytes += data;
   }
 
   void receive_bytes(const std::string& bytes)
@@ -59,7 +66,9 @@ public:
   }
 
   int async_read_call_count;
+  std::size_t async_read_byte_count;
   network::SocketListener* current_listener;
+  std::string written_bytes;
 };
 
 class DummyReceivable : public logsvc::prot::Receivable
@@ -73,6 +82,11 @@ public:
       BOOST_CHECK(received_payload == true);
   }
 
+  virtual std::size_t get_payload_length() const
+  {
+    return expected_payload.size();
+  }
+
   virtual void read_payload(const std::string& payload)
   {
     BOOST_CHECK_EQUAL(expected_payload, payload);
@@ -81,7 +95,7 @@ public:
   virtual std::unique_ptr<logsvc::prot::Deliverable> act(logsvc::prot::Executor& exec)
   {
     exec.write_message(logsvc::prot::FileHandle(0x42), "Hello");
-    return std::unique_ptr<logsvc::prot::Deliverable>();
+    return std::unique_ptr<logsvc::prot::Deliverable>(new logsvc::prot::NotAcknowledged("fail"));
   }
 
 private:
@@ -123,6 +137,7 @@ BOOST_FIXTURE_TEST_CASE(createdSession_startsListeningToSocket, F)
   BOOST_REQUIRE_EQUAL(0, socket.async_read_call_count);
   ss.start_listen();
   BOOST_CHECK_EQUAL(1, socket.async_read_call_count);
+  BOOST_CHECK_EQUAL(12, socket.async_read_byte_count);
 }
 
 BOOST_FIXTURE_TEST_CASE(receive_bytes_sends_bytes_to_ReceivableFactory, F)
@@ -143,6 +158,8 @@ BOOST_FIXTURE_TEST_CASE(received_bytes_after_header_sends_bytes_to_Receivable, F
   drf.expected_payload = payload;
 
   socket.receive_bytes(header);
+  BOOST_CHECK_EQUAL(2, socket.async_read_call_count);
+  BOOST_CHECK_EQUAL(9, socket.async_read_byte_count);
   socket.receive_bytes(payload);
 }
 
@@ -160,6 +177,20 @@ BOOST_FIXTURE_TEST_CASE(after_bytes_sent_to_Receivable_it_is_allowed_to_act, F)
   BOOST_CHECK_EQUAL(egen::lookup(logsvc::prot::FileHandle(0x42), exec.messages,
                                  std::string("file not written")),
                     "Hello");
+}
+
+BOOST_FIXTURE_TEST_CASE(after_it_has_acted_the_Deliverable_is_written_to_the_Socket, F)
+{
+  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  ss.start_listen();
+  std::string header("logsmesg\x09\0\0\0", 12);
+  std::string payload("\x42\0\0\0Hello", 9);
+  drf.expected_payload = payload;
+
+  socket.receive_bytes(header);
+  socket.receive_bytes(payload);
+
+  BOOST_CHECK_EQUAL(socket.written_bytes, std::string("logsnack\4\0\0\0fail", 16));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

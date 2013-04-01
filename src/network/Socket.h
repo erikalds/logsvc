@@ -37,7 +37,8 @@ namespace network
   public:
     virtual ~Socket() = 0;
 
-    virtual void async_read(SocketListener& listener) = 0;
+    virtual void async_read(SocketListener& listener, std::size_t read_bytes) = 0;
+    virtual void async_write(const std::string& data) = 0;
   };
 
   inline Socket::~Socket() {}

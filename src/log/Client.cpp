@@ -36,19 +36,22 @@ namespace logsvc
   namespace prot
   {
 
-    Client::Client() :
+    Client::Client(std::size_t payload_length) :
+      AbstractReceivable(payload_length),
       its_name("unnamed"),
       its_ip(boost::asio::ip::address_v4(0x7f000001ul)) // 127.0.0.1
     {
     }
 
     Client::Client(const std::string& name) :
+      AbstractReceivable(2 + 4 + name.size()),
       its_name(name),
       its_ip(boost::asio::ip::address_v4(0x7f000001ul)) // 127.0.0.1
     {
     }
 
     Client::Client(const std::string& name, const boost::asio::ip::address& ip) :
+      AbstractReceivable(2 + (ip.is_v6() ? 16 : 4) + name.size()),
       its_name(name),
       its_ip(ip)
     {

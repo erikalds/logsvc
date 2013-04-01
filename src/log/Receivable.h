@@ -43,6 +43,7 @@ namespace logsvc
     public:
       virtual ~Receivable() = 0;
 
+      virtual std::size_t get_payload_length() const = 0;
       virtual void read_payload(const std::string& payload) = 0;
       virtual std::unique_ptr<Deliverable> act(Executor& exec) = 0;
     };

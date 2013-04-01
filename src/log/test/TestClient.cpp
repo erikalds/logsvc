@@ -75,9 +75,25 @@ BOOST_AUTO_TEST_CASE(is_a_Receivable)
   BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&client) != nullptr);
 }
 
+BOOST_AUTO_TEST_CASE(get_payload_length)
+{
+  logsvc::prot::Client client(42);
+  BOOST_CHECK_EQUAL(42, client.get_payload_length());
+
+  client = logsvc::prot::Client("a_name");
+  BOOST_CHECK_EQUAL(2 + 4 + 6, client.get_payload_length());
+
+  std::array<unsigned char, 16> bytes = {{ 0x10, 0x10, 0x20, 0x20, 0x30, 0x30,
+                                           0x40, 0x40, 0x50, 0x50, 0x60, 0x60,
+                                           0x70, 0x70, 0x80, 0x80 }};
+  boost::asio::ip::address_v6 ipv6_address(bytes);
+  client = logsvc::prot::Client("name", ipv6_address);
+  BOOST_CHECK_EQUAL(2 + 16 + 4, client.get_payload_length());
+}
+
 BOOST_AUTO_TEST_CASE(can_read_payload)
 {
-  logsvc::prot::Client client;
+  logsvc::prot::Client client(2 + 4 + 7);
   client.read_payload("v4\xc0\xa8\1\x2dthename");
   BOOST_CHECK_EQUAL("thename", client.get_name());
   BOOST_CHECK_EQUAL(boost::asio::ip::address_v4((192ul << 24)

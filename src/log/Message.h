@@ -28,7 +28,7 @@
 */
 
 #include "log/FileHandle.h"
-#include "log/Receivable.h"
+#include "log/AbstractReceivable.h"
 
 #include <memory>
 #include <string>
@@ -41,10 +41,10 @@ namespace logsvc
     class Deliverable;
     class Executor;
 
-    class Message : public Receivable
+    class Message : public AbstractReceivable
     {
     public:
-      Message();
+      Message(std::size_t payload_length);
       Message(const std::string& msg, const FileHandle& fh);
 
       std::string get_message() const;

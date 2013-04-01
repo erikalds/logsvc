@@ -27,7 +27,7 @@
     NORWAY
 */
 
-#include "log/Receivable.h"
+#include "log/AbstractReceivable.h"
 #include <boost/filesystem/path.hpp>
 
 namespace logsvc
@@ -38,10 +38,10 @@ namespace logsvc
     class Deliverable;
     class Executor;
 
-    class File : public Receivable
+    class File : public AbstractReceivable
     {
     public:
-      File();
+      explicit File(std::size_t payload_length);
       explicit File(const boost::filesystem::path& fname);
 
       boost::filesystem::path get_name() const;

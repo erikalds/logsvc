@@ -56,14 +56,15 @@ BOOST_FIXTURE_TEST_CASE(can_get_filehandle, F)
 
 BOOST_FIXTURE_TEST_CASE(can_read_payload, F)
 {
-  logsvc::prot::Message msg;
-  msg.read_payload(std::string("\x56\x34\0\0a message", 13));
-  BOOST_CHECK_EQUAL("a message", msg.get_message());
-  BOOST_CHECK(logsvc::prot::FileHandle(0x3456) == msg.get_filehandle());
+  logsvc::prot::Message msg0(13);
+  msg0.read_payload(std::string("\x56\x34\0\0a message", 13));
+  BOOST_CHECK_EQUAL("a message", msg0.get_message());
+  BOOST_CHECK(logsvc::prot::FileHandle(0x3456) == msg0.get_filehandle());
 
-  msg.read_payload(std::string("\x67\x45\0\0stuff", 9));
-  BOOST_CHECK_EQUAL("stuff", msg.get_message());
-  BOOST_CHECK(logsvc::prot::FileHandle(0x4567) == msg.get_filehandle());
+  logsvc::prot::Message msg1(9);
+  msg1.read_payload(std::string("\x67\x45\0\0stuff", 9));
+  BOOST_CHECK_EQUAL("stuff", msg1.get_message());
+  BOOST_CHECK(logsvc::prot::FileHandle(0x4567) == msg1.get_filehandle());
 }
 
 BOOST_FIXTURE_TEST_CASE(act_writes_message_with_filehandle, F)

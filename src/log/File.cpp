@@ -36,12 +36,14 @@ namespace logsvc
   namespace prot
   {
 
-    File::File() :
+    File::File(std::size_t payload_length) :
+      AbstractReceivable(payload_length),
       filename("invalid path")
     {
     }
 
     File::File(const boost::filesystem::path& fname) :
+      AbstractReceivable(fname.string().size()),
       filename(fname)
     {
     }

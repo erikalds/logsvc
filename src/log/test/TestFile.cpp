@@ -44,16 +44,26 @@ BOOST_AUTO_TEST_CASE(get_name_test)
   BOOST_CHECK_EQUAL(boost::filesystem::path("../path/asdf.txt"), f2.get_name());
 }
 
+BOOST_AUTO_TEST_CASE(get_payload_length)
+{
+  logsvc::prot::File f0(42);
+  BOOST_CHECK_EQUAL(42, f0.get_payload_length());
+
+  logsvc::prot::File f1("path.txt");
+  BOOST_CHECK_EQUAL(8, f1.get_payload_length());
+}
+
 BOOST_AUTO_TEST_CASE(read_payload)
 {
-  logsvc::prot::File f;
-  BOOST_CHECK_THROW(f.get_name(), std::logic_error);
+  logsvc::prot::File f0(8);
+  BOOST_CHECK_THROW(f0.get_name(), std::logic_error);
 
-  f.read_payload("asdf.txt");
-  BOOST_CHECK_EQUAL(boost::filesystem::path("asdf.txt"), f.get_name());
+  f0.read_payload("asdf.txt");
+  BOOST_CHECK_EQUAL(boost::filesystem::path("asdf.txt"), f0.get_name());
 
-  f.read_payload("../path/asdf.txt");
-  BOOST_CHECK_EQUAL(boost::filesystem::path("../path/asdf.txt"), f.get_name());
+  logsvc::prot::File f1(16);
+  f1.read_payload("../path/asdf.txt");
+  BOOST_CHECK_EQUAL(boost::filesystem::path("../path/asdf.txt"), f1.get_name());
 }
 
 BOOST_AUTO_TEST_CASE(act_positive)
@@ -105,7 +115,7 @@ BOOST_AUTO_TEST_CASE(act_negative)
 
 BOOST_AUTO_TEST_CASE(is_a_Receivable)
 {
-  logsvc::prot::File f;
+  logsvc::prot::File f(4);
   BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&f) != nullptr);
 }
 

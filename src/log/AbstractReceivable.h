@@ -1,7 +1,7 @@
-#ifndef CLIENT_H_
-#define CLIENT_H_
+#ifndef ABSTRACTRECEIVABLE_H_
+#define ABSTRACTRECEIVABLE_H_
 
-/* Header created: 2013-03-09
+/* Header created: 2013-04-01
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -27,37 +27,25 @@
     NORWAY
 */
 
-#include "log/AbstractReceivable.h"
-#include <boost/asio/ip/address.hpp>
-#include <string>
+#include "log/Receivable.h"
 
 namespace logsvc
 {
   namespace prot
   {
 
-    class Deliverable;
-    class Executor;
-
-    class Client : public AbstractReceivable
+    class AbstractReceivable : public Receivable
     {
     public:
-      explicit Client(std::size_t payload_length);
-      explicit Client(const std::string& name);
-      Client(const std::string& name, const boost::asio::ip::address& ip);
+      AbstractReceivable(std::size_t pll) : payload_length(pll) {}
 
-      std::string get_name() const;
-      boost::asio::ip::address get_ip_address() const;
-
-      virtual void read_payload(const std::string& payload);
-      virtual std::unique_ptr<Deliverable> act(Executor& exec);
+      virtual std::size_t get_payload_length() const { return payload_length; }
 
     private:
-      std::string its_name;
-      boost::asio::ip::address its_ip;
+      std::size_t payload_length;
     };
 
   } // namespace prot
 } // namespace logsvc
 
-#endif // CLIENT_H_
+#endif // ABSTRACTRECEIVABLE_H_

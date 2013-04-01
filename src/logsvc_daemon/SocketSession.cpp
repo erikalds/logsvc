@@ -35,6 +35,10 @@ namespace logsvc
 {
   namespace daemon
   {
+    namespace constants
+    {
+      const static std::size_t header_length = 12;
+    } // namespace constants
 
     SocketSession::SocketSession(network::Socket& socket, prot::Executor& exec,
                                  prot::ReceivableFactory& rf) :
@@ -47,20 +51,23 @@ namespace logsvc
 
     void SocketSession::start_listen()
     {
-      the_socket.async_read(*this);
+      the_socket.async_read(*this, constants::header_length);
     }
 
     void SocketSession::receive_bytes(const std::string& bytes)
     {
       if (!current_receivable)
+      {
         current_receivable = the_receivable_factory.create(bytes);
+        the_socket.async_read(*this, current_receivable->get_payload_length());
+      }
       else
       {
         current_receivable->read_payload(bytes);
-        current_receivable->act(executor);
+        std::unique_ptr<prot::Deliverable> deliverable =
+          current_receivable->act(executor);
+        the_socket.async_write(deliverable->get_header() + deliverable->get_payload());
       }
-
-      the_socket.async_read(*this);
     }
 
   } // namespace daemon

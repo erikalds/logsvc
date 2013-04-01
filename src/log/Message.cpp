@@ -36,13 +36,15 @@ namespace logsvc
   namespace prot
   {
 
-    Message::Message() :
+    Message::Message(std::size_t payload_length) :
+      AbstractReceivable(payload_length),
       message("a message"),
       fh(0x3456)
     {
     }
 
     Message::Message(const std::string& msg, const FileHandle& fh) :
+      AbstractReceivable(4 + msg.size()),
       message(msg),
       fh(fh)
     {
