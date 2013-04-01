@@ -193,6 +193,26 @@ BOOST_FIXTURE_TEST_CASE(after_it_has_acted_the_Deliverable_is_written_to_the_Soc
   BOOST_CHECK_EQUAL(socket.written_bytes, std::string("logsnack\4\0\0\0fail", 16));
 }
 
+BOOST_FIXTURE_TEST_CASE(can_read_several_protocol_objects, F)
+{
+  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  ss.start_listen();
+  std::string header0("logsmesg\x09\0\0\0", 12);
+  std::string payload0("\x42\0\0\0Hello", 9);
+  drf.expected_payload = payload0;
+
+  socket.receive_bytes(header0);
+  socket.receive_bytes(payload0);
+
+  std::string header1("logsopen\x10\0\0\0", 12);
+  std::string payload1("path/to/file.txt");
+  drf.expected_payload = payload1;
+
+  socket.receive_bytes(header1);
+  BOOST_CHECK_EQUAL(16, socket.async_read_byte_count);
+  socket.receive_bytes(payload1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

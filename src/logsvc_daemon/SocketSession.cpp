@@ -67,6 +67,9 @@ namespace logsvc
         std::unique_ptr<prot::Deliverable> deliverable =
           current_receivable->act(executor);
         the_socket.async_write(deliverable->get_header() + deliverable->get_payload());
+
+        current_receivable.reset();
+        the_socket.async_read(*this, constants::header_length);
       }
     }
 
