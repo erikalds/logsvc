@@ -156,6 +156,46 @@ BOOST_AUTO_TEST_CASE(act_negative)
   BOOST_CHECK_EQUAL("fail", deliverable->get_payload());
 }
 
+BOOST_AUTO_TEST_CASE(is_a_Deliverable)
+{
+  logsvc::prot::Client client("name");
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Deliverable*>(&client) != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(get_header)
+{
+  logsvc::prot::Client client_v4("name");
+  BOOST_CHECK_EQUAL(std::string("logsclnt\x0a\0\0\0", 12), client_v4.get_header());
+
+  std::array<unsigned char, 16> bytes = {{ 0x10, 0x10, 0x20, 0x20, 0x30, 0x30,
+                                           0x40, 0x40, 0x50, 0x50, 0x60, 0x60,
+                                           0x70, 0x70, 0x80, 0x80 }};
+  boost::asio::ip::address_v6 addrv6(bytes);
+  logsvc::prot::Client client_v6("the_name", addrv6);
+  BOOST_CHECK_EQUAL(std::string("logsclnt\x1a\0\0\0", 12), client_v6.get_header());
+}
+
+BOOST_AUTO_TEST_CASE(get_payload)
+{
+  logsvc::prot::Client client_v4("name");
+  BOOST_CHECK_EQUAL(std::string("v4\x7f\0\0\1name", 10), client_v4.get_payload());
+  client_v4 = logsvc::prot::Client("the_name", boost::asio::ip::address_v4((42u << 24) + (24u << 16) + (33u << 8) + 10));
+  BOOST_CHECK_EQUAL(std::string("v4\x2a\x18\x21\x0athe_name", 14), client_v4.get_payload());
+
+  std::array<unsigned char, 16> bytes0 = {{ 0x10, 0x10, 0x20, 0x20, 0x30, 0x30,
+                                            0x40, 0x40, 0x50, 0x50, 0x60, 0x60,
+                                            0x70, 0x70, 0x80, 0x80 }};
+  logsvc::prot::Client client_v6("name", boost::asio::ip::address_v6(bytes0));
+  BOOST_CHECK_EQUAL(std::string("v6\x10\x10\x20\x20\x30\x30\x40\x40\x50\x50\x60\x60\x70\x70\x80\x80name", 22), client_v6.get_payload());
+
+  std::array<unsigned char, 16> bytes1 = {{ 0x10, 0x11, 0x12, 0x13, 0x14, 0x15,
+                                            0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
+                                            0x1c, 0x1d, 0x1e, 0x1f }};
+  client_v6 = logsvc::prot::Client("the_name", boost::asio::ip::address_v6(bytes1));
+  BOOST_CHECK_EQUAL(std::string("v6\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1fthe_name", 26), client_v6.get_payload());
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

@@ -26,6 +26,7 @@
 
 #include "log/Client.h"
 
+#include "log/create_header.h"
 #include "log/ClientHandle.h"
 #include "log/Deliverable.h"
 #include "log/Executor.h"
@@ -104,6 +105,32 @@ namespace logsvc
       {
         return std::unique_ptr<Deliverable>(new NotAcknowledged(e.what()));
       }
+    }
+
+    std::string Client::get_header() const
+    {
+      return create_header("clnt", 2 + (its_ip.is_v4() ? 4 : 16) + its_name.length());
+    }
+
+    std::string Client::get_payload() const
+    {
+      std::string payload;
+      if (its_ip.is_v4())
+      {
+        payload = "v4";
+        std::array<unsigned char, 4> bytes = its_ip.to_v4().to_bytes();
+        for (unsigned char byte : bytes)
+          payload.push_back(byte);
+      }
+      else if (its_ip.is_v6())
+      {
+        payload = "v6";
+        std::array<unsigned char, 16> bytes = its_ip.to_v6().to_bytes();
+        for (unsigned char byte : bytes)
+          payload.push_back(byte);
+      }
+      payload += its_name;
+      return payload;
     }
 
   } // namespace prot

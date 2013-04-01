@@ -27,6 +27,7 @@
     NORWAY
 */
 
+#include "log/Deliverable.h"
 #include "log/AbstractReceivable.h"
 #include <boost/asio/ip/address.hpp>
 #include <string>
@@ -36,10 +37,10 @@ namespace logsvc
   namespace prot
   {
 
-    class Deliverable;
     class Executor;
 
-    class Client : public AbstractReceivable
+    class Client : public AbstractReceivable,
+                   public Deliverable
     {
     public:
       explicit Client(std::size_t payload_length);
@@ -51,6 +52,9 @@ namespace logsvc
 
       virtual void read_payload(const std::string& payload);
       virtual std::unique_ptr<Deliverable> act(Executor& exec);
+
+      virtual std::string get_header() const;
+      virtual std::string get_payload() const;
 
     private:
       std::string its_name;
