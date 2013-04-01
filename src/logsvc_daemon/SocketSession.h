@@ -39,6 +39,7 @@ namespace logsvc
 {
   namespace prot
   {
+    class Executor;
     class Receivable;
     class ReceivableFactory;
   } // namespace prot
@@ -51,7 +52,7 @@ namespace logsvc
     class SocketSession : public network::SocketListener
     {
     public:
-      SocketSession(network::Socket& socket, Session& session,
+      SocketSession(network::Socket& socket, prot::Executor& exec,
                     prot::ReceivableFactory& rf);
 
       void start_listen();

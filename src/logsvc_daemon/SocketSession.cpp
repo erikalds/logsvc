@@ -35,7 +35,7 @@ namespace logsvc
   namespace daemon
   {
 
-    SocketSession::SocketSession(network::Socket& socket, Session& session,
+    SocketSession::SocketSession(network::Socket& socket, prot::Executor& exec,
                                  prot::ReceivableFactory& rf) :
       the_socket(socket),
       the_receivable_factory(rf),

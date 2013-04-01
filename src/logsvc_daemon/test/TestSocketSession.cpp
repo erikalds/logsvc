@@ -26,6 +26,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "log/test/DummyExecutor.h"
 #include "network/Socket.h"
 #include "network/SocketListener.h"
 #include "logsvc_daemon/Session.h"
@@ -58,15 +59,6 @@ public:
 
   int async_read_call_count;
   network::SocketListener* current_listener;
-};
-
-class DummySession : public logsvc::daemon::Session
-{
-public:
-  virtual logsvc::prot::FileHandle open_file(const logsvc::prot::File& /*f*/)
-  { return logsvc::prot::FileHandle(0); }
-  virtual void write_message(const logsvc::prot::FileHandle& /*fh*/,
-                             const std::string& /*message*/) {}
 };
 
 class DummyReceivable : public logsvc::prot::Receivable
@@ -108,22 +100,22 @@ public:
 
 struct F
 {
-  F() : socket(), session(), drf() {}
+  F() : socket(), exec(), drf() {}
   ~F() {}
 
   DummySocket socket;
-  DummySession session;
+  mock::DummyExecutor exec;
   DummyReceivableFactory drf;
 };
 
 BOOST_FIXTURE_TEST_CASE(canCreate, F)
 {
-  logsvc::daemon::SocketSession ss(socket, session, drf);
+  logsvc::daemon::SocketSession ss(socket, exec, drf);
 }
 
 BOOST_FIXTURE_TEST_CASE(createdSession_startsListeningToSocket, F)
 {
-  logsvc::daemon::SocketSession ss(socket, session, drf);
+  logsvc::daemon::SocketSession ss(socket, exec, drf);
   BOOST_REQUIRE_EQUAL(0, socket.async_read_call_count);
   ss.start_listen();
   BOOST_CHECK_EQUAL(1, socket.async_read_call_count);
@@ -131,7 +123,7 @@ BOOST_FIXTURE_TEST_CASE(createdSession_startsListeningToSocket, F)
 
 BOOST_FIXTURE_TEST_CASE(receive_bytes_sends_bytes_to_ReceivableFactory, F)
 {
-  logsvc::daemon::SocketSession ss(socket, session, drf);
+  logsvc::daemon::SocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   socket.receive_bytes(header);
@@ -140,7 +132,7 @@ BOOST_FIXTURE_TEST_CASE(receive_bytes_sends_bytes_to_ReceivableFactory, F)
 
 BOOST_FIXTURE_TEST_CASE(received_bytes_after_header_sends_bytes_to_Receivable, F)
 {
-  logsvc::daemon::SocketSession ss(socket, session, drf);
+  logsvc::daemon::SocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
