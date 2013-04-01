@@ -26,6 +26,7 @@
 
 #include "log/Message.h"
 
+#include "log/create_header.h"
 #include "log/Executor.h"
 #include "log/Acknowledged.h"
 #include "log/NotAcknowledged.h"
@@ -83,6 +84,16 @@ namespace logsvc
       {
         return std::unique_ptr<Deliverable>(new NotAcknowledged(e.what()));
       }
+    }
+
+    std::string Message::get_header() const
+    {
+      return create_header("mesg", 4 + message.size());
+    }
+
+    std::string Message::get_payload() const
+    {
+      return fh.get_payload() + message;
     }
 
   } // namespace prot

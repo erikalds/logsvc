@@ -27,8 +27,9 @@
     NORWAY
 */
 
-#include "log/FileHandle.h"
 #include "log/AbstractReceivable.h"
+#include "log/Deliverable.h"
+#include "log/FileHandle.h"
 
 #include <memory>
 #include <string>
@@ -38,10 +39,10 @@ namespace logsvc
   namespace prot
   {
 
-    class Deliverable;
     class Executor;
 
-    class Message : public AbstractReceivable
+    class Message : public AbstractReceivable,
+                    public Deliverable
     {
     public:
       Message(std::size_t payload_length);
@@ -52,6 +53,9 @@ namespace logsvc
 
       virtual void read_payload(const std::string& payload);
       virtual std::unique_ptr<Deliverable> act(Executor& exec);
+
+      virtual std::string get_header() const;
+      virtual std::string get_payload() const;
 
     private:
       std::string message;

@@ -109,6 +109,23 @@ BOOST_FIXTURE_TEST_CASE(is_a_Receivable, F)
   BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&msg0) != nullptr);
 }
 
+BOOST_FIXTURE_TEST_CASE(is_a_Deliverable, F)
+{
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Deliverable*>(&msg0) != nullptr);
+}
+
+BOOST_FIXTURE_TEST_CASE(get_header, F)
+{
+  BOOST_CHECK_EQUAL(std::string("logsmesg\x0b\0\0\0", 12), msg0.get_header());
+  BOOST_CHECK_EQUAL(std::string("logsmesg\x13\0\0\0", 12), msg1.get_header());
+}
+
+BOOST_FIXTURE_TEST_CASE(get_payload, F)
+{
+  BOOST_CHECK_EQUAL(std::string("\x34\x12\0\0message", 11), msg0.get_payload());
+  BOOST_CHECK_EQUAL(std::string("\x45\x23\0\0another message", 19), msg1.get_payload());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
