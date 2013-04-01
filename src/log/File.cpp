@@ -26,6 +26,7 @@
 
 #include "log/File.h"
 
+#include "log/create_header.h"
 #include "log/Deliverable.h"
 #include "log/Executor.h"
 #include "log/FileHandle.h"
@@ -76,13 +77,7 @@ namespace logsvc
 
     std::string File::get_header() const
     {
-      std::string header("logsopen");
-      std::size_t size = filename.string().size();
-      header.push_back(size & 0xff);
-      header.push_back((size >> 8) & 0xff);
-      header.push_back((size >> 16) & 0xff);
-      header.push_back((size >> 24) & 0xff);
-      return header;
+      return create_header("open", filename.string().size());
     }
 
     std::string File::get_payload() const

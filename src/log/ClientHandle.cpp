@@ -26,6 +26,8 @@
 
 #include "log/ClientHandle.h"
 
+#include "log/create_header.h"
+
 namespace logsvc
 {
   namespace prot
@@ -43,7 +45,7 @@ namespace logsvc
 
     std::string ClientHandle::get_header() const
     {
-      return std::string("logsclnh\4\0\0\0", 12);
+      return create_header("clnh", 4);
     }
 
     std::string ClientHandle::get_payload() const

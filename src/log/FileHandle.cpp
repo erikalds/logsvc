@@ -26,6 +26,8 @@
 
 #include "log/FileHandle.h"
 
+#include "log/create_header.h"
+
 namespace logsvc
 {
   namespace prot
@@ -48,7 +50,7 @@ namespace logsvc
 
     std::string FileHandle::get_header() const
     {
-      return std::string("logsfilh\x04\x00\x00\x00", 12);
+      return create_header("filh", 4);
     }
 
     std::string FileHandle::get_payload() const

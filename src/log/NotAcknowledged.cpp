@@ -26,6 +26,8 @@
 
 #include "log/NotAcknowledged.h"
 
+#include "log/create_header.h"
+
 namespace logsvc
 {
   namespace prot
@@ -43,12 +45,7 @@ namespace logsvc
 
     std::string NotAcknowledged::get_header() const
     {
-      std::string header("logsnack\x00\x00\x00\x00", 12);
-      header[8] = reason.length() & 0xff;
-      header[9] = (reason.length() >> 8) & 0xff;
-      header[10] = (reason.length() >> 16) & 0xff;
-      header[11] = (reason.length() >> 24)& 0xff;
-      return header;
+      return create_header("nack", reason.length());
     }
 
     std::string NotAcknowledged::get_payload() const

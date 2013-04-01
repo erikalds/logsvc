@@ -26,6 +26,8 @@
 
 #include "log/Acknowledged.h"
 
+#include "log/create_header.h"
+
 namespace logsvc
 {
   namespace prot
@@ -33,7 +35,7 @@ namespace logsvc
 
     std::string Acknowledged::get_header() const
     {
-      return std::string("logsackn\0\0\0\0", 12);
+      return create_header("ackn", 0);
     }
 
     std::string Acknowledged::get_payload() const
