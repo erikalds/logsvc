@@ -27,6 +27,8 @@
     NORWAY
 */
 
+#include "network/SocketListener.h"
+
 namespace network
 {
   class Socket;
@@ -34,20 +36,30 @@ namespace network
 
 namespace logsvc
 {
+  namespace prot
+  {
+    class ReceivableFactory;
+  } // namespace prot
+
   namespace daemon
   {
 
     class Session;
 
-    class SocketSession
+    class SocketSession : public network::SocketListener
     {
     public:
-      SocketSession(network::Socket& socket, Session& session);
+      SocketSession(network::Socket& socket, Session& session,
+                    prot::ReceivableFactory& rf);
 
       void start_listen();
 
     private:
+      virtual void receive_bytes(const std::string& bytes);
+
+    private:
       network::Socket& the_socket;
+      prot::ReceivableFactory& the_receivable_factory;
     };
 
   } // namespace daemon

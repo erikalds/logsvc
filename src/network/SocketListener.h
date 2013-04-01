@@ -1,7 +1,7 @@
-#ifndef SOCKET_H_
-#define SOCKET_H_
+#ifndef SOCKETLISTENER_H_
+#define SOCKETLISTENER_H_
 
-/* Header created: 2013-03-25
+/* Header created: 2013-04-01
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -27,21 +27,21 @@
     NORWAY
 */
 
+#include <string>
+
 namespace network
 {
 
-  class SocketListener;
-
-  class Socket
+  class SocketListener
   {
   public:
-    virtual ~Socket() = 0;
+    virtual ~SocketListener() = 0;
 
-    virtual void async_read(SocketListener& listener) = 0;
+    virtual void receive_bytes(const std::string& bytes) = 0;
   };
-
-  inline Socket::~Socket() {}
 
 } // namespace network
 
-#endif // SOCKET_H_
+inline network::SocketListener::~SocketListener() {}
+
+#endif // SOCKETLISTENER_H_

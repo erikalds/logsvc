@@ -1,7 +1,7 @@
-#ifndef SOCKET_H_
-#define SOCKET_H_
+#ifndef RECEIVABLEFACTORY_H_
+#define RECEIVABLEFACTORY_H_
 
-/* Header created: 2013-03-25
+/* Header created: 2013-04-01
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -27,21 +27,25 @@
     NORWAY
 */
 
-namespace network
+#include <memory>
+#include <string>
+
+namespace logsvc
 {
-
-  class SocketListener;
-
-  class Socket
+  namespace prot
   {
-  public:
-    virtual ~Socket() = 0;
+    class Receivable;
 
-    virtual void async_read(SocketListener& listener) = 0;
-  };
+    class ReceivableFactory
+    {
+    public:
+      virtual ~ReceivableFactory() = 0;
 
-  inline Socket::~Socket() {}
+      virtual std::unique_ptr<Receivable> create(const std::string& header) = 0;
+    };
+  } // namespace prot
+} // namespace logsvc
 
-} // namespace network
+inline logsvc::prot::ReceivableFactory::~ReceivableFactory() {}
 
-#endif // SOCKET_H_
+#endif // RECEIVABLEFACTORY_H_

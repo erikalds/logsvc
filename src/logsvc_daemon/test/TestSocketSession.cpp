@@ -27,52 +27,89 @@
 #include <boost/test/unit_test.hpp>
 
 #include "network/Socket.h"
+#include "network/SocketListener.h"
 #include "logsvc_daemon/Session.h"
 #include "logsvc_daemon/SocketSession.h"
 #include "log/FileHandle.h"
+#include "log/Receivable.h"
+#include "log/ReceivableFactory.h"
 
 BOOST_AUTO_TEST_SUITE(testSocketSession)
 
 class DummySocket : public network::Socket
 {
 public:
-  DummySocket() : async_read_call_count(0) {}
+  DummySocket() : async_read_call_count(0), current_listener(nullptr) {}
 
-  virtual void async_read() { ++async_read_call_count; }
+  virtual void async_read(network::SocketListener& listener)
+  {
+    BOOST_REQUIRE(current_listener == nullptr);
+    current_listener = &listener;
+    ++async_read_call_count;
+  }
+
+  void receive_bytes(const std::string& bytes)
+  {
+    BOOST_REQUIRE(current_listener != nullptr);
+    current_listener->receive_bytes(bytes);
+    current_listener = nullptr;
+  }
 
   int async_read_call_count;
+  network::SocketListener* current_listener;
 };
 
 class DummySession : public logsvc::daemon::Session
 {
 public:
-  virtual logsvc::prot::FileHandle open_file(const logsvc::prot::File& f)
+  virtual logsvc::prot::FileHandle open_file(const logsvc::prot::File& /*f*/)
   { return logsvc::prot::FileHandle(0); }
-  virtual void write_message(const logsvc::prot::FileHandle& fh,
-                             const std::string& message) {}
+  virtual void write_message(const logsvc::prot::FileHandle& /*fh*/,
+                             const std::string& /*message*/) {}
+};
+
+class DummyReceivableFactory : public logsvc::prot::ReceivableFactory
+{
+public:
+  std::unique_ptr<logsvc::prot::Receivable> create(const std::string& header)
+  {
+    received_bytes += header;
+    return std::unique_ptr<logsvc::prot::Receivable>();
+  }
+
+  std::string received_bytes;
 };
 
 struct F
 {
-  F() {}
+  F() : socket(), session(), drf() {}
   ~F() {}
+
+  DummySocket socket;
+  DummySession session;
+  DummyReceivableFactory drf;
 };
 
 BOOST_FIXTURE_TEST_CASE(canCreate, F)
 {
-  DummySocket socket;
-  DummySession session;
-  logsvc::daemon::SocketSession ss(socket, session);
+  logsvc::daemon::SocketSession ss(socket, session, drf);
 }
 
 BOOST_FIXTURE_TEST_CASE(createdSession_startsListeningToSocket, F)
 {
-  DummySocket socket;
-  DummySession session;
-  logsvc::daemon::SocketSession ss(socket, session);
+  logsvc::daemon::SocketSession ss(socket, session, drf);
   BOOST_REQUIRE_EQUAL(0, socket.async_read_call_count);
   ss.start_listen();
   BOOST_CHECK_EQUAL(1, socket.async_read_call_count);
+}
+
+BOOST_FIXTURE_TEST_CASE(receive_bytes_sends_bytes_to_ReceivableFactory, F)
+{
+  logsvc::daemon::SocketSession ss(socket, session, drf);
+  ss.start_listen();
+  std::string header("logsmesg\x09\0\0\0", 12);
+  socket.receive_bytes(header);
+  BOOST_CHECK_EQUAL(header, drf.received_bytes);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

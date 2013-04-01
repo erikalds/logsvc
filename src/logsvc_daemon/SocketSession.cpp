@@ -26,6 +26,8 @@
 
 #include "logsvc_daemon/SocketSession.h"
 
+#include "log/Receivable.h"
+#include "log/ReceivableFactory.h"
 #include "network/Socket.h"
 
 namespace logsvc
@@ -33,14 +35,21 @@ namespace logsvc
   namespace daemon
   {
 
-    SocketSession::SocketSession(network::Socket& socket, Session& session) :
-      the_socket(socket)
+    SocketSession::SocketSession(network::Socket& socket, Session& session,
+                                 prot::ReceivableFactory& rf) :
+      the_socket(socket),
+      the_receivable_factory(rf)
     {
     }
 
     void SocketSession::start_listen()
     {
-      the_socket.async_read();
+      the_socket.async_read(*this);
+    }
+
+    void SocketSession::receive_bytes(const std::string& bytes)
+    {
+      the_receivable_factory.create(bytes);
     }
 
   } // namespace daemon
