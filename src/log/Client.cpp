@@ -26,7 +26,10 @@
 
 #include "log/Client.h"
 
+#include "log/ClientHandle.h"
 #include "log/Deliverable.h"
+#include "log/Executor.h"
+#include "log/NotAcknowledged.h"
 
 namespace logsvc
 {
@@ -89,7 +92,15 @@ namespace logsvc
 
     std::unique_ptr<Deliverable> Client::act(Executor& exec)
     {
-      return std::unique_ptr<Deliverable>();
+      try
+      {
+        ClientHandle ch = exec.set_client_info(its_name, its_ip.to_string());
+        return std::unique_ptr<Deliverable>(new ClientHandle(ch));
+      }
+      catch (const std::exception& e)
+      {
+        return std::unique_ptr<Deliverable>(new NotAcknowledged(e.what()));
+      }
     }
 
   } // namespace prot

@@ -28,6 +28,8 @@
 */
 
 #include "log/Executor.h"
+#include "log/ClientHandle.h"
+#include "log/FileHandle.h"
 #include <map>
 
 namespace mock
@@ -38,7 +40,7 @@ namespace mock
   public:
     DummyExecutor() :
       fh_counter(0), open_file_fails(false), error_string("error"), messages(),
-      write_message_fails(false)
+      write_message_fails(false), error_on_set_client_info(false)
     {}
 
     virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& filename)
@@ -58,6 +60,17 @@ namespace mock
       messages[fh] += message;
     }
 
+    virtual logsvc::prot::ClientHandle
+    set_client_info(const std::string& name, const std::string& address)
+    {
+      if (error_on_set_client_info)
+        throw std::runtime_error(error_string);
+
+      client_name = name;
+      client_address = address;
+      return client_handle;
+    }
+
     boost::filesystem::path opened_file;
     unsigned int fh_counter;
     bool open_file_fails;
@@ -65,6 +78,11 @@ namespace mock
 
     std::map<logsvc::prot::FileHandle, std::string> messages;
     bool write_message_fails;
+
+    std::string client_name;
+    std::string client_address;
+    logsvc::prot::ClientHandle client_handle;
+    bool error_on_set_client_info;
   };
 
 } // namespace mock

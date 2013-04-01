@@ -35,6 +35,7 @@ namespace logsvc
   namespace prot
   {
 
+    class ClientHandle;
     class FileHandle;
 
     class Executor
@@ -45,6 +46,8 @@ namespace logsvc
       virtual FileHandle open_file(const boost::filesystem::path& filename) = 0;
       virtual void write_message(const FileHandle& fh,
                                  const std::string& message) = 0;
+      virtual ClientHandle set_client_info(const std::string& name,
+                                           const std::string& address) = 0;
     };
 
     inline Executor::~Executor() {}

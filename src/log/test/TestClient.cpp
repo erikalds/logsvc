@@ -25,6 +25,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include "log/test/DummyExecutor.h"
 #include "log/Client.h"
 #include "log/Receivable.h"
 #include <boost/asio/ip/address.hpp>
@@ -93,6 +94,50 @@ BOOST_AUTO_TEST_CASE(can_read_payload)
                                            0x70, 0x70, 0x80, 0x80 }};
   BOOST_CHECK_EQUAL(boost::asio::ip::address_v6(bytes),
                     client.get_ip_address());
+}
+
+BOOST_AUTO_TEST_CASE(act_sets_client_name_and_address)
+{
+  boost::asio::ip::address_v4 loopback((127 << 24) + 1ul);
+  logsvc::prot::Client client("name", loopback);
+  mock::DummyExecutor exec;
+  client.act(exec);
+  BOOST_CHECK_EQUAL(exec.client_name, "name");
+  BOOST_CHECK_EQUAL(exec.client_address, "127.0.0.1");
+
+  client = logsvc::prot::Client("another_name",
+                                boost::asio::ip::address_v4((127 << 24) + 2ul));
+  client.act(exec);
+  BOOST_CHECK_EQUAL(exec.client_name, "another_name");
+  BOOST_CHECK_EQUAL(exec.client_address, "127.0.0.2");
+}
+
+BOOST_AUTO_TEST_CASE(act_positive)
+{
+  logsvc::prot::Client client("name");
+  mock::DummyExecutor exec;
+  exec.client_handle = logsvc::prot::ClientHandle(0x42);
+  std::unique_ptr<logsvc::prot::Deliverable> deliverable = client.act(exec);
+  BOOST_REQUIRE(deliverable != nullptr);
+  BOOST_CHECK_EQUAL(std::string("logsclnh\4\0\0\0", 12), deliverable->get_header());
+  BOOST_CHECK_EQUAL(std::string("\x42\0\0\0", 4), deliverable->get_payload());
+}
+
+BOOST_AUTO_TEST_CASE(act_negative)
+{
+  logsvc::prot::Client client("name");
+  mock::DummyExecutor exec;
+  exec.error_on_set_client_info = true;
+  std::unique_ptr<logsvc::prot::Deliverable> deliverable = client.act(exec);
+  BOOST_REQUIRE(deliverable != nullptr);
+  BOOST_CHECK_EQUAL(std::string("logsnack\5\0\0\0", 12), deliverable->get_header());
+  BOOST_CHECK_EQUAL("error", deliverable->get_payload());
+
+  exec.error_string = "fail";
+  deliverable = client.act(exec);
+  BOOST_REQUIRE(deliverable != nullptr);
+  BOOST_CHECK_EQUAL(std::string("logsnack\4\0\0\0", 12), deliverable->get_header());
+  BOOST_CHECK_EQUAL("fail", deliverable->get_payload());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
