@@ -27,6 +27,7 @@
     NORWAY
 */
 
+#include "log/Receivable.h"
 #include <boost/asio/ip/address.hpp>
 #include <string>
 
@@ -35,14 +36,21 @@ namespace logsvc
   namespace prot
   {
 
-    class Client
+    class Deliverable;
+    class Executor;
+
+    class Client : public Receivable
     {
     public:
-      Client(const std::string& name);
+      Client();
+      explicit Client(const std::string& name);
       Client(const std::string& name, const boost::asio::ip::address& ip);
 
       std::string get_name() const;
       boost::asio::ip::address get_ip_address() const;
+
+      virtual void read_payload(const std::string& payload);
+      virtual std::unique_ptr<Deliverable> act(Executor& exec);
 
     private:
       std::string its_name;

@@ -26,6 +26,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "log/Client.h"
+#include "log/Receivable.h"
 #include <boost/asio/ip/address.hpp>
 
 BOOST_AUTO_TEST_SUITE(testClient)
@@ -65,6 +66,33 @@ BOOST_AUTO_TEST_CASE(uses_loopback_address_when_ip_not_set)
   boost::asio::ip::address_v4 loopback((127 << 24) + 1ul);
   logsvc::prot::Client client("name");
   BOOST_CHECK_EQUAL(loopback, client.get_ip_address());
+}
+
+BOOST_AUTO_TEST_CASE(is_a_Receivable)
+{
+  logsvc::prot::Client client("name");
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&client) != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(can_read_payload)
+{
+  logsvc::prot::Client client;
+  client.read_payload("v4\xc0\xa8\1\x2dthename");
+  BOOST_CHECK_EQUAL("thename", client.get_name());
+  BOOST_CHECK_EQUAL(boost::asio::ip::address_v4((192ul << 24)
+                                                + (168 << 16)
+                                                + (1 << 8)
+                                                + 45),
+                    client.get_ip_address());
+
+  client.read_payload("v6\x10\x10\x20\x20\x30\x30\x40\x40\x50\x50\x60\x60\x70\x70\x80\x80"
+                      "aname");
+  BOOST_CHECK_EQUAL("aname", client.get_name());
+  std::array<unsigned char, 16> bytes = {{ 0x10, 0x10, 0x20, 0x20, 0x30, 0x30,
+                                           0x40, 0x40, 0x50, 0x50, 0x60, 0x60,
+                                           0x70, 0x70, 0x80, 0x80 }};
+  BOOST_CHECK_EQUAL(boost::asio::ip::address_v6(bytes),
+                    client.get_ip_address());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

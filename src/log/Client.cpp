@@ -26,10 +26,18 @@
 
 #include "log/Client.h"
 
+#include "log/Deliverable.h"
+
 namespace logsvc
 {
   namespace prot
   {
+
+    Client::Client() :
+      its_name("unnamed"),
+      its_ip(boost::asio::ip::address_v4(0x7f000001ul)) // 127.0.0.1
+    {
+    }
 
     Client::Client(const std::string& name) :
       its_name(name),
@@ -51,6 +59,37 @@ namespace logsvc
     boost::asio::ip::address Client::get_ip_address() const
     {
       return its_ip;
+    }
+
+    void Client::read_payload(const std::string& payload)
+    {
+      assert(payload.size() > 2);
+      const std::string version = payload.substr(0, 2);
+      if (version == "v4")
+      {
+        assert(payload.size() > 6);
+        std::array<unsigned char, 4> bytes;
+        for (int i = 0; i < 4; ++i)
+          bytes[i] = payload[2 + i];
+
+        its_ip = boost::asio::ip::address_v4(bytes);
+        its_name = payload.substr(6);
+      }
+      else if (version == "v6")
+      {
+        assert(payload.size() > 18);
+        std::array<unsigned char, 16> bytes;
+        for (int i = 0; i < 16; ++i)
+          bytes[i] = payload[2 + i];
+
+        its_ip = boost::asio::ip::address_v6(bytes);
+        its_name = payload.substr(18);
+      }
+    }
+
+    std::unique_ptr<Deliverable> Client::act(Executor& exec)
+    {
+      return std::unique_ptr<Deliverable>();
     }
 
   } // namespace prot
