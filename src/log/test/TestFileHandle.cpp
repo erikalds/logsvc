@@ -97,13 +97,13 @@ BOOST_FIXTURE_TEST_CASE(get_payload, F)
 
 BOOST_FIXTURE_TEST_CASE(is_a_Receivable, F)
 {
-  logsvc::prot::FileHandle fh(1);
+  logsvc::prot::FileHandle fh;
   BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&fh) != nullptr);
 }
 
 BOOST_FIXTURE_TEST_CASE(read_payload, F)
 {
-  logsvc::prot::FileHandle fh(1);
+  logsvc::prot::FileHandle fh;
   fh.read_payload(std::string("\x42\x43\0\0", 4));
   BOOST_CHECK(logsvc::prot::FileHandle(0x4342) == fh);
   fh.read_payload(std::string("\x43\x42\0\0", 4));

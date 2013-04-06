@@ -39,6 +39,7 @@ namespace logsvc
                        public AbstractReceivable
     {
     public:
+      FileHandle();
       explicit FileHandle(unsigned int handle);
       FileHandle(const FileHandle&) = default;
       FileHandle& operator=(const FileHandle&) = default;

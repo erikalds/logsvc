@@ -34,6 +34,12 @@ namespace logsvc
   namespace prot
   {
 
+    FileHandle::FileHandle() :
+      AbstractReceivable(4),
+      fh(0)
+    {
+    }
+
     FileHandle::FileHandle(unsigned int handle) :
       AbstractReceivable(4),
       fh(handle)
