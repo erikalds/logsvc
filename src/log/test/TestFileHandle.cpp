@@ -25,6 +25,7 @@
 */
 
 #include "log/FileHandle.h"
+#include "log/Receivable.h"
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(testFileHandle)
@@ -92,6 +93,21 @@ BOOST_FIXTURE_TEST_CASE(get_payload, F)
   BOOST_CHECK_EQUAL(std::string("\x42\x42\x00\x00", 4), fh0.get_payload());
   logsvc::prot::FileHandle fh1(0x4342);
   BOOST_CHECK_EQUAL(std::string("\x42\x43\x00\x00", 4), fh1.get_payload());
+}
+
+BOOST_FIXTURE_TEST_CASE(is_a_Receivable, F)
+{
+  logsvc::prot::FileHandle fh(1);
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&fh) != nullptr);
+}
+
+BOOST_FIXTURE_TEST_CASE(read_payload, F)
+{
+  logsvc::prot::FileHandle fh(1);
+  fh.read_payload(std::string("\x42\x43\0\0", 4));
+  BOOST_CHECK(logsvc::prot::FileHandle(0x4342) == fh);
+  fh.read_payload(std::string("\x43\x42\0\0", 4));
+  BOOST_CHECK(logsvc::prot::FileHandle(0x4243) == fh);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -35,6 +35,7 @@ namespace logsvc
   {
 
     FileHandle::FileHandle(unsigned int handle) :
+      AbstractReceivable(4),
       fh(handle)
     {
     }
@@ -57,6 +58,16 @@ namespace logsvc
     std::string FileHandle::get_payload() const
     {
       return encode_32bit_int(fh);
+    }
+
+    void FileHandle::read_payload(const std::string& payload)
+    {
+      fh = decode_32bit_int(payload);;
+    }
+
+    std::unique_ptr<Deliverable> FileHandle:: act(Executor& exec)
+    {
+      return std::unique_ptr<Deliverable>();
     }
 
   } // namespace prot

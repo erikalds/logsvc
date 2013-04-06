@@ -28,13 +28,15 @@
 */
 
 #include "log/Deliverable.h"
+#include "log/AbstractReceivable.h"
 
 namespace logsvc
 {
   namespace prot
   {
 
-    class FileHandle : public Deliverable
+    class FileHandle : public Deliverable,
+                       public AbstractReceivable
     {
     public:
       explicit FileHandle(unsigned int handle);
@@ -46,6 +48,9 @@ namespace logsvc
 
       virtual std::string get_header() const;
       virtual std::string get_payload() const;
+
+      virtual void read_payload(const std::string& payload);
+      virtual std::unique_ptr<Deliverable> act(Executor& exec);
 
     private:
       unsigned int fh;
