@@ -29,6 +29,7 @@
 #include "log/int_codec.h"
 #include "log/Client.h"
 #include "log/File.h"
+#include "log/FileHandle.h"
 #include "log/Message.h"
 #include "log/Receivable.h"
 
@@ -44,6 +45,11 @@ namespace logsvc
         return std::unique_ptr<Receivable>(new File(payload_length));
       else if (header.substr(4, 4) == "mesg")
         return std::unique_ptr<Receivable>(new Message(payload_length));
+      else if (header.substr(4, 4) == "filh")
+      {
+        assert(payload_length == 4);
+        return std::unique_ptr<Receivable>(new FileHandle);
+      }
       else
         return std::unique_ptr<Receivable>(new Client(payload_length));
     }

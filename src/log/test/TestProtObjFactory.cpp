@@ -28,6 +28,7 @@
 
 #include "log/Client.h"
 #include "log/File.h"
+#include "log/FileHandle.h"
 #include "log/Message.h"
 #include "log/ProtObjFactory.h"
 #include "log/ReceivableFactory.h"
@@ -52,7 +53,7 @@ BOOST_FIXTURE_TEST_CASE(is_a_ReceivableFactory, F)
 // [ ] "clos" # close file, prot::FileHandle, return ackn, nack
 // [X] "clnt" # client description, prot::Client, return ackn, nack
 // [X] "mesg" # message to write to open log file, prot::Message, return ackn, nack
-// [ ] "filh" # Handle to open file, prot::FileHandle
+// [X] "filh" # Handle to open file, prot::FileHandle
 // [ ] "clnh" # Handle for client to present, prot::ClientHandle
 // [ ] "ackn" # Acknowledged, prot::Ack
 // [ ] "nack" # Not Acknowledged, prot::Nack
@@ -85,6 +86,14 @@ BOOST_FIXTURE_TEST_CASE(can_create_Message, F)
   BOOST_CHECK_EQUAL(28, receivable->get_payload_length());
 }
 
+BOOST_FIXTURE_TEST_CASE(can_create_FileHandle, F)
+{
+  std::unique_ptr<Receivable> receivable =
+    factory.create(std::string("logsfilh\x04\0\0\0", 12));
+  BOOST_REQUIRE(receivable != nullptr);
+  BOOST_CHECK(dynamic_cast<FileHandle*>(receivable.get()) != nullptr);
+  BOOST_CHECK_EQUAL(4, receivable->get_payload_length());
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
