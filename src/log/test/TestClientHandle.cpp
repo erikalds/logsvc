@@ -27,6 +27,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "log/ClientHandle.h"
+#include "log/Receivable.h"
 
 using namespace logsvc::prot;
 
@@ -72,6 +73,21 @@ BOOST_AUTO_TEST_CASE(get_payload)
 {
   BOOST_CHECK_EQUAL("\x42\x43\x44\x45", ClientHandle(0x45444342).get_payload());
   BOOST_CHECK_EQUAL(std::string("\x42\0\0\0", 4), ClientHandle(0x42).get_payload());
+}
+
+BOOST_AUTO_TEST_CASE(is_a_Receivable)
+{
+  ClientHandle ch;
+  BOOST_CHECK(dynamic_cast<Receivable*>(&ch) != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(read_payload)
+{
+  ClientHandle ch;
+  ch.read_payload("\x42\x43\x44\x45");
+  BOOST_CHECK(ClientHandle(0x45444342) == ch);
+  ch.read_payload(std::string("\x42\0\0\0", 4));
+  BOOST_CHECK(ClientHandle(0x42) == ch);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

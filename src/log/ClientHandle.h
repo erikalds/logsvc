@@ -28,12 +28,14 @@
 */
 
 #include "log/Deliverable.h"
+#include "log/AbstractReceivable.h"
 
 namespace logsvc
 {
   namespace prot
   {
-    class ClientHandle : public Deliverable
+    class ClientHandle : public Deliverable,
+                         public AbstractReceivable
     {
     public:
       ClientHandle();
@@ -44,6 +46,9 @@ namespace logsvc
 
       bool operator==(const ClientHandle& other) const;
       bool operator<(const ClientHandle& other) const;
+
+      virtual void read_payload(const std::string& payload);
+      virtual std::unique_ptr<Deliverable> act(Executor& exec);
 
     private:
       unsigned int ch;

@@ -35,11 +35,13 @@ namespace logsvc
   {
 
     ClientHandle::ClientHandle() :
+      AbstractReceivable(4),
       ch(0)
     {
     }
 
     ClientHandle::ClientHandle(unsigned int ch) :
+      AbstractReceivable(4),
       ch(ch)
     {
     }
@@ -64,5 +66,14 @@ namespace logsvc
       return ch < other.ch;
     }
 
+    void ClientHandle::read_payload(const std::string& payload)
+    {
+      ch = decode_32bit_int(payload);
+    }
+
+    std::unique_ptr<Deliverable> ClientHandle::act(Executor& exec)
+    {
+      return std::unique_ptr<Deliverable>();
+    }
   } // namespace prot
 } // namespace logsvc
