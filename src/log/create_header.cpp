@@ -25,25 +25,13 @@
 */
 
 #include "log/create_header.h"
+#include "log/int_codec.h"
 #include <stdexcept>
 
 namespace logsvc
 {
   namespace prot
   {
-    namespace
-    {
-
-      std::string encode_32bit_int(std::size_t integer)
-      {
-        std::string encoded;
-        for (int i = 0; i < 4; ++i)
-          encoded.push_back((integer >> (i * 8)) & 0xFF);
-
-        return encoded;
-      }
-
-    } // anonymous namespace
 
     std::string create_header(const std::string& type, std::size_t length)
     {
