@@ -27,6 +27,7 @@
 #include "log/ClientHandle.h"
 
 #include "log/create_header.h"
+#include "log/int_codec.h"
 
 namespace logsvc
 {
@@ -50,12 +51,7 @@ namespace logsvc
 
     std::string ClientHandle::get_payload() const
     {
-      std::string payload(4, '\0');
-      payload[0] = ch & 0xff;
-      payload[1] = (ch >> 8) & 0xff;
-      payload[2] = (ch >> 16) & 0xff;
-      payload[3] = (ch >> 24) & 0xff;
-      return payload;
+      return encode_32bit_int(ch);
     }
 
     bool ClientHandle::operator==(const ClientHandle& other) const
