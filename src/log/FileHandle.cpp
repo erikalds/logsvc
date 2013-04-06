@@ -27,6 +27,7 @@
 #include "log/FileHandle.h"
 
 #include "log/create_header.h"
+#include "log/int_codec.h"
 
 namespace logsvc
 {
@@ -55,12 +56,7 @@ namespace logsvc
 
     std::string FileHandle::get_payload() const
     {
-      std::string payload(4, '\x00');
-      payload[0] = fh & 0xFF;
-      payload[1] = (fh >> 8) & 0xFF;
-      payload[2] = (fh >> 16) & 0xFF;
-      payload[3] = (fh >> 24) & 0xFF;
-      return payload;
+      return encode_32bit_int(fh);
     }
 
   } // namespace prot
