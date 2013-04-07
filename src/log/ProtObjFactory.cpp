@@ -75,6 +75,9 @@ namespace logsvc
 
     std::unique_ptr<Receivable> ProtObjFactory::create(const std::string& header)
     {
+      if (header.size() != 12)
+        throw std::logic_error("Wrong number of bytes in header.");
+
       const std::string start_seq = header.substr(0, 4);
       if (start_seq != "logs")
         throw MalformedHeader("Malformed header format: Missing start sequence \"logs\".");

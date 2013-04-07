@@ -170,6 +170,16 @@ BOOST_FIXTURE_TEST_CASE(error_on_missing_logs_string_in_header, F)
                         });
 }
 
+BOOST_FIXTURE_TEST_CASE(logic_error_on_wrong_number_of_bytes_in_header, F)
+{
+  BOOST_CHECK_THROW(factory.create(std::string("logsackn\0\0\0", 11)),
+                    std::logic_error);
+  BOOST_CHECK_THROW(factory.create(std::string("logsackn\0\0\0\0\0", 13)),
+                    std::logic_error);
+  BOOST_CHECK_THROW(factory.create(std::string("ogsackn\0\0\0\0", 11)),
+                    std::logic_error);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
