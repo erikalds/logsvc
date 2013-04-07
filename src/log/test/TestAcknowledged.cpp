@@ -54,6 +54,11 @@ BOOST_FIXTURE_TEST_CASE(is_a_Receivable, F)
   BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&ack) != nullptr);
 }
 
+BOOST_FIXTURE_TEST_CASE(no_exception_on_read_payload, F)
+{
+  BOOST_CHECK_NO_THROW(ack.read_payload("adsf"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
