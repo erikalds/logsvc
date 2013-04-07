@@ -28,6 +28,7 @@
 */
 
 #include "log/ReceivableFactory.h"
+#include <map>
 
 namespace logsvc
 {
@@ -36,7 +37,12 @@ namespace logsvc
     class ProtObjFactory : public ReceivableFactory
     {
     public:
+      ProtObjFactory();
+
       std::unique_ptr<Receivable> create(const std::string& header);
+
+    private:
+      std::map<std::string, std::function<Receivable* (std::size_t)> > creators;
     };
   } // namespace prot
 } // namespace logsvc

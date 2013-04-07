@@ -36,40 +36,34 @@
 #include "log/NotAcknowledged.h"
 #include "log/Receivable.h"
 #include "log/UnknownProtocolObjectType.h"
+#include <egen/lookup.h>
 
 namespace logsvc
 {
   namespace prot
   {
 
+    ProtObjFactory::ProtObjFactory()
+    {
+      creators["open"] = [](std::size_t pl) { return new File(pl); };
+      creators["mesg"] = [](std::size_t pl) { return new Message(pl); };
+      creators["filh"] = [](std::size_t pl) { assert(pl == 4); return new FileHandle; };
+      creators["clnh"] = [](std::size_t pl) { assert(pl == 4); return new ClientHandle; };
+      creators["ackn"] = [](std::size_t pl) { assert(pl == 0); return new Acknowledged; };
+      creators["nack"] = [](std::size_t pl) { return new NotAcknowledged(pl); };
+      creators["clnt"] = [](std::size_t pl) { return new Client(pl); };
+    }
+
     std::unique_ptr<Receivable> ProtObjFactory::create(const std::string& header)
     {
-      std::size_t payload_length = decode_32bit_int(header.substr(8));
-      if (header.substr(4, 4) == "open")
-        return std::unique_ptr<Receivable>(new File(payload_length));
-      else if (header.substr(4, 4) == "mesg")
-        return std::unique_ptr<Receivable>(new Message(payload_length));
-      else if (header.substr(4, 4) == "filh")
-      {
-        assert(payload_length == 4);
-        return std::unique_ptr<Receivable>(new FileHandle);
-      }
-      else if (header.substr(4, 4) == "clnh")
-      {
-        assert(payload_length == 4);
-        return std::unique_ptr<Receivable>(new ClientHandle);
-      }
-      else if (header.substr(4, 4) == "ackn")
-      {
-        assert(payload_length == 0);
-        return std::unique_ptr<Receivable>(new Acknowledged);
-      }
-      else if (header.substr(4, 4) == "nack")
-        return std::unique_ptr<Receivable>(new NotAcknowledged(payload_length));
-      else if (header.substr(4, 4) == "clnt")
-        return std::unique_ptr<Receivable>(new Client(payload_length));
-      else
-        throw UnknownProtocolObjectType(header.substr(4, 4));
+      const std::string typespec = header.substr(4, 4);
+      auto create_fun = egen::lookup(typespec, creators,
+                                     std::function<Receivable*(std::size_t)>());
+      if (!create_fun)
+        throw UnknownProtocolObjectType(typespec);
+
+      const std::size_t payload_length = decode_32bit_int(header.substr(8));
+      return std::unique_ptr<Receivable>(create_fun(payload_length));
     }
 
   } // namespace prot
