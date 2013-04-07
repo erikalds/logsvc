@@ -44,7 +44,21 @@ struct F
 {
   F() : factory() {}
   ~F() {}
+
   ProtObjFactory factory;
+
+  template<typename ReceivableSubClass>
+  void can_create_(const std::string& type, std::size_t payload_length)
+  {
+    std::string encoded_pl("\0\0\0\0", 4);
+    for (int i = 0; i < 4; ++i)
+      encoded_pl[i] = static_cast<unsigned char>((payload_length >> (i * 8)) & 0xff);
+    std::unique_ptr<Receivable> receivable =
+      factory.create("logs" + type + encoded_pl);
+    BOOST_REQUIRE(receivable != nullptr);
+    BOOST_CHECK(dynamic_cast<ReceivableSubClass*>(receivable.get()) != nullptr);
+    BOOST_CHECK_EQUAL(payload_length, receivable->get_payload_length());
+  }
 };
 
 BOOST_FIXTURE_TEST_CASE(is_a_ReceivableFactory, F)
@@ -64,65 +78,37 @@ BOOST_FIXTURE_TEST_CASE(is_a_ReceivableFactory, F)
 
 BOOST_FIXTURE_TEST_CASE(can_create_File, F)
 {
-  std::unique_ptr<Receivable> receivable =
-    factory.create(std::string("logsopen\xa\0\0\0", 12));
-  BOOST_REQUIRE(receivable != nullptr);
-  BOOST_CHECK(dynamic_cast<File*>(receivable.get()) != nullptr);
-  BOOST_CHECK_EQUAL(10, receivable->get_payload_length());
+  can_create_<File>("open", 10);
 }
 
 BOOST_FIXTURE_TEST_CASE(can_create_Client, F)
 {
-  std::unique_ptr<Receivable> receivable =
-    factory.create(std::string("logsclnt\xb\0\0\0", 12));
-  BOOST_REQUIRE(receivable != nullptr);
-  BOOST_CHECK(dynamic_cast<Client*>(receivable.get()) != nullptr);
-  BOOST_CHECK_EQUAL(11, receivable->get_payload_length());
+  can_create_<Client>("clnt", 11);
 }
 
 BOOST_FIXTURE_TEST_CASE(can_create_Message, F)
 {
-  std::unique_ptr<Receivable> receivable =
-    factory.create(std::string("logsmesg\x1c\0\0\0", 12));
-  BOOST_REQUIRE(receivable != nullptr);
-  BOOST_CHECK(dynamic_cast<Message*>(receivable.get()) != nullptr);
-  BOOST_CHECK_EQUAL(28, receivable->get_payload_length());
+  can_create_<Message>("mesg", 28);
 }
 
 BOOST_FIXTURE_TEST_CASE(can_create_FileHandle, F)
 {
-  std::unique_ptr<Receivable> receivable =
-    factory.create(std::string("logsfilh\x04\0\0\0", 12));
-  BOOST_REQUIRE(receivable != nullptr);
-  BOOST_CHECK(dynamic_cast<FileHandle*>(receivable.get()) != nullptr);
-  BOOST_CHECK_EQUAL(4, receivable->get_payload_length());
+  can_create_<FileHandle>("filh", 4);
 }
 
 BOOST_FIXTURE_TEST_CASE(can_create_ClientHandle, F)
 {
-  std::unique_ptr<Receivable> receivable =
-    factory.create(std::string("logsclnh\x04\0\0\0", 12));
-  BOOST_REQUIRE(receivable != nullptr);
-  BOOST_CHECK(dynamic_cast<ClientHandle*>(receivable.get()) != nullptr);
-  BOOST_CHECK_EQUAL(4, receivable->get_payload_length());
+  can_create_<ClientHandle>("clnh", 4);
 }
 
 BOOST_FIXTURE_TEST_CASE(can_create_Acknowledged, F)
 {
-  std::unique_ptr<Receivable> receivable =
-    factory.create(std::string("logsackn\0\0\0\0", 12));
-  BOOST_REQUIRE(receivable != nullptr);
-  BOOST_CHECK(dynamic_cast<Acknowledged*>(receivable.get()) != nullptr);
-  BOOST_CHECK_EQUAL(0, receivable->get_payload_length());
+  can_create_<Acknowledged>("ackn", 0);
 }
 
 BOOST_FIXTURE_TEST_CASE(can_create_NotAcknowledged, F)
 {
-  std::unique_ptr<Receivable> receivable =
-    factory.create(std::string("logsnack\x2a\0\0\0", 12));
-  BOOST_REQUIRE(receivable != nullptr);
-  BOOST_CHECK(dynamic_cast<NotAcknowledged*>(receivable.get()) != nullptr);
-  BOOST_CHECK_EQUAL(42, receivable->get_payload_length());
+  can_create_<NotAcknowledged>("nack", 42);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
