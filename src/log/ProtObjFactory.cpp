@@ -75,6 +75,10 @@ namespace logsvc
 
     std::unique_ptr<Receivable> ProtObjFactory::create(const std::string& header)
     {
+      const std::string start_seq = header.substr(0, 4);
+      if (start_seq != "logs")
+        throw MalformedHeader("Malformed header format: Missing start sequence \"logs\".");
+
       const std::string typespec = header.substr(4, 4);
       auto create_fun = egen::lookup(typespec, creators,
                                      std::function<Receivable*(std::size_t)>());

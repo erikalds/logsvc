@@ -160,6 +160,16 @@ BOOST_FIXTURE_TEST_CASE(error_on_not_allowed_payload_length, F)
                         });
 }
 
+BOOST_FIXTURE_TEST_CASE(error_on_missing_logs_string_in_header, F)
+{
+  BOOST_CHECK_EXCEPTION(factory.create(std::string("asdfackn\0\0\0\0", 12)),
+                        MalformedHeader,
+                        [](const MalformedHeader& e)
+                        {
+                          return boost::regex_search(e.what(), boost::regex("[Mm]issing start sequence \"logs\"."));
+                        });
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
