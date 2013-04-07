@@ -35,6 +35,8 @@
 #include "log/NotAcknowledged.h"
 #include "log/ProtObjFactory.h"
 #include "log/ReceivableFactory.h"
+#include "log/UnknownProtocolObjectType.h"
+#include <boost/regex.hpp>
 
 using namespace logsvc::prot;
 
@@ -109,6 +111,18 @@ BOOST_FIXTURE_TEST_CASE(can_create_Acknowledged, F)
 BOOST_FIXTURE_TEST_CASE(can_create_NotAcknowledged, F)
 {
   can_create_<NotAcknowledged>("nack", 42);
+}
+
+BOOST_FIXTURE_TEST_CASE(error_on_unknown_type, F)
+{
+  BOOST_CHECK_EXCEPTION(factory.create(std::string("logsasdf\0\0\0\0", 12)),
+                        UnknownProtocolObjectType,
+                        [](const UnknownProtocolObjectType& e)
+                        {
+                          return boost::regex_search(e.what(),
+                                                     boost::regex("[Uu]nknown protocol object type"))
+                            && boost::regex_search(e.what(), boost::regex("\"asdf\""));
+                        });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

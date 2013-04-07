@@ -5,6 +5,7 @@ env = CoreEnvironment(DEBUG=1,
                       LIBS=[
         "boost_unit_test_framework",
         "boost_system",
+        "boost_regex",
         ])
 env['CPPDEFINES'] = { 'BOOST_TEST_DYN_LINK': None }
 cpp_files = env.Glob('*.cpp')

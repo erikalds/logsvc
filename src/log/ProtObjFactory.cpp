@@ -35,6 +35,7 @@
 #include "log/Message.h"
 #include "log/NotAcknowledged.h"
 #include "log/Receivable.h"
+#include "log/UnknownProtocolObjectType.h"
 
 namespace logsvc
 {
@@ -65,8 +66,10 @@ namespace logsvc
       }
       else if (header.substr(4, 4) == "nack")
         return std::unique_ptr<Receivable>(new NotAcknowledged(payload_length));
-      else
+      else if (header.substr(4, 4) == "clnt")
         return std::unique_ptr<Receivable>(new Client(payload_length));
+      else
+        throw UnknownProtocolObjectType(header.substr(4, 4));
     }
 
   } // namespace prot
