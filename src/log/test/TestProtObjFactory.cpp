@@ -31,6 +31,7 @@
 #include "log/ClientHandle.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
+#include "log/MalformedHeader.h"
 #include "log/Message.h"
 #include "log/NotAcknowledged.h"
 #include "log/ProtObjFactory.h"
@@ -122,6 +123,40 @@ BOOST_FIXTURE_TEST_CASE(error_on_unknown_type, F)
                           return boost::regex_search(e.what(),
                                                      boost::regex("[Uu]nknown protocol object type"))
                             && boost::regex_search(e.what(), boost::regex("\"asdf\""));
+                        });
+}
+
+BOOST_FIXTURE_TEST_CASE(error_on_not_allowed_payload_length, F)
+{
+  BOOST_CHECK_EXCEPTION(factory.create(std::string("logsackn\1\0\0\0", 12)),
+                        MalformedHeader,
+                        [](const MalformedHeader& e)
+                        {
+                          return boost::regex_search(e.what(),
+                                                     boost::regex("[Ii]ncorrect payload length"))
+                            && boost::regex_search(e.what(), boost::regex("command \"ackn\""))
+                            && boost::regex_search(e.what(), boost::regex("\\b1\\b"))
+                            && boost::regex_search(e.what(), boost::regex("\\b0\\b"));
+                        });
+  BOOST_CHECK_EXCEPTION(factory.create(std::string("logsfilh\1\0\0\0", 12)),
+                        MalformedHeader,
+                        [](const MalformedHeader& e)
+                        {
+                          return boost::regex_search(e.what(),
+                                                     boost::regex("[Ii]ncorrect payload length"))
+                            && boost::regex_search(e.what(), boost::regex("command \"filh\""))
+                            && boost::regex_search(e.what(), boost::regex("\\b1\\b"))
+                            && boost::regex_search(e.what(), boost::regex("\\b4\\b"));
+                        });
+  BOOST_CHECK_EXCEPTION(factory.create(std::string("logsclnh\2\0\0\0", 12)),
+                        MalformedHeader,
+                        [](const MalformedHeader& e)
+                        {
+                          return boost::regex_search(e.what(),
+                                                     boost::regex("[Ii]ncorrect payload length"))
+                            && boost::regex_search(e.what(), boost::regex("command \"clnh\""))
+                            && boost::regex_search(e.what(), boost::regex("\\b2\\b"))
+                            && boost::regex_search(e.what(), boost::regex("\\b4\\b"));
                         });
 }
 

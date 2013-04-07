@@ -32,6 +32,7 @@
 #include "log/ClientHandle.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
+#include "log/MalformedHeader.h"
 #include "log/Message.h"
 #include "log/NotAcknowledged.h"
 #include "log/Receivable.h"
@@ -42,14 +43,32 @@ namespace logsvc
 {
   namespace prot
   {
+    namespace
+    {
+
+      void check_payload_length(std::size_t actual, std::size_t expected, const std::string& cmd)
+      {
+        if (actual == expected)
+          return;
+
+        std::ostringstream ost;
+        ost << "Malformed header format: Incorrect payload length for command \""
+            << cmd << "\".  Expected " << expected << ", was " << actual << ".";
+        throw MalformedHeader(ost.str());
+      }
+
+    } // anonymous namespace
 
     ProtObjFactory::ProtObjFactory()
     {
       creators["open"] = [](std::size_t pl) { return new File(pl); };
       creators["mesg"] = [](std::size_t pl) { return new Message(pl); };
-      creators["filh"] = [](std::size_t pl) { assert(pl == 4); return new FileHandle; };
-      creators["clnh"] = [](std::size_t pl) { assert(pl == 4); return new ClientHandle; };
-      creators["ackn"] = [](std::size_t pl) { assert(pl == 0); return new Acknowledged; };
+      creators["filh"] = [](std::size_t pl) { check_payload_length(pl, 4, "filh");
+                                              return new FileHandle; };
+      creators["clnh"] = [](std::size_t pl) { check_payload_length(pl, 4, "clnh");
+                                              return new ClientHandle; };
+      creators["ackn"] = [](std::size_t pl) { check_payload_length(pl, 0, "ackn");
+                                              return new Acknowledged; };
       creators["nack"] = [](std::size_t pl) { return new NotAcknowledged(pl); };
       creators["clnt"] = [](std::size_t pl) { return new Client(pl); };
     }
