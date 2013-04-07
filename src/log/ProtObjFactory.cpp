@@ -33,6 +33,7 @@
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include "log/Message.h"
+#include "log/NotAcknowledged.h"
 #include "log/Receivable.h"
 
 namespace logsvc
@@ -62,6 +63,8 @@ namespace logsvc
         assert(payload_length == 0);
         return std::unique_ptr<Receivable>(new Acknowledged);
       }
+      else if (header.substr(4, 4) == "nack")
+        return std::unique_ptr<Receivable>(new NotAcknowledged(payload_length));
       else
         return std::unique_ptr<Receivable>(new Client(payload_length));
     }

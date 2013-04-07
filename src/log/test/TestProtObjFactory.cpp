@@ -32,6 +32,7 @@
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include "log/Message.h"
+#include "log/NotAcknowledged.h"
 #include "log/ProtObjFactory.h"
 #include "log/ReceivableFactory.h"
 
@@ -58,7 +59,7 @@ BOOST_FIXTURE_TEST_CASE(is_a_ReceivableFactory, F)
 // [X] "filh" # Handle to open file, prot::FileHandle
 // [X] "clnh" # Handle for client to present, prot::ClientHandle
 // [X] "ackn" # Acknowledged, prot::Ack
-// [ ] "nack" # Not Acknowledged, prot::Nack
+// [X] "nack" # Not Acknowledged, prot::Nack
 
 
 BOOST_FIXTURE_TEST_CASE(can_create_File, F)
@@ -113,6 +114,15 @@ BOOST_FIXTURE_TEST_CASE(can_create_Acknowledged, F)
   BOOST_REQUIRE(receivable != nullptr);
   BOOST_CHECK(dynamic_cast<Acknowledged*>(receivable.get()) != nullptr);
   BOOST_CHECK_EQUAL(0, receivable->get_payload_length());
+}
+
+BOOST_FIXTURE_TEST_CASE(can_create_NotAcknowledged, F)
+{
+  std::unique_ptr<Receivable> receivable =
+    factory.create(std::string("logsnack\x2a\0\0\0", 12));
+  BOOST_REQUIRE(receivable != nullptr);
+  BOOST_CHECK(dynamic_cast<NotAcknowledged*>(receivable.get()) != nullptr);
+  BOOST_CHECK_EQUAL(42, receivable->get_payload_length());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
