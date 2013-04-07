@@ -27,6 +27,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "log/Acknowledged.h"
+#include "log/Receivable.h"
 
 BOOST_AUTO_TEST_SUITE(testAcknowledged)
 
@@ -46,6 +47,11 @@ BOOST_FIXTURE_TEST_CASE(get_header, F)
 BOOST_FIXTURE_TEST_CASE(no_payload, F)
 {
   BOOST_CHECK(ack.get_payload().empty());
+}
+
+BOOST_FIXTURE_TEST_CASE(is_a_Receivable, F)
+{
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&ack) != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

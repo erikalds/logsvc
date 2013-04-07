@@ -27,6 +27,7 @@
     NORWAY
 */
 
+#include "log/AbstractReceivable.h"
 #include "log/Deliverable.h"
 
 namespace logsvc
@@ -34,11 +35,17 @@ namespace logsvc
   namespace prot
   {
 
-    class Acknowledged : public Deliverable
+    class Acknowledged : public Deliverable,
+                         public AbstractReceivable
     {
     public:
+      Acknowledged();
+
       virtual std::string get_header() const;
       virtual std::string get_payload() const;
+
+      virtual void read_payload(const std::string& payload);
+      virtual std::unique_ptr<Deliverable> act(Executor& exec);
     };
 
   } // namespace prot

@@ -33,6 +33,11 @@ namespace logsvc
   namespace prot
   {
 
+    Acknowledged::Acknowledged() :
+      AbstractReceivable(0)
+    {
+    }
+
     std::string Acknowledged::get_header() const
     {
       return create_header("ackn", 0);
@@ -43,5 +48,13 @@ namespace logsvc
       return std::string();
     }
 
+    void Acknowledged::read_payload(const std::string& payload)
+    {
+    }
+
+    std::unique_ptr<Deliverable> Acknowledged::act(Executor& exec)
+    {
+      return std::unique_ptr<Deliverable>();
+    }
   } // namespace prot
 } // namespace logsvc
