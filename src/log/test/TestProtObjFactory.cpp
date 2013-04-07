@@ -26,6 +26,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "log/Acknowledged.h"
 #include "log/Client.h"
 #include "log/ClientHandle.h"
 #include "log/File.h"
@@ -56,7 +57,7 @@ BOOST_FIXTURE_TEST_CASE(is_a_ReceivableFactory, F)
 // [X] "mesg" # message to write to open log file, prot::Message, return ackn, nack
 // [X] "filh" # Handle to open file, prot::FileHandle
 // [X] "clnh" # Handle for client to present, prot::ClientHandle
-// [ ] "ackn" # Acknowledged, prot::Ack
+// [X] "ackn" # Acknowledged, prot::Ack
 // [ ] "nack" # Not Acknowledged, prot::Nack
 
 
@@ -103,6 +104,15 @@ BOOST_FIXTURE_TEST_CASE(can_create_ClientHandle, F)
   BOOST_REQUIRE(receivable != nullptr);
   BOOST_CHECK(dynamic_cast<ClientHandle*>(receivable.get()) != nullptr);
   BOOST_CHECK_EQUAL(4, receivable->get_payload_length());
+}
+
+BOOST_FIXTURE_TEST_CASE(can_create_Acknowledged, F)
+{
+  std::unique_ptr<Receivable> receivable =
+    factory.create(std::string("logsackn\0\0\0\0", 12));
+  BOOST_REQUIRE(receivable != nullptr);
+  BOOST_CHECK(dynamic_cast<Acknowledged*>(receivable.get()) != nullptr);
+  BOOST_CHECK_EQUAL(0, receivable->get_payload_length());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

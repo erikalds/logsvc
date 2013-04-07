@@ -27,6 +27,7 @@
 #include "log/ProtObjFactory.h"
 
 #include "log/int_codec.h"
+#include "log/Acknowledged.h"
 #include "log/Client.h"
 #include "log/ClientHandle.h"
 #include "log/File.h"
@@ -55,6 +56,11 @@ namespace logsvc
       {
         assert(payload_length == 4);
         return std::unique_ptr<Receivable>(new ClientHandle);
+      }
+      else if (header.substr(4, 4) == "ackn")
+      {
+        assert(payload_length == 0);
+        return std::unique_ptr<Receivable>(new Acknowledged);
       }
       else
         return std::unique_ptr<Receivable>(new Client(payload_length));
