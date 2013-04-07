@@ -33,7 +33,14 @@ namespace logsvc
   namespace prot
   {
 
+    NotAcknowledged::NotAcknowledged(std::size_t payload_length) :
+      AbstractReceivable(payload_length),
+      reason()
+    {
+    }
+
     NotAcknowledged::NotAcknowledged(const std::string& reason) :
+      AbstractReceivable(reason.size()),
       reason(reason)
     {
     }
@@ -51,6 +58,16 @@ namespace logsvc
     std::string NotAcknowledged::get_payload() const
     {
       return reason;
+    }
+
+    void NotAcknowledged::read_payload(const std::string& payload)
+    {
+      reason = payload;
+    }
+
+    std::unique_ptr<Deliverable> NotAcknowledged::act(Executor& exec)
+    {
+      return std::unique_ptr<Deliverable>();
     }
 
   } // namespace prot

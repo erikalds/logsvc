@@ -25,6 +25,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include "log/Receivable.h"
 #include "log/NotAcknowledged.h"
 
 BOOST_AUTO_TEST_SUITE(testNotAcknowledged)
@@ -55,6 +56,26 @@ BOOST_FIXTURE_TEST_CASE(get_payload, F)
 {
   BOOST_CHECK_EQUAL("error", nack0.get_payload());
   BOOST_CHECK_EQUAL("fail", nack1.get_payload());
+}
+
+BOOST_FIXTURE_TEST_CASE(is_a_Receivable, F)
+{
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Receivable*>(&nack0) != nullptr);
+}
+
+BOOST_FIXTURE_TEST_CASE(can_read_payload, F)
+{
+  std::string payload("a message");
+  logsvc::prot::NotAcknowledged nack(payload.size());
+  BOOST_CHECK_EQUAL(payload.size(), nack.get_payload_length());
+  nack.read_payload(payload);
+  BOOST_CHECK_EQUAL(payload, nack.get_reason());
+
+  payload = "another message";
+  nack = logsvc::prot::NotAcknowledged(payload.size());
+  BOOST_CHECK_EQUAL(payload.size(), nack.get_payload_length());
+  nack.read_payload(payload);
+  BOOST_CHECK_EQUAL(payload, nack.get_reason());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

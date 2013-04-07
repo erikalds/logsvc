@@ -28,6 +28,7 @@
 */
 
 #include "log/Deliverable.h"
+#include "log/AbstractReceivable.h"
 #include <string>
 
 namespace logsvc
@@ -35,15 +36,20 @@ namespace logsvc
   namespace prot
   {
 
-    class NotAcknowledged : public Deliverable
+    class NotAcknowledged : public Deliverable,
+                            public AbstractReceivable
     {
     public:
+      explicit NotAcknowledged(std::size_t payload_length);
       explicit NotAcknowledged(const std::string& reason);
 
       std::string get_reason() const;
 
       virtual std::string get_header() const;
       virtual std::string get_payload() const;
+
+      virtual void read_payload(const std::string& payload);
+      virtual std::unique_ptr<Deliverable> act(Executor& exec);
 
     private:
       std::string reason;
