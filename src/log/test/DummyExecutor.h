@@ -40,7 +40,8 @@ namespace mock
   public:
     DummyExecutor() :
       fh_counter(0), open_file_fails(false), error_string("error"), messages(),
-      write_message_fails(false), error_on_set_client_info(false)
+      write_message_fails(false), error_on_set_client_info(false),
+      closed_file(0), close_file_fails(false)
     {}
 
     virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& filename)
@@ -50,6 +51,14 @@ namespace mock
 
       opened_file = filename;
       return logsvc::prot::FileHandle(++fh_counter);
+    }
+
+    virtual void close_file(const logsvc::prot::FileHandle& fh)
+    {
+      if (close_file_fails)
+        throw std::runtime_error(error_string);
+
+      closed_file = fh;
     }
 
     virtual void write_message(const logsvc::prot::FileHandle& fh,
@@ -83,6 +92,9 @@ namespace mock
     std::string client_address;
     logsvc::prot::ClientHandle client_handle;
     bool error_on_set_client_info;
+
+    logsvc::prot::FileHandle closed_file;
+    bool close_file_fails;
   };
 
 } // namespace mock

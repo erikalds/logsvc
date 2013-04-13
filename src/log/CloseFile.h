@@ -1,7 +1,7 @@
-#ifndef EXECUTOR_H_
-#define EXECUTOR_H_
+#ifndef CLOSEFILE_H_
+#define CLOSEFILE_H_
 
-/* Header created: 2013-03-26
+/* Header created: 2013-04-07
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -27,33 +27,35 @@
     NORWAY
 */
 
-#include <boost/filesystem/path.hpp>
 #include <string>
+#include "log/Deliverable.h"
+#include "log/FileHandle.h"
+#include "log/AbstractReceivable.h"
+
 
 namespace logsvc
 {
   namespace prot
   {
 
-    class ClientHandle;
-    class FileHandle;
-
-    class Executor
+    class CloseFile : public Deliverable,
+                      public AbstractReceivable
     {
     public:
-      virtual ~Executor() = 0;
+      CloseFile();
+      explicit CloseFile(const FileHandle& fh);
 
-      virtual FileHandle open_file(const boost::filesystem::path& filename) = 0;
-      virtual void close_file(const FileHandle& fh) = 0;
-      virtual void write_message(const FileHandle& fh,
-                                 const std::string& message) = 0;
-      virtual ClientHandle set_client_info(const std::string& name,
-                                           const std::string& address) = 0;
+      virtual std::string get_header() const;
+      virtual std::string get_payload() const;
+
+      virtual void read_payload(const std::string& payload);
+      virtual std::unique_ptr<Deliverable> act(Executor& exec);
+
+    private:
+      FileHandle file_handle;
     };
-
-    inline Executor::~Executor() {}
 
   } // namespace prot
 } // namespace logsvc
 
-#endif // EXECUTOR_H_
+#endif // CLOSEFILE_H_
