@@ -27,8 +27,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "log/test/DummyExecutor.h"
-#include "network/Socket.h"
-#include "network/SocketListener.h"
+#include "logsvc_daemon/test/DummySocket.h"
 #include "logsvc_daemon/Session.h"
 #include "logsvc_daemon/SocketSession.h"
 #include "log/FileHandle.h"
@@ -38,38 +37,6 @@
 #include <egen/lookup.h>
 
 BOOST_AUTO_TEST_SUITE(testSocketSession)
-
-class DummySocket : public network::Socket
-{
-public:
-  DummySocket() : async_read_call_count(0), current_listener(nullptr), written_bytes() {}
-
-  virtual void async_read(network::SocketListener& listener, std::size_t read_bytes)
-  {
-    BOOST_REQUIRE(current_listener == nullptr);
-    current_listener = &listener;
-    ++async_read_call_count;
-    async_read_byte_count = read_bytes;
-  }
-
-  virtual void async_write(const std::string& data)
-  {
-    written_bytes += data;
-  }
-
-  void receive_bytes(const std::string& bytes)
-  {
-    BOOST_REQUIRE(current_listener != nullptr);
-    network::SocketListener* this_listener = nullptr;
-    std::swap(current_listener, this_listener);
-    this_listener->receive_bytes(bytes);
-  }
-
-  int async_read_call_count;
-  std::size_t async_read_byte_count;
-  network::SocketListener* current_listener;
-  std::string written_bytes;
-};
 
 class DummyReceivable : public logsvc::prot::Receivable
 {
@@ -121,7 +88,7 @@ struct F
   F() : socket(), exec(), drf() {}
   ~F() {}
 
-  DummySocket socket;
+  mock::DummySocket socket;
   mock::DummyExecutor exec;
   DummyReceivableFactory drf;
 };
