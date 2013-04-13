@@ -30,6 +30,7 @@
 #include "log/Acknowledged.h"
 #include "log/Client.h"
 #include "log/ClientHandle.h"
+#include "log/CloseFile.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include "log/MalformedHeader.h"
@@ -65,6 +66,8 @@ namespace logsvc
       creators["mesg"] = [](std::size_t pl) { return new Message(pl); };
       creators["filh"] = [](std::size_t pl) { check_payload_length(pl, 4, "filh");
                                               return new FileHandle; };
+      creators["clos"] = [](std::size_t pl) { check_payload_length(pl, 4, "clos");
+                                              return new CloseFile; };
       creators["clnh"] = [](std::size_t pl) { check_payload_length(pl, 4, "clnh");
                                               return new ClientHandle; };
       creators["ackn"] = [](std::size_t pl) { check_payload_length(pl, 0, "ackn");

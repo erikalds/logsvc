@@ -29,6 +29,7 @@
 #include "log/Acknowledged.h"
 #include "log/Client.h"
 #include "log/ClientHandle.h"
+#include "log/CloseFile.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include "log/MalformedHeader.h"
@@ -112,6 +113,11 @@ BOOST_FIXTURE_TEST_CASE(can_create_Acknowledged, F)
 BOOST_FIXTURE_TEST_CASE(can_create_NotAcknowledged, F)
 {
   can_create_<NotAcknowledged>("nack", 42);
+}
+
+BOOST_FIXTURE_TEST_CASE(can_create_CloseFile, F)
+{
+  can_create_<CloseFile>("clos", 4);
 }
 
 BOOST_FIXTURE_TEST_CASE(error_on_unknown_type, F)
