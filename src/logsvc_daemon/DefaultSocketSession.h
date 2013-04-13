@@ -54,9 +54,9 @@ namespace logsvc
     public:
       DefaultSocketSession(network::Socket& socket, prot::Executor& exec,
                            prot::ReceivableFactory& rf);
-      ~DefaultSocketSession();
+      virtual ~DefaultSocketSession();
 
-      void start_listen();
+      virtual void start_listen();
 
     private:
       virtual void receive_bytes(const std::string& bytes);

@@ -39,7 +39,8 @@ namespace logsvc
     public:
       virtual ~SocketSessionFactory() = 0;
 
-      virtual std::unique_ptr<SocketSession> create_session() = 0;
+      virtual std::unique_ptr<SocketSession>
+      create_session(std::unique_ptr<network::Socket> socket) = 0;
     };
 
 

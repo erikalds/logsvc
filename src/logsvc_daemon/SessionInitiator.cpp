@@ -28,6 +28,7 @@
 
 #include "logsvc_daemon/SocketSessionFactory.h"
 #include "logsvc_daemon/SocketSession.h"
+#include "network/Socket.h"
 #include "network/SocketAcceptor.h"
 
 namespace logsvc
@@ -38,14 +39,17 @@ namespace logsvc
     SessionInitiator::SessionInitiator(SocketSessionFactory& factory,
                                        network::SocketAcceptor& acceptor) :
       acceptor(acceptor),
-      factory(factory)
+      factory(factory),
+      live_sessions()
     {
       acceptor.async_accept(*this);
     }
 
     void SessionInitiator::accept_requested(std::unique_ptr<network::Socket> socket)
     {
-      factory.create_session();
+      std::unique_ptr<SocketSession> session = factory.create_session(std::move(socket));
+      session->start_listen();
+      live_sessions.insert(std::move(session));
     }
 
   } // namespace daemon

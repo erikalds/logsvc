@@ -36,6 +36,8 @@ namespace logsvc
     {
     public:
       virtual ~SocketSession() = 0;
+
+      virtual void start_listen() = 0;
     };
 
   } // namespace daemon

@@ -37,24 +37,54 @@ using namespace logsvc::daemon;
 
 BOOST_AUTO_TEST_SUITE(testSessionInitiator)
 
+class DummySocketSession;
+
+class DummySocketDeleteListener
+{
+public:
+  virtual ~DummySocketDeleteListener() {}
+  virtual void deleting(DummySocketSession* session) = 0;
+};
+
 class DummySocketSession : public SocketSession
 {
 public:
+  DummySocketSession(DummySocketDeleteListener* listener) :
+    is_listening(false), delete_listener(listener) {}
+  ~DummySocketSession()
+  { delete_listener->deleting(this); }
 
+  virtual void start_listen() { is_listening = true; }
+
+  bool is_listening;
+  DummySocketDeleteListener* delete_listener;
 };
 
-class DummySocketSessionFactory : public SocketSessionFactory
+class DummySocketSessionFactory : public SocketSessionFactory,
+                                  public DummySocketDeleteListener
 {
 public:
-  DummySocketSessionFactory() : create_count(0) {}
+  DummySocketSessionFactory() : create_count(0), last_socket(), last_session(nullptr) {}
 
-  virtual std::unique_ptr<SocketSession> create_session()
+  virtual std::unique_ptr<SocketSession>
+  create_session(std::unique_ptr<network::Socket> socket)
   {
     ++create_count;
-    return std::unique_ptr<SocketSession>();
+    last_socket = std::move(socket);
+    std::unique_ptr<DummySocketSession> session(new DummySocketSession(this));
+    last_session = session.get();
+    return std::move(session);
+  }
+
+  virtual void deleting(DummySocketSession* session)
+  {
+    if (last_session == session)
+      last_session = nullptr;
   }
 
   int create_count;
+  std::unique_ptr<network::Socket> last_socket;
+  DummySocketSession* last_session;
 };
 
 class DummySocketAcceptor : public network::SocketAcceptor
@@ -71,11 +101,13 @@ public:
   {
     BOOST_REQUIRE(current_listener != nullptr);
     std::unique_ptr<network::Socket> dummysocket(new mock::DummySocket);
+    last_socket = dummysocket.get();
     current_listener->accept_requested(std::move(dummysocket));
     current_listener = nullptr;
   }
 
   network::SocketAcceptListener* current_listener;
+  network::Socket* last_socket;
 };
 
 struct F
@@ -91,6 +123,25 @@ BOOST_FIXTURE_TEST_CASE(creates_socket_session_on_request, F)
   SessionInitiator initiator(factory, acceptor);
   acceptor.request_accept();
   BOOST_CHECK_EQUAL(1, factory.create_count);
+}
+
+BOOST_FIXTURE_TEST_CASE(passes_on_socket, F)
+{
+  DummySocketSessionFactory factory;
+  DummySocketAcceptor acceptor;
+  SessionInitiator initiator(factory, acceptor);
+  acceptor.request_accept();
+  BOOST_CHECK_EQUAL(acceptor.last_socket, factory.last_socket.get());
+}
+
+BOOST_FIXTURE_TEST_CASE(calls_start_listen, F)
+{
+  DummySocketSessionFactory factory;
+  DummySocketAcceptor acceptor;
+  SessionInitiator initiator(factory, acceptor);
+  acceptor.request_accept();
+  BOOST_REQUIRE(factory.last_session != nullptr);
+  BOOST_CHECK(factory.last_session->is_listening);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

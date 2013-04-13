@@ -28,6 +28,7 @@
 */
 
 #include "network/SocketAcceptListener.h"
+#include <set>
 
 namespace network
 {
@@ -41,6 +42,7 @@ namespace logsvc
   namespace daemon
   {
 
+    class SocketSession;
     class SocketSessionFactory;
 
     class SessionInitiator : public network::SocketAcceptListener
@@ -54,6 +56,7 @@ namespace logsvc
 
       network::SocketAcceptor& acceptor;
       SocketSessionFactory& factory;
+      std::set<std::unique_ptr<SocketSession> > live_sessions;
     };
 
   } // namespace daemon
