@@ -50,6 +50,7 @@ namespace logsvc
       std::unique_ptr<SocketSession> session = factory.create_session(std::move(socket));
       session->start_listen();
       live_sessions.insert(std::move(session));
+      acceptor.async_accept(*this);
     }
 
   } // namespace daemon

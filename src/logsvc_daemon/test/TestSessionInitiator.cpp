@@ -64,7 +64,7 @@ class DummySocketSessionFactory : public SocketSessionFactory,
                                   public DummySocketDeleteListener
 {
 public:
-  DummySocketSessionFactory() : create_count(0), last_socket(), last_session(nullptr) {}
+  DummySocketSessionFactory() : create_count(0), live_count(0), last_socket(), last_session(nullptr) {}
 
   virtual std::unique_ptr<SocketSession>
   create_session(std::unique_ptr<network::Socket> socket)
@@ -72,6 +72,7 @@ public:
     ++create_count;
     last_socket = std::move(socket);
     std::unique_ptr<DummySocketSession> session(new DummySocketSession(this));
+    ++live_count;
     last_session = session.get();
     return std::move(session);
   }
@@ -80,9 +81,11 @@ public:
   {
     if (last_session == session)
       last_session = nullptr;
+    --live_count;
   }
 
   int create_count;
+  int live_count;
   std::unique_ptr<network::Socket> last_socket;
   DummySocketSession* last_session;
 };
@@ -102,8 +105,9 @@ public:
     BOOST_REQUIRE(current_listener != nullptr);
     std::unique_ptr<network::Socket> dummysocket(new mock::DummySocket);
     last_socket = dummysocket.get();
-    current_listener->accept_requested(std::move(dummysocket));
+    network::SocketAcceptListener* prev_listener = current_listener;
     current_listener = nullptr;
+    prev_listener->accept_requested(std::move(dummysocket));
   }
 
   network::SocketAcceptListener* current_listener;
@@ -142,6 +146,19 @@ BOOST_FIXTURE_TEST_CASE(calls_start_listen, F)
   acceptor.request_accept();
   BOOST_REQUIRE(factory.last_session != nullptr);
   BOOST_CHECK(factory.last_session->is_listening);
+}
+
+BOOST_FIXTURE_TEST_CASE(can_accept_many_sessions, F)
+{
+  DummySocketSessionFactory factory;
+  DummySocketAcceptor acceptor;
+  SessionInitiator initiator(factory, acceptor);
+  acceptor.request_accept();
+  acceptor.request_accept();
+  BOOST_CHECK_EQUAL(2, factory.create_count);
+  acceptor.request_accept();
+  BOOST_CHECK_EQUAL(3, factory.create_count);
+  BOOST_CHECK_EQUAL(3, factory.live_count);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
