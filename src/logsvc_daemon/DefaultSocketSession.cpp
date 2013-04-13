@@ -24,7 +24,7 @@
     NORWAY
 */
 
-#include "logsvc_daemon/SocketSession.h"
+#include "logsvc_daemon/DefaultSocketSession.h"
 
 #include "log/Deliverable.h"
 #include "log/Receivable.h"
@@ -40,8 +40,9 @@ namespace logsvc
       const static std::size_t header_length = 12;
     } // namespace constants
 
-    SocketSession::SocketSession(network::Socket& socket, prot::Executor& exec,
-                                 prot::ReceivableFactory& rf) :
+    DefaultSocketSession::DefaultSocketSession(network::Socket& socket,
+                                               prot::Executor& exec,
+                                               prot::ReceivableFactory& rf) :
       the_socket(socket),
       the_receivable_factory(rf),
       current_receivable(nullptr),
@@ -49,16 +50,16 @@ namespace logsvc
     {
     }
 
-    SocketSession::~SocketSession()
+    DefaultSocketSession::~DefaultSocketSession()
     {
     }
 
-    void SocketSession::start_listen()
+    void DefaultSocketSession::start_listen()
     {
       the_socket.async_read(*this, constants::header_length);
     }
 
-    void SocketSession::receive_bytes(const std::string& bytes)
+    void DefaultSocketSession::receive_bytes(const std::string& bytes)
     {
       if (!current_receivable)
       {

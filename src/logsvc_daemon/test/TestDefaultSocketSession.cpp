@@ -29,14 +29,14 @@
 #include "log/test/DummyExecutor.h"
 #include "logsvc_daemon/test/DummySocket.h"
 #include "logsvc_daemon/Session.h"
-#include "logsvc_daemon/SocketSession.h"
+#include "logsvc_daemon/DefaultSocketSession.h"
 #include "log/FileHandle.h"
 #include "log/NotAcknowledged.h"
 #include "log/Receivable.h"
 #include "log/ReceivableFactory.h"
 #include <egen/lookup.h>
 
-BOOST_AUTO_TEST_SUITE(testSocketSession)
+BOOST_AUTO_TEST_SUITE(testDefaultSocketSession)
 
 class DummyReceivable : public logsvc::prot::Receivable
 {
@@ -95,12 +95,12 @@ struct F
 
 BOOST_FIXTURE_TEST_CASE(canCreate, F)
 {
-  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
 }
 
 BOOST_FIXTURE_TEST_CASE(createdSession_startsListeningToSocket, F)
 {
-  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   BOOST_REQUIRE_EQUAL(0, socket.async_read_call_count);
   ss.start_listen();
   BOOST_CHECK_EQUAL(1, socket.async_read_call_count);
@@ -109,7 +109,7 @@ BOOST_FIXTURE_TEST_CASE(createdSession_startsListeningToSocket, F)
 
 BOOST_FIXTURE_TEST_CASE(receive_bytes_sends_bytes_to_ReceivableFactory, F)
 {
-  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   socket.receive_bytes(header);
@@ -118,7 +118,7 @@ BOOST_FIXTURE_TEST_CASE(receive_bytes_sends_bytes_to_ReceivableFactory, F)
 
 BOOST_FIXTURE_TEST_CASE(received_bytes_after_header_sends_bytes_to_Receivable, F)
 {
-  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
@@ -132,7 +132,7 @@ BOOST_FIXTURE_TEST_CASE(received_bytes_after_header_sends_bytes_to_Receivable, F
 
 BOOST_FIXTURE_TEST_CASE(after_bytes_sent_to_Receivable_it_is_allowed_to_act, F)
 {
-  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
@@ -148,7 +148,7 @@ BOOST_FIXTURE_TEST_CASE(after_bytes_sent_to_Receivable_it_is_allowed_to_act, F)
 
 BOOST_FIXTURE_TEST_CASE(after_it_has_acted_the_Deliverable_is_written_to_the_Socket, F)
 {
-  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
@@ -162,7 +162,7 @@ BOOST_FIXTURE_TEST_CASE(after_it_has_acted_the_Deliverable_is_written_to_the_Soc
 
 BOOST_FIXTURE_TEST_CASE(can_read_several_protocol_objects, F)
 {
-  logsvc::daemon::SocketSession ss(socket, exec, drf);
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header0("logsmesg\x09\0\0\0", 12);
   std::string payload0("\x42\0\0\0Hello", 9);

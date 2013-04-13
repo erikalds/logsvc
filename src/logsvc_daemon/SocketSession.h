@@ -1,7 +1,7 @@
-#ifndef DEFAULTSOCKETSESSION_H_
-#define DEFAULTSOCKETSESSION_H_
+#ifndef SOCKETSESSION_H_
+#define SOCKETSESSION_H_
 
-/* Header created: 2013-03-25
+/* Header created: 2013-04-13
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -27,48 +27,20 @@
     NORWAY
 */
 
-#include "network/SocketListener.h"
-#include <memory>
-
-namespace network
-{
-  class Socket;
-}
-
 namespace logsvc
 {
-  namespace prot
-  {
-    class Executor;
-    class Receivable;
-    class ReceivableFactory;
-  } // namespace prot
-
   namespace daemon
   {
 
-    class Session;
-
-    class DefaultSocketSession : public network::SocketListener
+    class SocketSession
     {
     public:
-      DefaultSocketSession(network::Socket& socket, prot::Executor& exec,
-                           prot::ReceivableFactory& rf);
-      ~DefaultSocketSession();
-
-      void start_listen();
-
-    private:
-      virtual void receive_bytes(const std::string& bytes);
-
-    private:
-      network::Socket& the_socket;
-      prot::ReceivableFactory& the_receivable_factory;
-      std::unique_ptr<prot::Receivable> current_receivable;
-      prot::Executor& executor;
+      virtual ~SocketSession() = 0;
     };
 
   } // namespace daemon
 } // namespace logsvc
 
-#endif // DEFAULTSOCKETSESSION_H_
+inline logsvc::daemon::SocketSession::~SocketSession() {}
+
+#endif // SOCKETSESSION_H_
