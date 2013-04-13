@@ -54,6 +54,7 @@ namespace logsvc
     public:
       SocketSession(network::Socket& socket, prot::Executor& exec,
                     prot::ReceivableFactory& rf);
+      ~SocketSession();
 
       void start_listen();
 

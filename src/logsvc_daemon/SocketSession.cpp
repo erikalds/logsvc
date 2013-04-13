@@ -49,6 +49,10 @@ namespace logsvc
     {
     }
 
+    SocketSession::~SocketSession()
+    {
+    }
+
     void SocketSession::start_listen()
     {
       the_socket.async_read(*this, constants::header_length);
