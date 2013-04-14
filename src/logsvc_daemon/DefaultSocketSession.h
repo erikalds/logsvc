@@ -27,8 +27,11 @@
     NORWAY
 */
 
+#include "logsvc_daemon/SocketSession.h"
 #include "network/SocketListener.h"
+#include "network/SocketStateListener.h"
 #include <memory>
+#include <set>
 
 namespace network
 {
@@ -49,7 +52,9 @@ namespace logsvc
 
     class Session;
 
-    class DefaultSocketSession : public network::SocketListener
+    class DefaultSocketSession : public SocketSession,
+                                 public network::SocketListener,
+                                 public network::SocketStateListener
     {
     public:
       DefaultSocketSession(network::Socket& socket, prot::Executor& exec,
@@ -58,14 +63,20 @@ namespace logsvc
 
       virtual void start_listen();
 
+      virtual void add_socket_session_listener(SocketSessionListener*);
+      virtual void remove_socket_session_listener(SocketSessionListener*);
+
     private:
       virtual void receive_bytes(const std::string& bytes);
+
+      virtual void connection_lost(network::Socket* socket);
 
     private:
       network::Socket& the_socket;
       prot::ReceivableFactory& the_receivable_factory;
       std::unique_ptr<prot::Receivable> current_receivable;
       prot::Executor& executor;
+      std::set<SocketSessionListener*> listeners;
     };
 
   } // namespace daemon

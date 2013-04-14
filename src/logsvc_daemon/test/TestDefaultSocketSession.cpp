@@ -29,6 +29,8 @@
 #include "log/test/DummyExecutor.h"
 #include "logsvc_daemon/test/DummySocket.h"
 #include "logsvc_daemon/Session.h"
+#include "logsvc_daemon/SocketSession.h"
+#include "logsvc_daemon/SocketSessionListener.h"
 #include "logsvc_daemon/DefaultSocketSession.h"
 #include "log/FileHandle.h"
 #include "log/NotAcknowledged.h"
@@ -81,6 +83,17 @@ public:
 
   std::string received_bytes;
   std::string expected_payload;
+};
+
+class MySocketSessionListener : public logsvc::daemon::SocketSessionListener
+{
+public:
+  MySocketSessionListener() : notification_count(0) {}
+
+  virtual void connection_lost(logsvc::daemon::SocketSession* session)
+  { BOOST_CHECK(session != nullptr); ++notification_count; }
+
+  int notification_count;
 };
 
 struct F
@@ -178,6 +191,31 @@ BOOST_FIXTURE_TEST_CASE(can_read_several_protocol_objects, F)
   socket.receive_bytes(header1);
   BOOST_CHECK_EQUAL(16, socket.async_read_byte_count);
   socket.receive_bytes(payload1);
+}
+
+BOOST_FIXTURE_TEST_CASE(is_a_SocketSession, F)
+{
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
+  BOOST_CHECK(dynamic_cast<logsvc::daemon::SocketSession*>(&ss) != nullptr);
+}
+
+BOOST_FIXTURE_TEST_CASE(is_notified_when_socket_connection_dropped, F)
+{
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
+  MySocketSessionListener listener;
+  ss.add_socket_session_listener(&listener);
+  socket.kill_connection();
+  BOOST_CHECK_EQUAL(1, listener.notification_count);
+}
+
+BOOST_FIXTURE_TEST_CASE(is_not_notified_when_socket_connection_dropped_and_unregistered, F)
+{
+  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
+  MySocketSessionListener listener;
+  ss.add_socket_session_listener(&listener);
+  ss.remove_socket_session_listener(&listener);
+  socket.kill_connection();
+  BOOST_CHECK_EQUAL(0, listener.notification_count);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

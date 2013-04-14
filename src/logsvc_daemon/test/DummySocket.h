@@ -29,6 +29,8 @@
 
 #include "network/Socket.h"
 #include "network/SocketListener.h"
+#include "network/SocketStateListener.h"
+#include <set>
 
 namespace mock
 {
@@ -59,10 +61,22 @@ namespace mock
       this_listener->receive_bytes(bytes);
     }
 
+    virtual void add_socket_state_listener(network::SocketStateListener* listener)
+    { listeners.insert(listener); }
+    virtual void remove_socket_state_listener(network::SocketStateListener* listener)
+    { listeners.insert(listener); }
+
+    void kill_connection()
+    {
+      for (network::SocketStateListener* listener : listeners)
+        listener->connection_lost(this);
+    }
+
     int async_read_call_count;
     std::size_t async_read_byte_count;
     network::SocketListener* current_listener;
     std::string written_bytes;
+    std::set<network::SocketStateListener*> listeners;
   };
 
 } // namespace mock

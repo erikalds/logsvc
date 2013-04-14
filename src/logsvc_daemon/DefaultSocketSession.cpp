@@ -26,6 +26,7 @@
 
 #include "logsvc_daemon/DefaultSocketSession.h"
 
+#include "logsvc_daemon/SocketSessionListener.h"
 #include "log/Deliverable.h"
 #include "log/Receivable.h"
 #include "log/ReceivableFactory.h"
@@ -48,6 +49,7 @@ namespace logsvc
       current_receivable(nullptr),
       executor(exec)
     {
+      the_socket.add_socket_state_listener(this);
     }
 
     DefaultSocketSession::~DefaultSocketSession()
@@ -57,6 +59,16 @@ namespace logsvc
     void DefaultSocketSession::start_listen()
     {
       the_socket.async_read(*this, constants::header_length);
+    }
+
+    void DefaultSocketSession::add_socket_session_listener(SocketSessionListener* l)
+    {
+      listeners.insert(l);
+    }
+
+    void DefaultSocketSession::remove_socket_session_listener(SocketSessionListener* l)
+    {
+      listeners.erase(l);
     }
 
     void DefaultSocketSession::receive_bytes(const std::string& bytes)
@@ -76,6 +88,12 @@ namespace logsvc
         current_receivable.reset();
         the_socket.async_read(*this, constants::header_length);
       }
+    }
+
+    void DefaultSocketSession::connection_lost(network::Socket* /*socket*/)
+    {
+      for (SocketSessionListener* listener : listeners)
+        listener->connection_lost(this);
     }
 
   } // namespace daemon

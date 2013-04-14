@@ -1,7 +1,7 @@
-#ifndef SOCKET_H_
-#define SOCKET_H_
+#ifndef SOCKETSTATELISTENER_H_
+#define SOCKETSTATELISTENER_H_
 
-/* Header created: 2013-03-25
+/* Header created: 2013-04-14
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -30,23 +30,18 @@
 namespace network
 {
 
-  class SocketListener;
-  class SocketStateListener;
+  class Socket;
 
-  class Socket
+  class SocketStateListener
   {
   public:
-    virtual ~Socket() = 0;
+    virtual ~SocketStateListener() = 0;
 
-    virtual void async_read(SocketListener& listener, std::size_t read_bytes) = 0;
-    virtual void async_write(const std::string& data) = 0;
-
-    virtual void add_socket_state_listener(SocketStateListener* listener) = 0;
-    virtual void remove_socket_state_listener(SocketStateListener* listener) = 0;
+    virtual void connection_lost(Socket* socket) = 0;
   };
-
-  inline Socket::~Socket() {}
 
 } // namespace network
 
-#endif // SOCKET_H_
+inline network::SocketStateListener::~SocketStateListener() {}
+
+#endif // SOCKETSTATELISTENER_H_
