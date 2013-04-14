@@ -29,6 +29,7 @@
 #include "logsvc_daemon/test/DummySocket.h"
 #include "logsvc_daemon/SessionInitiator.h"
 #include "logsvc_daemon/SocketSession.h"
+#include "logsvc_daemon/SocketSessionListener.h"
 #include "logsvc_daemon/SocketSessionFactory.h"
 #include "network/SocketAcceptor.h"
 #include "network/SocketAcceptListener.h"
@@ -55,9 +56,20 @@ public:
   { delete_listener->deleting(this); }
 
   virtual void start_listen() { is_listening = true; }
+  virtual void add_socket_session_listener(SocketSessionListener* listener)
+  { listeners.insert(listener); }
+  virtual void remove_socket_session_listener(SocketSessionListener* listener)
+  { listeners.erase(listener); }
+
+  void kill()
+  {
+    for (SocketSessionListener* listener : listeners)
+      listener->connection_lost(this);
+  }
 
   bool is_listening;
   DummySocketDeleteListener* delete_listener;
+  std::set<SocketSessionListener*> listeners;
 };
 
 class DummySocketSessionFactory : public SocketSessionFactory,
@@ -116,33 +128,28 @@ public:
 
 struct F
 {
-  F() {}
+  F() : factory(), acceptor(), initiator(factory, acceptor) {}
   ~F() {}
+
+  DummySocketSessionFactory factory;
+  DummySocketAcceptor acceptor;
+  SessionInitiator initiator;
 };
 
 BOOST_FIXTURE_TEST_CASE(creates_socket_session_on_request, F)
 {
-  DummySocketSessionFactory factory;
-  DummySocketAcceptor acceptor;
-  SessionInitiator initiator(factory, acceptor);
   acceptor.request_accept();
   BOOST_CHECK_EQUAL(1, factory.create_count);
 }
 
 BOOST_FIXTURE_TEST_CASE(passes_on_socket, F)
 {
-  DummySocketSessionFactory factory;
-  DummySocketAcceptor acceptor;
-  SessionInitiator initiator(factory, acceptor);
   acceptor.request_accept();
   BOOST_CHECK_EQUAL(acceptor.last_socket, factory.last_socket.get());
 }
 
 BOOST_FIXTURE_TEST_CASE(calls_start_listen, F)
 {
-  DummySocketSessionFactory factory;
-  DummySocketAcceptor acceptor;
-  SessionInitiator initiator(factory, acceptor);
   acceptor.request_accept();
   BOOST_REQUIRE(factory.last_session != nullptr);
   BOOST_CHECK(factory.last_session->is_listening);
@@ -150,15 +157,27 @@ BOOST_FIXTURE_TEST_CASE(calls_start_listen, F)
 
 BOOST_FIXTURE_TEST_CASE(can_accept_many_sessions, F)
 {
-  DummySocketSessionFactory factory;
-  DummySocketAcceptor acceptor;
-  SessionInitiator initiator(factory, acceptor);
   acceptor.request_accept();
   acceptor.request_accept();
   BOOST_CHECK_EQUAL(2, factory.create_count);
   acceptor.request_accept();
   BOOST_CHECK_EQUAL(3, factory.create_count);
   BOOST_CHECK_EQUAL(3, factory.live_count);
+}
+
+BOOST_FIXTURE_TEST_CASE(destroys_sessions_when_they_lose_their_connection, F)
+{
+  acceptor.request_accept();
+  DummySocketSession* first_session = factory.last_session;
+  acceptor.request_accept();
+  DummySocketSession* second_session = factory.last_session;
+
+  BOOST_CHECK_EQUAL(2, factory.live_count);
+  second_session->kill();
+  BOOST_CHECK_EQUAL(1, factory.live_count);
+  BOOST_CHECK(factory.last_session == nullptr);
+  first_session->kill();
+  BOOST_CHECK_EQUAL(0, factory.live_count);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

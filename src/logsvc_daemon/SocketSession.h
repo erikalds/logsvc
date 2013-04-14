@@ -32,12 +32,17 @@ namespace logsvc
   namespace daemon
   {
 
+    class SocketSessionListener;
+
     class SocketSession
     {
     public:
       virtual ~SocketSession() = 0;
 
       virtual void start_listen() = 0;
+
+      virtual void add_socket_session_listener(SocketSessionListener*) = 0;
+      virtual void remove_socket_session_listener(SocketSessionListener*) = 0;
     };
 
   } // namespace daemon

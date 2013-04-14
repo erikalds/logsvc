@@ -27,6 +27,7 @@
     NORWAY
 */
 
+#include "logsvc_daemon/SocketSessionListener.h"
 #include "network/SocketAcceptListener.h"
 #include <set>
 
@@ -45,7 +46,8 @@ namespace logsvc
     class SocketSession;
     class SocketSessionFactory;
 
-    class SessionInitiator : public network::SocketAcceptListener
+    class SessionInitiator : public network::SocketAcceptListener,
+                             public SocketSessionListener
     {
     public:
       SessionInitiator(SocketSessionFactory& factory,
@@ -53,6 +55,7 @@ namespace logsvc
 
     private:
       virtual void accept_requested(std::unique_ptr<network::Socket> socket);
+      virtual void connection_lost(SocketSession* session);
 
       network::SocketAcceptor& acceptor;
       SocketSessionFactory& factory;

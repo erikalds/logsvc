@@ -1,7 +1,7 @@
-#ifndef SOCKET_H_
-#define SOCKET_H_
+#ifndef SOCKETSESSIONLISTENER_H_
+#define SOCKETSESSIONLISTENER_H_
 
-/* Header created: 2013-03-25
+/* Header created: 2013-04-14
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -27,23 +27,24 @@
     NORWAY
 */
 
-namespace network
+namespace logsvc
 {
-
-  class SocketListener;
-  class SocketStateListener;
-
-  class Socket
+  namespace daemon
   {
-  public:
-    virtual ~Socket() = 0;
 
-    virtual void async_read(SocketListener& listener, std::size_t read_bytes) = 0;
-    virtual void async_write(const std::string& data) = 0;
-  };
+    class SocketSession;
 
-  inline Socket::~Socket() {}
+    class SocketSessionListener
+    {
+    public:
+      virtual ~SocketSessionListener() = 0;
 
-} // namespace network
+      virtual void connection_lost(SocketSession* session) = 0;
+    };
 
-#endif // SOCKET_H_
+  } // namespace daemon
+} // namespace logsvc
+
+inline logsvc::daemon::SocketSessionListener::~SocketSessionListener() {}
+
+#endif // SOCKETSESSIONLISTENER_H_

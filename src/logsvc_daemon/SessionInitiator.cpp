@@ -30,6 +30,7 @@
 #include "logsvc_daemon/SocketSession.h"
 #include "network/Socket.h"
 #include "network/SocketAcceptor.h"
+#include <algorithm>
 
 namespace logsvc
 {
@@ -49,8 +50,18 @@ namespace logsvc
     {
       std::unique_ptr<SocketSession> session = factory.create_session(std::move(socket));
       session->start_listen();
+      session->add_socket_session_listener(this);
       live_sessions.insert(std::move(session));
       acceptor.async_accept(*this);
+    }
+
+    void SessionInitiator::connection_lost(SocketSession* session)
+    {
+      auto iter = std::find_if(live_sessions.begin(), live_sessions.end(),
+                               [&](const std::unique_ptr<SocketSession>& ss)
+                               { return ss.get() == session; });
+      if (iter != live_sessions.end())
+        live_sessions.erase(iter);
     }
 
   } // namespace daemon
