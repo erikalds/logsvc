@@ -27,7 +27,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "logsvc_daemon/FileFactory.h"
+#include "logsvc_daemon/LogFile.h"
 #include "logsvc_daemon/LogFileCollection.h"
+#include <boost/filesystem/operations.hpp>
+#include <cstdlib>
+#include <set>
 
 using namespace logsvc::daemon;
 
@@ -35,14 +39,59 @@ BOOST_AUTO_TEST_SUITE(testLogFileCollection)
 
 struct F
 {
-  F() {}
-  ~F() {}
+  F() : lfc(), created_files() {}
+  ~F()
+  {
+    for (const boost::filesystem::path& filename : created_files)
+      if (boost::filesystem::exists(filename))
+        unlink(filename.c_str());
+  }
+
+  LogFileCollection lfc;
+  std::set<boost::filesystem::path> created_files;
+
+  std::shared_ptr<File> create_file(const boost::filesystem::path& filename)
+  {
+    std::shared_ptr<File> file = lfc.open_file(filename);
+    created_files.insert(filename);
+    return file;
+  }
 };
 
 BOOST_FIXTURE_TEST_CASE(is_a_FileFactory, F)
 {
-  LogFileCollection lfc;
   BOOST_CHECK(dynamic_cast<FileFactory*>(&lfc));
+}
+
+BOOST_FIXTURE_TEST_CASE(open_file_gives_valid_ptr, F)
+{
+  std::shared_ptr<File> file = create_file("unittest_some_file.txt");
+  BOOST_CHECK(file != nullptr);
+}
+
+BOOST_FIXTURE_TEST_CASE(open_file_twice_gives_same_ptr, F)
+{
+  std::shared_ptr<File> file0 = create_file("unittest_another_file.txt");
+  BOOST_CHECK(file0 != nullptr);
+  std::shared_ptr<File> file1 = create_file("unittest_another_file.txt");
+  BOOST_CHECK_EQUAL(file0, file1);
+}
+
+BOOST_FIXTURE_TEST_CASE(open_two_different_files_gives_different_ptr, F)
+{
+  std::shared_ptr<File> file0 = create_file("one_file.txt");
+  BOOST_CHECK(file0 != nullptr);
+  std::shared_ptr<File> file1 = create_file("another_file.txt");
+  BOOST_CHECK_NE(file0, file1);
+}
+
+BOOST_FIXTURE_TEST_CASE(created_files_are_LogFile_instances, F)
+{
+  std::shared_ptr<File> file = create_file("a.txt");
+  BOOST_CHECK(file != nullptr);
+  std::shared_ptr<LogFile> logfile = std::dynamic_pointer_cast<LogFile>(file);
+  // So that we don't have to test LogFile functionality
+  BOOST_CHECK(logfile != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -29,6 +29,7 @@
 
 #include "logsvc_daemon/FileFactory.h"
 #include <boost/filesystem/path.hpp>
+#include <map>
 
 namespace logsvc
 {
@@ -40,7 +41,12 @@ namespace logsvc
     class LogFileCollection : public FileFactory
     {
     public:
+      LogFileCollection();
+
       virtual std::shared_ptr<File> open_file(const boost::filesystem::path& p);
+
+    private:
+      std::map<boost::filesystem::path, std::weak_ptr<File>> open_files;
     };
 
   }

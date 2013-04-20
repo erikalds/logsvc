@@ -26,15 +26,32 @@
 
 #include "logsvc_daemon/LogFileCollection.h"
 
+#include "logsvc_daemon/LogFile.h"
+#include <egen/lookup.h>
+
 namespace logsvc
 {
   namespace daemon
   {
 
+    LogFileCollection::LogFileCollection() :
+      open_files()
+    {
+    }
+
     std::shared_ptr<File>
     LogFileCollection::open_file(const boost::filesystem::path& p)
     {
-      return std::shared_ptr<File>();
+      std::weak_ptr<File> weakfile = egen::lookup(p, open_files,
+                                                  std::weak_ptr<File>());
+      std::shared_ptr<File> file = weakfile.lock();
+      if (!file)
+      {
+        file.reset(new LogFile(p));
+        open_files[p] = file;
+      }
+
+      return file;
     }
 
   } // namespace daemon
