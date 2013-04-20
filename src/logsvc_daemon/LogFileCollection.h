@@ -30,6 +30,7 @@
 #include "logsvc_daemon/FileFactory.h"
 #include <boost/filesystem/path.hpp>
 #include <map>
+#include <mutex>
 
 namespace logsvc
 {
@@ -47,6 +48,7 @@ namespace logsvc
 
     private:
       std::map<boost::filesystem::path, std::weak_ptr<File>> open_files;
+      std::mutex collection_sentry;
     };
 
   }

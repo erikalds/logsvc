@@ -35,13 +35,16 @@ namespace logsvc
   {
 
     LogFileCollection::LogFileCollection() :
-      open_files()
+      open_files(),
+      collection_sentry()
     {
     }
 
     std::shared_ptr<File>
     LogFileCollection::open_file(const boost::filesystem::path& p)
     {
+      std::lock_guard<std::mutex> locked(collection_sentry);
+
       std::weak_ptr<File> weakfile = egen::lookup(p, open_files,
                                                   std::weak_ptr<File>());
       std::shared_ptr<File> file = weakfile.lock();
