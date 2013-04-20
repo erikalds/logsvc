@@ -29,6 +29,7 @@
 #include "logsvc_daemon/RealSession.h"
 #include "logsvc_daemon/TimestampFactory.h"
 #include "log/Client.h"
+#include "log/ClientHandle.h"
 #include "log/Executor.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
@@ -84,14 +85,20 @@ private:
 
 struct F
 {
-  F() : ff(), tsfac(), client("client"), session(client, tsfac, ff),
-        bracket_open_pos(std::string::npos), clientpos(std::string::npos),
-        bracket_close_pos(std::string::npos), msgpos(std::string::npos) {}
+  F() :
+    ff(), tsfac(), client_name("client"), client_address("127.0.0.1"),
+    session(tsfac, ff),
+    bracket_open_pos(std::string::npos), clientpos(std::string::npos),
+    bracket_close_pos(std::string::npos), msgpos(std::string::npos)
+  {
+    client_handle = session.set_client_info(client_name, client_address);
+  }
   ~F() {}
 
   DummyFileFactory ff;
   DummyTimestampFactory tsfac;
-  logsvc::prot::Client client;
+  std::string client_name;
+  std::string client_address;
   RealSession session;
   std::size_t bracket_open_pos;
   std::size_t timestamp_pos;
@@ -100,6 +107,7 @@ struct F
   std::size_t bracket_close_pos;
   std::size_t msgpos;
   std::string contents;
+  logsvc::prot::ClientHandle client_handle;
 
   logsvc::prot::FileHandle open_file(const std::string& filename)
   {
@@ -116,12 +124,8 @@ struct F
     contents = dummy->contents;
     bracket_open_pos = contents.find("[");
     timestamp_pos = contents.find(tsfac.stamp);
-    clientpos = contents.find("client");
-
-    std::ostringstream ost;
-    ost << client.get_ip_address();
-    ip_pos = contents.find(ost.str());
-
+    clientpos = contents.find(client_name);
+    ip_pos = contents.find(client_address);
     bracket_close_pos = contents.find("]");
     msgpos = contents.find("hallo");
   }
