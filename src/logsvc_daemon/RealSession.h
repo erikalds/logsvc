@@ -62,6 +62,10 @@ namespace logsvc
                                                  const std::string& address);
 
     private:
+      prot::FileHandle get_filehandle_for_path(const boost::filesystem::path& filename);
+      void open_file_if_necessary(const prot::FileHandle& fh,
+                                  const boost::filesystem::path& filename);
+
       std::unique_ptr<prot::Client> client;
       FileFactory& file_factory;
       TimestampFactory& timestamp_factory;

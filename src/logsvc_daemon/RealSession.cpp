@@ -40,6 +40,9 @@ namespace logsvc
   namespace daemon
   {
 
+    using prot::FileHandle;
+    using boost::filesystem::path;
+
     RealSession::RealSession(const prot::Client& c,
                              TimestampFactory& tsfac,
                              FileFactory& ff) :
@@ -56,28 +59,49 @@ namespace logsvc
     {
     }
 
-    prot::FileHandle RealSession::open_file(const boost::filesystem::path& file)
+    FileHandle RealSession::open_file(const path& filename)
     {
-      auto iter = open_filehandles.find(file);
-      if (iter != open_filehandles.end())
-        return prot::FileHandle(iter->second);
-
-      std::shared_ptr<File> f = file_factory.open_file(file);
-      prot::FileHandle fh(file_handle_counter++);
-      open_filehandles.insert(std::make_pair(file, fh));
-      open_files.insert(std::make_pair(fh, f));
-
+      FileHandle fh = get_filehandle_for_path(filename);
+      open_file_if_necessary(fh, filename);
       return fh;
     }
 
-    void RealSession::close_file(const prot::FileHandle& fh)
+    FileHandle RealSession::get_filehandle_for_path(const path& filename)
     {
+      auto iter = open_filehandles.find(filename);
+      if (iter != open_filehandles.end())
+        return iter->second;
+      else
+      {
+        FileHandle fh = FileHandle(file_handle_counter++);
+        open_filehandles.insert(std::make_pair(filename, fh));
+        return fh;
+      }
     }
 
-    void RealSession::write_message(const prot::FileHandle& fh,
-                                    const std::string& message)
+    void RealSession::open_file_if_necessary(const FileHandle& fh, const path& filename)
+    {
+      auto iter2 = open_files.find(fh);
+      if (iter2 == open_files.end())
+      {
+        std::shared_ptr<File> f = file_factory.open_file(filename);
+        open_files.insert(std::make_pair(fh, f));
+      }
+    }
+
+    void RealSession::close_file(const FileHandle& fh)
+    {
+      auto iter = open_files.find(fh);
+      if (iter != open_files.end())
+        open_files.erase(iter);
+    }
+
+    void RealSession::write_message(const FileHandle& fh, const std::string& message)
     {
       std::shared_ptr<File> f = egen::lookup(fh, open_files, std::shared_ptr<File>());
+      if (!f)
+        throw std::runtime_error("Invalid file handle.");
+
       std::ostringstream ost;
       ost << "[" << timestamp_factory.get_timestamp() << ":"
           << client->get_name() << ":"

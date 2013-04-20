@@ -238,6 +238,33 @@ BOOST_FIXTURE_TEST_CASE(is_a_prot__Executor, F)
   BOOST_CHECK(dynamic_cast<logsvc::prot::Executor*>(&session) != nullptr);
 }
 
+BOOST_FIXTURE_TEST_CASE(error_on_invalid_file_handle, F)
+{
+  BOOST_CHECK_EXCEPTION(session.write_message(logsvc::prot::FileHandle(42), "asdf"),
+                        std::runtime_error,
+                        [](const std::runtime_error& e)
+                        {
+                          const std::string what = e.what();
+                          return what.find("invalid file handle") != std::string::npos
+                            || what.find("Invalid file handle") != std::string::npos;
+                        });
+}
+
+BOOST_FIXTURE_TEST_CASE(close_file_invalidates_file_handle, F)
+{
+  logsvc::prot::FileHandle fh = session.open_file("asdf.txt");
+  session.close_file(fh);
+  BOOST_CHECK_THROW(session.write_message(fh, "test"), std::runtime_error);
+}
+
+BOOST_FIXTURE_TEST_CASE(close_then_reopen_gives_valid_file_handle, F)
+{
+  logsvc::prot::FileHandle fh0 = session.open_file("asdf.txt");
+  session.close_file(fh0);
+  logsvc::prot::FileHandle fh1 = session.open_file("asdf.txt");
+  BOOST_CHECK(fh1 == fh0);
+  BOOST_CHECK_NO_THROW(session.write_message(fh1, "test"));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
