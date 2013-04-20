@@ -24,6 +24,7 @@
     NORWAY
 */
 
+#include "logsvc_daemon/ClientHandleFactory.h"
 #include "logsvc_daemon/File.h"
 #include "logsvc_daemon/FileFactory.h"
 #include "logsvc_daemon/RealSession.h"
@@ -83,11 +84,25 @@ private:
   std::map<boost::filesystem::path, std::shared_ptr<DummyFile> > opened_files;
 };
 
+class RandomClientHandleFactory : public ClientHandleFactory
+{
+public:
+  RandomClientHandleFactory() { std::srand(std::time(nullptr)); }
+
+  virtual logsvc::prot::ClientHandle generate_client_handle()
+  {
+    client_handle = logsvc::prot::ClientHandle(rand());
+    return client_handle;
+  }
+
+  logsvc::prot::ClientHandle client_handle;
+};
+
 struct F
 {
   F() :
     ff(), tsfac(), client_name("client"), client_address("127.0.0.1"),
-    session(tsfac, ff),
+    clhfac(), session(tsfac, ff, clhfac),
     bracket_open_pos(std::string::npos), clientpos(std::string::npos),
     bracket_close_pos(std::string::npos), msgpos(std::string::npos)
   {
@@ -99,6 +114,7 @@ struct F
   DummyTimestampFactory tsfac;
   std::string client_name;
   std::string client_address;
+  RandomClientHandleFactory clhfac;
   RealSession session;
   std::size_t bracket_open_pos;
   std::size_t timestamp_pos;
@@ -268,6 +284,28 @@ BOOST_FIXTURE_TEST_CASE(close_then_reopen_gives_valid_file_handle, F)
   logsvc::prot::FileHandle fh1 = session.open_file("asdf.txt");
   BOOST_CHECK(fh1 == fh0);
   BOOST_CHECK_NO_THROW(session.write_message(fh1, "test"));
+}
+
+BOOST_FIXTURE_TEST_CASE(uses_client_handle_from_factory, F)
+{
+  BOOST_CHECK(clhfac.client_handle == client_handle);
+}
+
+BOOST_FIXTURE_TEST_CASE(new_client_info_same_client_handle, F)
+{
+  logsvc::prot::ClientHandle handle = client_handle;
+  logsvc::prot::ClientHandle new_handle = session.set_client_info("a", "b");
+  BOOST_CHECK(handle == new_handle);
+}
+
+BOOST_FIXTURE_TEST_CASE(new_client_info_used_in_message, F)
+{
+  client_name = "client_name";
+  client_address = "client_address";
+  session.set_client_info(client_name, client_address);
+  write_message_and_find_line_positions();
+  BOOST_CHECK_NE(clientpos, std::string::npos);
+  BOOST_CHECK_NE(ip_pos, std::string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -43,6 +43,7 @@ namespace logsvc
 
   namespace daemon
   {
+    class ClientHandleFactory;
     class File;
     class FileFactory;
     class TimestampFactory;
@@ -50,7 +51,8 @@ namespace logsvc
     class RealSession : public prot::Executor
     {
     public:
-      RealSession(TimestampFactory& tsfac, FileFactory& ff);
+      RealSession(TimestampFactory& tsfac, FileFactory& ff,
+                  ClientHandleFactory& clhfac);
       ~RealSession();
 
       virtual prot::FileHandle open_file(const boost::filesystem::path& filename);
@@ -71,6 +73,7 @@ namespace logsvc
       std::map<boost::filesystem::path, prot::FileHandle> open_filehandles;
       std::map<prot::FileHandle, std::shared_ptr<File> > open_files;
       std::string client_name, client_address;
+      std::unique_ptr<prot::ClientHandle> client_handle;
     };
 
   } // namespace daemon

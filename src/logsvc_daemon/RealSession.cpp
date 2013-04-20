@@ -26,6 +26,7 @@
 
 #include "logsvc_daemon/RealSession.h"
 
+#include "logsvc_daemon/ClientHandleFactory.h"
 #include "logsvc_daemon/FileFactory.h"
 #include "logsvc_daemon/File.h"
 #include "logsvc_daemon/TimestampFactory.h"
@@ -43,14 +44,16 @@ namespace logsvc
     using boost::filesystem::path;
 
     RealSession::RealSession(TimestampFactory& tsfac,
-                             FileFactory& ff) :
+                             FileFactory& ff,
+                             ClientHandleFactory& clhfac) :
       file_factory(ff),
       timestamp_factory(tsfac),
       file_handle_counter(1),
       open_filehandles(),
       open_files(),
       client_name(),
-      client_address()
+      client_address(),
+      client_handle(new prot::ClientHandle(clhfac.generate_client_handle()))
     {
     }
 
@@ -114,7 +117,7 @@ namespace logsvc
     {
       client_name = name;
       client_address = address;
-      return prot::ClientHandle();
+      return *client_handle;
     }
 
   } // namespace daemon
