@@ -28,7 +28,6 @@
 
 #include "log/test/DummyExecutor.h"
 #include "logsvc_daemon/test/DummySocket.h"
-#include "logsvc_daemon/Session.h"
 #include "logsvc_daemon/SocketSession.h"
 #include "logsvc_daemon/SocketSessionListener.h"
 #include "logsvc_daemon/DefaultSocketSession.h"
