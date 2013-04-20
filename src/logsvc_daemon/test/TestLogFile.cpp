@@ -34,6 +34,8 @@
 
 #include <cstdlib>
 
+using namespace logsvc::daemon;
+
 BOOST_AUTO_TEST_SUITE(testLogFile)
 
 struct F
@@ -62,9 +64,9 @@ struct F
   boost::filesystem::path filename() const
   { return boost::filesystem::path(tempfilename); }
 
-  logsvc::daemon::LogFile create_LogFile()
+  std::unique_ptr<LogFile> create_LogFile()
   {
-    return logsvc::daemon::LogFile(filename());
+    return std::unique_ptr<LogFile>(new LogFile(filename()));
   }
 
   std::string read_file_contents() const
@@ -94,26 +96,26 @@ BOOST_FIXTURE_TEST_CASE(existingFileGivenToCtor_noProblem, F)
 BOOST_FIXTURE_TEST_CASE(writeString_StringIsWritten, F)
 {
   create_tempfile();
-  logsvc::daemon::LogFile lf = create_LogFile();
-  lf.write("asdf");
+  std::unique_ptr<LogFile> lf = create_LogFile();
+  lf->write("asdf");
   BOOST_CHECK_EQUAL("asdf", read_file_contents());
 }
 
 BOOST_FIXTURE_TEST_CASE(writeStrings_StringsAreAppended, F)
 {
   create_tempfile();
-  logsvc::daemon::LogFile lf = create_LogFile();
-  lf.write("foo");
-  lf.write("bar");
+  std::unique_ptr<LogFile> lf = create_LogFile();
+  lf->write("foo");
+  lf->write("bar");
   BOOST_CHECK_EQUAL("foobar", read_file_contents());
 }
 
 BOOST_FIXTURE_TEST_CASE(writeStringsToNotExistingFile_CreatedFileIsUsed, F)
 {
   generate_tempfilename();
-  logsvc::daemon::LogFile lf = create_LogFile();
-  lf.write("as");
-  lf.write("df");
+  std::unique_ptr<LogFile> lf = create_LogFile();
+  lf->write("as");
+  lf->write("df");
   BOOST_CHECK_EQUAL("asdf", read_file_contents());
 }
 

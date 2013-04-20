@@ -29,6 +29,7 @@
 
 #include "logsvc_daemon/File.h"
 #include <boost/filesystem/path.hpp>
+#include <mutex>
 #include <string>
 
 namespace logsvc
@@ -40,10 +41,14 @@ namespace logsvc
     public:
       explicit LogFile(const boost::filesystem::path& p);
 
+      LogFile(const LogFile&) = delete;
+      LogFile& operator=(const LogFile&) = delete;
+
       virtual void write(const std::string& s);
 
     private:
       boost::filesystem::path filepath;
+      std::mutex file_sentry;
     };
   } // namespace daemon
 } // namespace logsvc

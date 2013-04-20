@@ -34,7 +34,8 @@ namespace logsvc
   {
 
     LogFile::LogFile(const boost::filesystem::path& p) :
-      filepath(p)
+      filepath(p),
+      file_sentry()
     {
       if (!boost::filesystem::exists(p))
       {
@@ -45,6 +46,7 @@ namespace logsvc
 
     void LogFile::write(const std::string& s)
     {
+      std::lock_guard<std::mutex> lock(file_sentry);
       boost::filesystem::ofstream ost(filepath, std::ios_base::app);
       ost << s;
     }
