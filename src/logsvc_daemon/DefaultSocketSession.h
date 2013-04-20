@@ -50,8 +50,6 @@ namespace logsvc
   namespace daemon
   {
 
-    class Session;
-
     class DefaultSocketSession : public SocketSession,
                                  public network::SocketListener,
                                  public network::SocketStateListener
