@@ -27,7 +27,7 @@
     NORWAY
 */
 
-#include "logsvc_daemon/Session.h"
+#include "log/Executor.h"
 #include <boost/filesystem/path.hpp>
 #include <map>
 
@@ -48,14 +48,18 @@ namespace logsvc
     class FileFactory;
     class TimestampFactory;
 
-    class RealSession : public Session
+    class RealSession : public prot::Executor
     {
     public:
       RealSession(const prot::Client& c, TimestampFactory& tsfac, FileFactory& ff);
       ~RealSession();
 
-      prot::FileHandle open_file(const prot::File& f);
-      void write_message(const prot::FileHandle& fh, const std::string& message);
+      virtual prot::FileHandle open_file(const boost::filesystem::path& filename);
+      virtual void close_file(const prot::FileHandle& fh);
+      virtual void write_message(const prot::FileHandle& fh,
+                                 const std::string& message);
+      virtual prot::ClientHandle set_client_info(const std::string& name,
+                                                 const std::string& address);
 
     private:
       std::unique_ptr<prot::Client> client;

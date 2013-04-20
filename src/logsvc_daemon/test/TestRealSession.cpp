@@ -29,6 +29,7 @@
 #include "logsvc_daemon/RealSession.h"
 #include "logsvc_daemon/TimestampFactory.h"
 #include "log/Client.h"
+#include "log/Executor.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include <egen/lookup.h>
@@ -102,8 +103,7 @@ struct F
 
   logsvc::prot::FileHandle open_file(const std::string& filename)
   {
-    logsvc::prot::File f(filename);
-    return session.open_file(f);
+    return session.open_file(boost::filesystem::path(filename));
   }
 
   void write_message_and_find_line_positions()
@@ -232,6 +232,12 @@ BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_colonBeforeClient, F)
   write_message_and_find_line_positions();
   BOOST_CHECK_EQUAL(':', contents[clientpos - 1]);
 }
+
+BOOST_FIXTURE_TEST_CASE(is_a_prot__Executor, F)
+{
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Executor*>(&session) != nullptr);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -30,6 +30,7 @@
 #include "logsvc_daemon/File.h"
 #include "logsvc_daemon/TimestampFactory.h"
 #include "log/Client.h"
+#include "log/ClientHandle.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include <egen/lookup.h>
@@ -55,18 +56,22 @@ namespace logsvc
     {
     }
 
-    prot::FileHandle RealSession::open_file(const prot::File& prot_file)
+    prot::FileHandle RealSession::open_file(const boost::filesystem::path& file)
     {
-      auto iter = open_filehandles.find(prot_file.get_name());
+      auto iter = open_filehandles.find(file);
       if (iter != open_filehandles.end())
         return prot::FileHandle(iter->second);
 
-      std::shared_ptr<File> f = file_factory.open_file(prot_file.get_name());
+      std::shared_ptr<File> f = file_factory.open_file(file);
       prot::FileHandle fh(file_handle_counter++);
-      open_filehandles.insert(std::make_pair(prot_file.get_name(), fh));
+      open_filehandles.insert(std::make_pair(file, fh));
       open_files.insert(std::make_pair(fh, f));
 
       return fh;
+    }
+
+    void RealSession::close_file(const prot::FileHandle& fh)
+    {
     }
 
     void RealSession::write_message(const prot::FileHandle& fh,
@@ -79,6 +84,12 @@ namespace logsvc
           << client->get_ip_address() << "] "
           << message << "\n";
       f->write(ost.str());
+    }
+
+    prot::ClientHandle RealSession::set_client_info(const std::string& name,
+                                                    const std::string& address)
+    {
+      return prot::ClientHandle();
     }
 
   } // namespace daemon
