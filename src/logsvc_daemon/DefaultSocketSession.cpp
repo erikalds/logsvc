@@ -41,15 +41,15 @@ namespace logsvc
       const static std::size_t header_length = 12;
     } // namespace constants
 
-    DefaultSocketSession::DefaultSocketSession(network::Socket& socket,
+    DefaultSocketSession::DefaultSocketSession(std::unique_ptr<network::Socket> socket,
                                                prot::Executor& exec,
                                                prot::ReceivableFactory& rf) :
-      the_socket(socket),
+      the_socket(std::move(socket)),
       the_receivable_factory(rf),
       current_receivable(nullptr),
       executor(exec)
     {
-      the_socket.add_socket_state_listener(this);
+      the_socket->add_socket_state_listener(this);
     }
 
     DefaultSocketSession::~DefaultSocketSession()
@@ -58,7 +58,7 @@ namespace logsvc
 
     void DefaultSocketSession::start_listen()
     {
-      the_socket.async_read(*this, constants::header_length);
+      the_socket->async_read(*this, constants::header_length);
     }
 
     void DefaultSocketSession::add_socket_session_listener(SocketSessionListener* l)
@@ -76,17 +76,17 @@ namespace logsvc
       if (!current_receivable)
       {
         current_receivable = the_receivable_factory.create(bytes);
-        the_socket.async_read(*this, current_receivable->get_payload_length());
+        the_socket->async_read(*this, current_receivable->get_payload_length());
       }
       else
       {
         current_receivable->read_payload(bytes);
         std::unique_ptr<prot::Deliverable> deliverable =
           current_receivable->act(executor);
-        the_socket.async_write(deliverable->get_header() + deliverable->get_payload());
+        the_socket->async_write(deliverable->get_header() + deliverable->get_payload());
 
         current_receivable.reset();
-        the_socket.async_read(*this, constants::header_length);
+        the_socket->async_read(*this, constants::header_length);
       }
     }
 

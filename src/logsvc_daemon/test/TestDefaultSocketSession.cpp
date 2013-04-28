@@ -97,61 +97,59 @@ public:
 
 struct F
 {
-  F() : socket(), exec(), drf() {}
+  F() : socket(nullptr), exec(), drf(), ss(create_socket(), exec, drf) {}
   ~F() {}
 
-  mock::DummySocket socket;
+  mock::DummySocket* socket;
   mock::DummyExecutor exec;
   DummyReceivableFactory drf;
-};
+  logsvc::daemon::DefaultSocketSession ss;
 
-BOOST_FIXTURE_TEST_CASE(canCreate, F)
-{
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
-}
+  std::unique_ptr<network::Socket> create_socket()
+  {
+    socket = new mock::DummySocket;
+    return std::unique_ptr<network::Socket>(socket);
+  }
+};
 
 BOOST_FIXTURE_TEST_CASE(createdSession_startsListeningToSocket, F)
 {
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
-  BOOST_REQUIRE_EQUAL(0, socket.async_read_call_count);
+  BOOST_REQUIRE_EQUAL(0, socket->async_read_call_count);
   ss.start_listen();
-  BOOST_CHECK_EQUAL(1, socket.async_read_call_count);
-  BOOST_CHECK_EQUAL(12, socket.async_read_byte_count);
+  BOOST_CHECK_EQUAL(1, socket->async_read_call_count);
+  BOOST_CHECK_EQUAL(12, socket->async_read_byte_count);
 }
 
 BOOST_FIXTURE_TEST_CASE(receive_bytes_sends_bytes_to_ReceivableFactory, F)
 {
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
-  socket.receive_bytes(header);
+  socket->receive_bytes(header);
   BOOST_CHECK_EQUAL(header, drf.received_bytes);
 }
 
 BOOST_FIXTURE_TEST_CASE(received_bytes_after_header_sends_bytes_to_Receivable, F)
 {
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
   drf.expected_payload = payload;
 
-  socket.receive_bytes(header);
-  BOOST_CHECK_EQUAL(2, socket.async_read_call_count);
-  BOOST_CHECK_EQUAL(9, socket.async_read_byte_count);
-  socket.receive_bytes(payload);
+  socket->receive_bytes(header);
+  BOOST_CHECK_EQUAL(2, socket->async_read_call_count);
+  BOOST_CHECK_EQUAL(9, socket->async_read_byte_count);
+  socket->receive_bytes(payload);
 }
 
 BOOST_FIXTURE_TEST_CASE(after_bytes_sent_to_Receivable_it_is_allowed_to_act, F)
 {
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
   drf.expected_payload = payload;
 
-  socket.receive_bytes(header);
-  socket.receive_bytes(payload);
+  socket->receive_bytes(header);
+  socket->receive_bytes(payload);
 
   BOOST_CHECK_EQUAL(egen::lookup(logsvc::prot::FileHandle(0x42), exec.messages,
                                  std::string("file not written")),
@@ -160,60 +158,55 @@ BOOST_FIXTURE_TEST_CASE(after_bytes_sent_to_Receivable_it_is_allowed_to_act, F)
 
 BOOST_FIXTURE_TEST_CASE(after_it_has_acted_the_Deliverable_is_written_to_the_Socket, F)
 {
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
   drf.expected_payload = payload;
 
-  socket.receive_bytes(header);
-  socket.receive_bytes(payload);
+  socket->receive_bytes(header);
+  socket->receive_bytes(payload);
 
-  BOOST_CHECK_EQUAL(socket.written_bytes, std::string("logsnack\4\0\0\0fail", 16));
+  BOOST_CHECK_EQUAL(socket->written_bytes, std::string("logsnack\4\0\0\0fail", 16));
 }
 
 BOOST_FIXTURE_TEST_CASE(can_read_several_protocol_objects, F)
 {
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   ss.start_listen();
   std::string header0("logsmesg\x09\0\0\0", 12);
   std::string payload0("\x42\0\0\0Hello", 9);
   drf.expected_payload = payload0;
 
-  socket.receive_bytes(header0);
-  socket.receive_bytes(payload0);
+  socket->receive_bytes(header0);
+  socket->receive_bytes(payload0);
 
   std::string header1("logsopen\x10\0\0\0", 12);
   std::string payload1("path/to/file.txt");
   drf.expected_payload = payload1;
 
-  socket.receive_bytes(header1);
-  BOOST_CHECK_EQUAL(16, socket.async_read_byte_count);
-  socket.receive_bytes(payload1);
+  socket->receive_bytes(header1);
+  BOOST_CHECK_EQUAL(16, socket->async_read_byte_count);
+  socket->receive_bytes(payload1);
 }
 
 BOOST_FIXTURE_TEST_CASE(is_a_SocketSession, F)
 {
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   BOOST_CHECK(dynamic_cast<logsvc::daemon::SocketSession*>(&ss) != nullptr);
 }
 
 BOOST_FIXTURE_TEST_CASE(is_notified_when_socket_connection_dropped, F)
 {
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   MySocketSessionListener listener;
   ss.add_socket_session_listener(&listener);
-  socket.kill_connection();
+  socket->kill_connection();
   BOOST_CHECK_EQUAL(1, listener.notification_count);
 }
 
 BOOST_FIXTURE_TEST_CASE(is_not_notified_when_socket_connection_dropped_and_unregistered, F)
 {
-  logsvc::daemon::DefaultSocketSession ss(socket, exec, drf);
   MySocketSessionListener listener;
   ss.add_socket_session_listener(&listener);
   ss.remove_socket_session_listener(&listener);
-  socket.kill_connection();
+  socket->kill_connection();
   BOOST_CHECK_EQUAL(0, listener.notification_count);
 }
 

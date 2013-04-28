@@ -55,7 +55,8 @@ namespace logsvc
                                  public network::SocketStateListener
     {
     public:
-      DefaultSocketSession(network::Socket& socket, prot::Executor& exec,
+      DefaultSocketSession(std::unique_ptr<network::Socket> socket,
+                           prot::Executor& exec,
                            prot::ReceivableFactory& rf);
       virtual ~DefaultSocketSession();
 
@@ -70,7 +71,7 @@ namespace logsvc
       virtual void connection_lost(network::Socket* socket);
 
     private:
-      network::Socket& the_socket;
+      std::unique_ptr<network::Socket> the_socket;
       prot::ReceivableFactory& the_receivable_factory;
       std::unique_ptr<prot::Receivable> current_receivable;
       prot::Executor& executor;
