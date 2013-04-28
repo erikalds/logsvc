@@ -56,7 +56,7 @@ namespace logsvc
     {
     public:
       DefaultSocketSession(std::unique_ptr<network::Socket> socket,
-                           prot::Executor& exec,
+                           std::unique_ptr<prot::Executor> exec,
                            prot::ReceivableFactory& rf);
       virtual ~DefaultSocketSession();
 
@@ -74,7 +74,7 @@ namespace logsvc
       std::unique_ptr<network::Socket> the_socket;
       prot::ReceivableFactory& the_receivable_factory;
       std::unique_ptr<prot::Receivable> current_receivable;
-      prot::Executor& executor;
+      std::unique_ptr<prot::Executor> executor;
       std::set<SocketSessionListener*> listeners;
     };
 

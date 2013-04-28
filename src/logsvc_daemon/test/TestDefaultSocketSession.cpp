@@ -97,11 +97,11 @@ public:
 
 struct F
 {
-  F() : socket(nullptr), exec(), drf(), ss(create_socket(), exec, drf) {}
+  F() : socket(nullptr), exec(nullptr), drf(), ss(create_socket(), create_exec(), drf) {}
   ~F() {}
 
   mock::DummySocket* socket;
-  mock::DummyExecutor exec;
+  mock::DummyExecutor* exec;
   DummyReceivableFactory drf;
   logsvc::daemon::DefaultSocketSession ss;
 
@@ -109,6 +109,12 @@ struct F
   {
     socket = new mock::DummySocket;
     return std::unique_ptr<network::Socket>(socket);
+  }
+
+  std::unique_ptr<logsvc::prot::Executor> create_exec()
+  {
+    exec = new mock::DummyExecutor;
+    return std::unique_ptr<logsvc::prot::Executor>(exec);
   }
 };
 
@@ -151,7 +157,7 @@ BOOST_FIXTURE_TEST_CASE(after_bytes_sent_to_Receivable_it_is_allowed_to_act, F)
   socket->receive_bytes(header);
   socket->receive_bytes(payload);
 
-  BOOST_CHECK_EQUAL(egen::lookup(logsvc::prot::FileHandle(0x42), exec.messages,
+  BOOST_CHECK_EQUAL(egen::lookup(logsvc::prot::FileHandle(0x42), exec->messages,
                                  std::string("file not written")),
                     "Hello");
 }

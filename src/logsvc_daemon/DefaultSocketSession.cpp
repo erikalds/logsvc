@@ -28,6 +28,7 @@
 
 #include "logsvc_daemon/SocketSessionListener.h"
 #include "log/Deliverable.h"
+#include "log/Executor.h"
 #include "log/Receivable.h"
 #include "log/ReceivableFactory.h"
 #include "network/Socket.h"
@@ -42,12 +43,12 @@ namespace logsvc
     } // namespace constants
 
     DefaultSocketSession::DefaultSocketSession(std::unique_ptr<network::Socket> socket,
-                                               prot::Executor& exec,
+                                               std::unique_ptr<prot::Executor> exec,
                                                prot::ReceivableFactory& rf) :
       the_socket(std::move(socket)),
       the_receivable_factory(rf),
       current_receivable(nullptr),
-      executor(exec)
+      executor(std::move(exec))
     {
       the_socket->add_socket_state_listener(this);
     }
@@ -82,7 +83,7 @@ namespace logsvc
       {
         current_receivable->read_payload(bytes);
         std::unique_ptr<prot::Deliverable> deliverable =
-          current_receivable->act(executor);
+          current_receivable->act(*executor);
         the_socket->async_write(deliverable->get_header() + deliverable->get_payload());
 
         current_receivable.reset();
