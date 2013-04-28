@@ -4,6 +4,7 @@ Import("logsvc_daemon log")
 env = CoreEnvironment(DEBUG=1,
                       LIBS=[
         "boost_filesystem",
+        "boost_regex",
         "boost_system",
         "boost_unit_test_framework",
         ])
