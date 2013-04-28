@@ -28,6 +28,7 @@
 */
 
 #include "logsvc_daemon/ClientHandleFactory.h"
+#include <atomic>
 
 namespace logsvc
 {
@@ -42,7 +43,7 @@ namespace logsvc
       virtual prot::ClientHandle generate_client_handle();
 
     private:
-      unsigned int handle_counter;
+      std::atomic<unsigned int> handle_counter;
     };
 
   } // namespace daemon
