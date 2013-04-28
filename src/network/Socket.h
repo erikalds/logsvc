@@ -27,6 +27,8 @@
     NORWAY
 */
 
+#include <string>
+
 namespace network
 {
 
