@@ -48,7 +48,7 @@ class DummyTimestampFactory : public TimestampFactory
 public:
   DummyTimestampFactory() : stamp() {}
 
-  virtual std::string get_timestamp()
+  virtual std::string get_timestamp() const
   { return stamp; }
 
   std::string stamp;

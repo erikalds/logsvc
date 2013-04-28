@@ -39,7 +39,7 @@ namespace logsvc
     public:
       virtual ~TimestampFactory() = 0;
 
-      virtual std::string get_timestamp() = 0;
+      virtual std::string get_timestamp() const = 0;
     };
 
     inline TimestampFactory::~TimestampFactory() {}
