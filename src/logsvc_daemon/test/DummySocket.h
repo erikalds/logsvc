@@ -30,6 +30,7 @@
 #include "network/Socket.h"
 #include "network/SocketListener.h"
 #include "network/SocketStateListener.h"
+#include <boost/test/unit_test.hpp>
 #include <set>
 
 namespace mock
