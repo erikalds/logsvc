@@ -44,9 +44,9 @@ namespace logsvc
 
     DefaultSocketSession::DefaultSocketSession(std::unique_ptr<network::Socket> socket,
                                                std::unique_ptr<prot::Executor> exec,
-                                               prot::ReceivableFactory& rf) :
+                                               std::unique_ptr<prot::ReceivableFactory> rf) :
       the_socket(std::move(socket)),
-      the_receivable_factory(rf),
+      the_receivable_factory(std::move(rf)),
       current_receivable(nullptr),
       executor(std::move(exec))
     {
@@ -76,7 +76,7 @@ namespace logsvc
     {
       if (!current_receivable)
       {
-        current_receivable = the_receivable_factory.create(bytes);
+        current_receivable = the_receivable_factory->create(bytes);
         the_socket->async_read(*this, current_receivable->get_payload_length());
       }
       else

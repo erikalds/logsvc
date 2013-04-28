@@ -57,7 +57,7 @@ namespace logsvc
     public:
       DefaultSocketSession(std::unique_ptr<network::Socket> socket,
                            std::unique_ptr<prot::Executor> exec,
-                           prot::ReceivableFactory& rf);
+                           std::unique_ptr<prot::ReceivableFactory> rf);
       virtual ~DefaultSocketSession();
 
       virtual void start_listen();
@@ -72,7 +72,7 @@ namespace logsvc
 
     private:
       std::unique_ptr<network::Socket> the_socket;
-      prot::ReceivableFactory& the_receivable_factory;
+      std::unique_ptr<prot::ReceivableFactory> the_receivable_factory;
       std::unique_ptr<prot::Receivable> current_receivable;
       std::unique_ptr<prot::Executor> executor;
       std::set<SocketSessionListener*> listeners;

@@ -97,12 +97,14 @@ public:
 
 struct F
 {
-  F() : socket(nullptr), exec(nullptr), drf(), ss(create_socket(), create_exec(), drf) {}
+  F() : socket(nullptr), exec(nullptr), drf(), ss(create_socket(),
+                                                  create_exec(),
+                                                  create_receivable_factory()) {}
   ~F() {}
 
   mock::DummySocket* socket;
   mock::DummyExecutor* exec;
-  DummyReceivableFactory drf;
+  DummyReceivableFactory* drf;
   logsvc::daemon::DefaultSocketSession ss;
 
   std::unique_ptr<network::Socket> create_socket()
@@ -115,6 +117,12 @@ struct F
   {
     exec = new mock::DummyExecutor;
     return std::unique_ptr<logsvc::prot::Executor>(exec);
+  }
+
+  std::unique_ptr<logsvc::prot::ReceivableFactory> create_receivable_factory()
+  {
+    drf = new DummyReceivableFactory;
+    return std::unique_ptr<logsvc::prot::ReceivableFactory>(drf);
   }
 };
 
@@ -131,7 +139,7 @@ BOOST_FIXTURE_TEST_CASE(receive_bytes_sends_bytes_to_ReceivableFactory, F)
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   socket->receive_bytes(header);
-  BOOST_CHECK_EQUAL(header, drf.received_bytes);
+  BOOST_CHECK_EQUAL(header, drf->received_bytes);
 }
 
 BOOST_FIXTURE_TEST_CASE(received_bytes_after_header_sends_bytes_to_Receivable, F)
@@ -139,7 +147,7 @@ BOOST_FIXTURE_TEST_CASE(received_bytes_after_header_sends_bytes_to_Receivable, F
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
-  drf.expected_payload = payload;
+  drf->expected_payload = payload;
 
   socket->receive_bytes(header);
   BOOST_CHECK_EQUAL(2, socket->async_read_call_count);
@@ -152,7 +160,7 @@ BOOST_FIXTURE_TEST_CASE(after_bytes_sent_to_Receivable_it_is_allowed_to_act, F)
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
-  drf.expected_payload = payload;
+  drf->expected_payload = payload;
 
   socket->receive_bytes(header);
   socket->receive_bytes(payload);
@@ -167,7 +175,7 @@ BOOST_FIXTURE_TEST_CASE(after_it_has_acted_the_Deliverable_is_written_to_the_Soc
   ss.start_listen();
   std::string header("logsmesg\x09\0\0\0", 12);
   std::string payload("\x42\0\0\0Hello", 9);
-  drf.expected_payload = payload;
+  drf->expected_payload = payload;
 
   socket->receive_bytes(header);
   socket->receive_bytes(payload);
@@ -180,14 +188,14 @@ BOOST_FIXTURE_TEST_CASE(can_read_several_protocol_objects, F)
   ss.start_listen();
   std::string header0("logsmesg\x09\0\0\0", 12);
   std::string payload0("\x42\0\0\0Hello", 9);
-  drf.expected_payload = payload0;
+  drf->expected_payload = payload0;
 
   socket->receive_bytes(header0);
   socket->receive_bytes(payload0);
 
   std::string header1("logsopen\x10\0\0\0", 12);
   std::string payload1("path/to/file.txt");
-  drf.expected_payload = payload1;
+  drf->expected_payload = payload1;
 
   socket->receive_bytes(header1);
   BOOST_CHECK_EQUAL(16, socket->async_read_byte_count);
