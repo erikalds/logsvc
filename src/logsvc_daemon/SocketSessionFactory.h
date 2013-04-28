@@ -27,6 +27,10 @@
     NORWAY
 */
 
+#include <memory>
+
+namespace network { class Socket; }
+
 namespace logsvc
 {
   namespace daemon
