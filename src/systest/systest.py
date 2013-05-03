@@ -61,7 +61,7 @@ def load_passed_tests():
         return []
 
     with open("passed_tests.txt", 'r') as fd:
-        return fd.readlines()
+        return [line for line in fd.readlines() if line]
 
 def main(argv):
     print("Running system test suite...")
@@ -90,8 +90,7 @@ def main(argv):
                 earlier_passed_tests.append(test)
 
     with open("passed_tests.txt", 'w') as fd:
-        for test in earlier_passed_tests:
-            fd.write("%s\n" % test)
+        fd.writelines(earlier_passed_tests)
 
     print("Passed tests:    %d" % len(passed_tests))
     print("Failed tests:    %d" % len(failed_tests))
