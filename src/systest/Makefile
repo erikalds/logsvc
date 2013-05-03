@@ -13,3 +13,8 @@ OutStream: OutStream.o
 	g++ -o OutStream OutStream.o -L../build -llogsvccpp
 OutStream.o: OutStream.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h ../logsvccpp/OutStream.h
 	g++ -c -o OutStream.o OutStream.cpp -I..
+
+logtofile: logtofile.o
+	g++ -o logtofile logtofile.o -L../build -llogsvccpp
+logtofile.o: logtofile.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h ../logsvccpp/OutStream.h
+	g++ -c -o logtofile.o logtofile.cpp -I..
