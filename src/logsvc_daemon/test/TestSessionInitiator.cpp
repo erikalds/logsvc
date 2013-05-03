@@ -134,14 +134,37 @@ public:
   network::Socket* last_socket;
 };
 
+struct MyStreamBuf : std::basic_streambuf<char, std::char_traits<char> >
+{
+  std::ostringstream contents;
+
+  virtual int_type overflow(int_type ch = std::char_traits<char>::eof())
+  { contents << char(ch); assert(1 != std::char_traits<char>::eof()); return 1; }
+  virtual std::streamsize xsputn(const char_type* s, std::streamsize count)
+  { contents << std::string(s, count); return count; }
+};
+
 struct F
 {
-  F() : factory(), acceptor(), initiator(factory, acceptor) {}
-  ~F() {}
+  F() : factory(), acceptor(), initiator(factory, acceptor),
+        orig_rdbuf(nullptr), mybuf() {}
+  ~F() { if (orig_rdbuf) std::clog.rdbuf(orig_rdbuf); }
 
   DummySocketSessionFactory factory;
   DummySocketAcceptor acceptor;
   SessionInitiator initiator;
+  std::basic_streambuf<char, std::char_traits<char> >* orig_rdbuf;
+  MyStreamBuf mybuf;
+
+  void intercept_clog()
+  {
+    std::clog.rdbuf(&mybuf);
+  }
+
+  std::string clog_contents()
+  {
+    return mybuf.contents.str();
+  }
 };
 
 BOOST_FIXTURE_TEST_CASE(creates_socket_session_on_request, F)
@@ -190,9 +213,17 @@ BOOST_FIXTURE_TEST_CASE(destroys_sessions_when_they_lose_their_connection, F)
 
 BOOST_FIXTURE_TEST_CASE(can_accept_session_after_error_occurs_in_acceptor, F)
 {
+  intercept_clog();
   acceptor.make_error_occur("A serious error.");
   acceptor.request_accept();
   BOOST_CHECK_EQUAL(1, factory.create_count);
+}
+
+BOOST_FIXTURE_TEST_CASE(logs_error_messages_from_acceptor_to_clog, F)
+{
+  intercept_clog();
+  acceptor.make_error_occur("A serious error.");
+  BOOST_CHECK_EQUAL("ERROR [SessionInitiator]: A serious error.\n", clog_contents());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

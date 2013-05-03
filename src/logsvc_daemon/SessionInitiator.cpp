@@ -31,6 +31,7 @@
 #include "network/Socket.h"
 #include "network/SocketAcceptor.h"
 #include <algorithm>
+#include <iostream>
 
 namespace logsvc
 {
@@ -61,6 +62,7 @@ namespace logsvc
 
     void SessionInitiator::error_occurred(const std::string& message)
     {
+      std::clog << "ERROR [SessionInitiator]: " << message << std::endl;
       acceptor.async_accept(*this);
     }
 
