@@ -1,0 +1,16 @@
+import os
+
+env = CoreEnvironment(LIBS=[
+        ],
+                      DEBUG=1)
+
+cpp_files = env.Glob('*.cpp')
+libnetwork = env.SharedLibrary("network", cpp_files)
+network = env.Install(dir = '#/build', source = libnetwork)
+
+Export("network")
+SConscript(os.path.join("test", "SConscript"))
+#env.Depends(network, run_tests)
+
+Return("network")
+

@@ -2,6 +2,7 @@ import os
 
 libs = []
 for library in [
+    "network",
     "log",
     "logsvccpp",
     "logsvc_daemon",
