@@ -49,11 +49,22 @@ def compile_OutStream_test():
 def compile_logtofile():
     return make("logtofile")
 
+def can_start_logsvcd():
+    proc = subprocess.Popen("build/logsvcd", stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    if proc.poll() == None:
+        proc.send_signal(subprocess.signal.SIGKILL)
+        return (True, "")
+    else:
+        return (False, proc.communicate()[1])
+
+
 def load_tests():
     tests = { "compile_Host_test": compile_Host_test,
               "compile_Log_test": compile_Log_test,
               "compile_OutStream_test": compile_OutStream_test,
-              "compile_logtofile": compile_logtofile }
+              "compile_logtofile": compile_logtofile,
+              "can_start_logsvcd": can_start_logsvcd }
     return tests
 
 def load_passed_tests():
@@ -64,6 +75,8 @@ def load_passed_tests():
         return [line for line in fd.readlines() if line]
 
 def main(argv):
+    os.environ['LD_LIBRARY_PATH'] = "build"
+
     print("Running system test suite...")
     tests = load_tests()
     print("Running %d tests..." % len(tests))
