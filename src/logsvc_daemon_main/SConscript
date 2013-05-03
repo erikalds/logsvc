@@ -1,6 +1,7 @@
-Import(Split('libs'))
 
 env = CoreEnvironment(LIBS=[
+        "boost_filesystem",
+        "boost_system",
         ],
                       DEBUG=1,
                       PKGS=[
@@ -11,8 +12,9 @@ env = CoreEnvironment(LIBS=[
 
 cpp_files = env.Glob('*.cpp')
 
+libs = ['logsvc_daemon', 'log', 'network']
 libs += env['LIBS'][:]
-logsvcd = env.Program('logsvcd', cpp_files, LIBS=libs)
+logsvcd = env.Program('logsvcd', cpp_files, LIBPATH='#/build', LIBS=libs)
 installed_logsvcd = env.Install(dir="#/build", source=logsvcd)
 
 env.Alias("build", installed_logsvcd)
