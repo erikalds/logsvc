@@ -60,7 +60,9 @@ def load_passed_tests():
         return fd.readlines()
 
 def main(argv):
+    print("Running system test suite...")
     tests = load_tests()
+    print("Running %d tests..." % len(tests))
     earlier_passed_tests = load_passed_tests()
     regressions = []
     passed_tests = []
@@ -70,24 +72,31 @@ def main(argv):
         sys.stdout.flush()
         testresult = tests[test]()
         if not testresult[0]:
-            if test in earlier_passed_tests:
-                regressions.append(test)
-            failed_tests.append(test)
             print("FAILED")
+            if test in earlier_passed_tests:
+                print("########## REGRESSION ##########")
+                regressions.append(test)
+
+            failed_tests.append(test)
             print(testresult[1])
         else:
+            print("OK")
+            passed_tests.append(test)
             if test not in earlier_passed_tests:
                 earlier_passed_tests.append(test)
-            passed_tests.append(test)
-            print("OK")
 
     with open("passed_tests.txt", 'w') as fd:
         for test in earlier_passed_tests:
             fd.write("%s\n" % test)
 
-    print("Passed tests: %d" % len(passed_tests))
-    print("Failed tests: %d" % len(failed_tests))
-    print("Regressions:  %d" % len(regressions))
+    print("Passed tests:    %d" % len(passed_tests))
+    print("Failed tests:    %d" % len(failed_tests))
+    print("Regressed tests: %d" % len(regressions))
+
+    if not regressions:
+        print("\nsystemtest: *** OK ***\n")
+    else:
+        print("\nsystemtest: *** FAILED ***\n")
 
     return len(regressions)
 
