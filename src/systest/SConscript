@@ -1,0 +1,11 @@
+import os
+
+Import("daemon")
+
+st = os.path.join("systest", "systest.py")
+runtest = Command(st, None, st)
+
+Depends(daemon, runtest)
+
+Default(runtest)
+

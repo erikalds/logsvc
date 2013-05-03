@@ -15,8 +15,10 @@ for library in [
 
 Export("libs")
 
-SConscript(os.path.join("logsvc_daemon_main", "SConscript"))
+daemon = SConscript(os.path.join("logsvc_daemon_main", "SConscript"))
+Export("daemon")
 
+SConscript(os.path.join("systest", "SConscript"))
 # SConscript(os.path.join("logsvcc", "SConscript"))
 # SConscript(os.path.join("logsvcpy", "SConscript"))
 # SConscript(os.path.join("logsvcj", "SConscript"))
