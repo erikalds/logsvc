@@ -73,6 +73,14 @@ namespace mock
         listener->connection_lost(this);
     }
 
+    void make_error_occur(const std::string& msg)
+    {
+      BOOST_REQUIRE(current_listener != nullptr);
+      network::SocketListener* this_listener = nullptr;
+      std::swap(current_listener, this_listener);
+      this_listener->error_occurred(msg);
+    }
+
     int async_read_call_count;
     std::size_t async_read_byte_count;
     network::SocketListener* current_listener;

@@ -86,15 +86,26 @@ namespace logsvc
           current_receivable->act(*executor);
         the_socket->async_write(deliverable->get_header() + deliverable->get_payload());
 
-        current_receivable.reset();
-        the_socket->async_read(*this, constants::header_length);
+        listen_for_new_header();
       }
+    }
+
+    void DefaultSocketSession::error_occurred(const std::string& message)
+    {
+      std::clog << "ERROR [DefaultSocketSession]: " << message << std::endl;
+      listen_for_new_header();
     }
 
     void DefaultSocketSession::connection_lost(network::Socket* /*socket*/)
     {
       for (SocketSessionListener* listener : listeners)
         listener->connection_lost(this);
+    }
+
+    void DefaultSocketSession::listen_for_new_header()
+    {
+      current_receivable.reset();
+      start_listen();
     }
 
   } // namespace daemon

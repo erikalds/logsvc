@@ -38,6 +38,7 @@ namespace network
     virtual ~SocketListener() = 0;
 
     virtual void receive_bytes(const std::string& bytes) = 0;
+    virtual void error_occurred(const std::string& message) = 0;
   };
 
 } // namespace network

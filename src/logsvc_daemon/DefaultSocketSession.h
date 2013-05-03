@@ -67,8 +67,11 @@ namespace logsvc
 
     private:
       virtual void receive_bytes(const std::string& bytes);
+      virtual void error_occurred(const std::string& message);
 
       virtual void connection_lost(network::Socket* socket);
+
+      void listen_for_new_header();
 
     private:
       std::unique_ptr<network::Socket> the_socket;

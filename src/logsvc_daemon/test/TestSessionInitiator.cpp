@@ -27,6 +27,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "logsvc_daemon/test/DummySocket.h"
+#include "logsvc_daemon/test/MyStreamBuf.h"
 #include "logsvc_daemon/SessionInitiator.h"
 #include "logsvc_daemon/SocketSession.h"
 #include "logsvc_daemon/SocketSessionListener.h"
@@ -134,37 +135,14 @@ public:
   network::Socket* last_socket;
 };
 
-struct MyStreamBuf : std::basic_streambuf<char, std::char_traits<char> >
+struct F : ClogInterceptor
 {
-  std::ostringstream contents;
-
-  virtual int_type overflow(int_type ch = std::char_traits<char>::eof())
-  { contents << char(ch); assert(1 != std::char_traits<char>::eof()); return 1; }
-  virtual std::streamsize xsputn(const char_type* s, std::streamsize count)
-  { contents << std::string(s, count); return count; }
-};
-
-struct F
-{
-  F() : factory(), acceptor(), initiator(factory, acceptor),
-        orig_rdbuf(nullptr), mybuf() {}
-  ~F() { if (orig_rdbuf) std::clog.rdbuf(orig_rdbuf); }
+  F() : factory(), acceptor(), initiator(factory, acceptor) {}
+  ~F() {}
 
   DummySocketSessionFactory factory;
   DummySocketAcceptor acceptor;
   SessionInitiator initiator;
-  std::basic_streambuf<char, std::char_traits<char> >* orig_rdbuf;
-  MyStreamBuf mybuf;
-
-  void intercept_clog()
-  {
-    std::clog.rdbuf(&mybuf);
-  }
-
-  std::string clog_contents()
-  {
-    return mybuf.contents.str();
-  }
 };
 
 BOOST_FIXTURE_TEST_CASE(creates_socket_session_on_request, F)

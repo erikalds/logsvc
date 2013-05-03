@@ -28,6 +28,7 @@
 
 #include "log/test/DummyExecutor.h"
 #include "logsvc_daemon/test/DummySocket.h"
+#include "logsvc_daemon/test/MyStreamBuf.h"
 #include "logsvc_daemon/SocketSession.h"
 #include "logsvc_daemon/SocketSessionListener.h"
 #include "logsvc_daemon/DefaultSocketSession.h"
@@ -95,7 +96,7 @@ public:
   int notification_count;
 };
 
-struct F
+struct F : ClogInterceptor
 {
   F() : socket(nullptr), exec(nullptr), drf(), ss(create_socket(),
                                                   create_exec(),
@@ -222,6 +223,29 @@ BOOST_FIXTURE_TEST_CASE(is_not_notified_when_socket_connection_dropped_and_unreg
   ss.remove_socket_session_listener(&listener);
   socket->kill_connection();
   BOOST_CHECK_EQUAL(0, listener.notification_count);
+}
+
+BOOST_FIXTURE_TEST_CASE(Socket_error_occur_during_read_starts_listening_for_new_header, F)
+{
+  intercept_clog();
+  ss.start_listen();
+  std::string header("logsmesg\x09\0\0\0", 12);
+  socket->receive_bytes(header);
+  BOOST_CHECK_EQUAL(2, socket->async_read_call_count);
+  socket->make_error_occur("asdf");
+  BOOST_CHECK_EQUAL(3, socket->async_read_call_count);
+  BOOST_CHECK_EQUAL(12, socket->async_read_byte_count);
+  socket->receive_bytes(header);
+  BOOST_CHECK_EQUAL(4, socket->async_read_call_count);
+}
+
+BOOST_FIXTURE_TEST_CASE(Socket_error_occur_during_read_is_logged_to_clog, F)
+{
+  intercept_clog();
+  ss.start_listen();
+  socket->make_error_occur("A grave error.");
+  BOOST_CHECK_EQUAL("ERROR [DefaultSocketSession]: A grave error.\n",
+                    clog_contents());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
