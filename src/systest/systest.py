@@ -40,8 +40,12 @@ def make(target):
 def compile_Host_test():
     return make("Host")
 
+def compile_Log_test():
+    return make("Log")
+
 def load_tests():
-    tests = { "compile_Host_test": compile_Host_test }
+    tests = { "compile_Host_test": compile_Host_test,
+              "compile_Log_test": compile_Log_test }
     return tests
 
 def load_passed_tests():
