@@ -43,9 +43,13 @@ def compile_Host_test():
 def compile_Log_test():
     return make("Log")
 
+def compile_OutStream_test():
+    return make("OutStream")
+
 def load_tests():
     tests = { "compile_Host_test": compile_Host_test,
-              "compile_Log_test": compile_Log_test }
+              "compile_Log_test": compile_Log_test,
+              "compile_OutStream_test": compile_OutStream_test }
     return tests
 
 def load_passed_tests():
