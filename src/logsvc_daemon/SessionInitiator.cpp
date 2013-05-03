@@ -46,12 +46,21 @@ namespace logsvc
       acceptor.async_accept(*this);
     }
 
+    SessionInitiator::~SessionInitiator()
+    {
+    }
+
     void SessionInitiator::accept_requested(std::unique_ptr<network::Socket> socket)
     {
       std::unique_ptr<SocketSession> session = factory.create_session(std::move(socket));
       session->start_listen();
       session->add_socket_session_listener(this);
       live_sessions.insert(std::move(session));
+      acceptor.async_accept(*this);
+    }
+
+    void SessionInitiator::error_occurred(const std::string& message)
+    {
       acceptor.async_accept(*this);
     }
 

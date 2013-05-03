@@ -40,6 +40,7 @@ namespace network
     virtual ~SocketAcceptListener() = 0;
 
     virtual void accept_requested(std::unique_ptr<Socket> socket) = 0;
+    virtual void error_occurred(const std::string& message) = 0;
   };
 
 } // namespace network

@@ -52,9 +52,12 @@ namespace logsvc
     public:
       SessionInitiator(SocketSessionFactory& factory,
                        network::SocketAcceptor& acceptor);
+      ~SessionInitiator();
 
     private:
       virtual void accept_requested(std::unique_ptr<network::Socket> socket);
+      virtual void error_occurred(const std::string& message);
+
       virtual void connection_lost(SocketSession* session);
 
       network::SocketAcceptor& acceptor;

@@ -122,6 +122,14 @@ public:
     prev_listener->accept_requested(std::move(dummysocket));
   }
 
+  void make_error_occur(const std::string& msg)
+  {
+    BOOST_REQUIRE(current_listener != nullptr);
+    network::SocketAcceptListener* prev_listener = current_listener;
+    current_listener = nullptr;
+    prev_listener->error_occurred(msg);
+  }
+
   network::SocketAcceptListener* current_listener;
   network::Socket* last_socket;
 };
@@ -178,6 +186,13 @@ BOOST_FIXTURE_TEST_CASE(destroys_sessions_when_they_lose_their_connection, F)
   BOOST_CHECK(factory.last_session == nullptr);
   first_session->kill();
   BOOST_CHECK_EQUAL(0, factory.live_count);
+}
+
+BOOST_FIXTURE_TEST_CASE(can_accept_session_after_error_occurs_in_acceptor, F)
+{
+  acceptor.make_error_occur("A serious error.");
+  acceptor.request_accept();
+  BOOST_CHECK_EQUAL(1, factory.create_count);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
