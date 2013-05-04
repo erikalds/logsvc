@@ -28,7 +28,7 @@
 #include "logsvccpp/Log.h"
 #include "logsvccpp/OutStream.h"
 
-int main(int argc, const char* argv)
+int main(int argc, const char* argv[])
 {
   if (argc < 3)
     return 0;
