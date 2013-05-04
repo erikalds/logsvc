@@ -5,6 +5,7 @@ env = CoreEnvironment(LIBS=[
                       DEBUG=1)
 
 cpp_files = env.Glob('*.cpp')
+cpp_files += env.Glob(os.path.join("client", "*.cpp"))
 liblogsvccpp = env.SharedLibrary("logsvccpp", cpp_files)
 logsvccpp = env.Install(dir = '#/build', source = liblogsvccpp)
 
