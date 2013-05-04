@@ -30,22 +30,35 @@
 #include "logsvccpp/client/Host.h"
 #include "logsvccpp/client/ConnectionFactory.h"
 #include "logsvccpp/client/SessionConnection.h"
+#include "log/Deliverable.h"
+#include <set>
 
 BOOST_AUTO_TEST_SUITE(testClientHost)
+
+class DummySessionConnection;
 
 class DSCKilledListener
 {
 public:
   virtual ~DSCKilledListener() {}
 
-  virtual void connection_killed() const = 0;
+  virtual void connection_killed(DummySessionConnection*) const = 0;
 };
 
 class DummySessionConnection : public logsvc::client::SessionConnection
 {
 public:
   DummySessionConnection(const DSCKilledListener* listener) : listener(listener) {}
-  ~DummySessionConnection() { listener->connection_killed(); }
+  ~DummySessionConnection() { listener->connection_killed(this); }
+
+  virtual void send(const logsvc::prot::Deliverable& deliverable)
+  {
+    sent_headers.push_back(deliverable.get_header());
+    sent_payloads.push_back(deliverable.get_payload());
+  }
+
+  std::vector<std::string> sent_headers;
+  std::vector<std::string> sent_payloads;
 
 private:
   const DSCKilledListener* listener;
@@ -55,42 +68,64 @@ class DummyConnectionFactory : public logsvc::client::ConnectionFactory,
                                public DSCKilledListener
 {
 public:
-  DummyConnectionFactory() : create_count(0), live_count(0) {}
+  DummyConnectionFactory() : create_count(0), live_ptrs() {}
 
   virtual std::unique_ptr<logsvc::client::SessionConnection> create_session() const
   {
     ++create_count;
-    ++live_count;
-    return std::unique_ptr<logsvc::client::SessionConnection>(new DummySessionConnection(this));
+    DummySessionConnection* conn = new DummySessionConnection(this);
+    live_ptrs.insert(conn);
+    return std::unique_ptr<logsvc::client::SessionConnection>(conn);
   }
 
-  virtual void connection_killed() const
+  virtual void connection_killed(DummySessionConnection* conn) const
   {
-    --live_count;
+    live_ptrs.erase(conn);
   }
+
+  std::size_t live_count() const { return live_ptrs.size(); }
 
   mutable int create_count;
-  mutable int live_count;
+  mutable std::set<DummySessionConnection*> live_ptrs;
 };
 
 struct F
 {
-  F() {}
+  F() : connection_factory(),
+        host(new logsvc::client::Host("appname", connection_factory)) {}
   ~F() {}
+
+  std::string get_sent_header(std::size_t index) const
+  {
+    BOOST_REQUIRE_GT(connection_factory.live_ptrs.size(), 0);
+    DummySessionConnection* conn = *connection_factory.live_ptrs.begin();
+    BOOST_REQUIRE_GT(conn->sent_headers.size(), index);
+    return conn->sent_headers[index];
+  }
+
+  DummyConnectionFactory connection_factory;
+  std::unique_ptr<logsvc::client::Host> host;
 };
 
 BOOST_FIXTURE_TEST_CASE(constructor_creates_session_connection, F)
 {
-  DummyConnectionFactory connection_factory;
-  logsvc::client::Host host("appname", connection_factory);
   BOOST_CHECK_EQUAL(1, connection_factory.create_count);
 }
 
 BOOST_FIXTURE_TEST_CASE(keeps_session_connection, F)
 {
-  DummyConnectionFactory connection_factory;
-  logsvc::client::Host host("appname", connection_factory);
-  BOOST_CHECK_EQUAL(1, connection_factory.live_count);
+  BOOST_CHECK_EQUAL(1, connection_factory.live_count());
+}
+
+BOOST_FIXTURE_TEST_CASE(session_connection_dies_with_host, F)
+{
+  host.reset();
+  BOOST_CHECK_EQUAL(0, connection_factory.live_count());
+}
+
+BOOST_FIXTURE_TEST_CASE(sends_prot_client_via_session_connection, F)
+{
+  BOOST_CHECK_EQUAL(get_sent_header(0).substr(4, 4), "clnt");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

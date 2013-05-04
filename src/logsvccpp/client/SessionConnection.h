@@ -29,6 +29,12 @@
 
 namespace logsvc
 {
+  namespace prot
+  {
+
+    class Deliverable;
+
+  } // namespace prot
   namespace client
   {
 
@@ -36,6 +42,8 @@ namespace logsvc
     {
     public:
       virtual ~SessionConnection() = 0;
+
+      virtual void send(const prot::Deliverable& deliverable) = 0;
     };
 
   } // namespace client

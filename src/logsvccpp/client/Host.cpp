@@ -28,15 +28,28 @@
 
 #include "logsvccpp/client/ConnectionFactory.h"
 #include "logsvccpp/client/SessionConnection.h"
+#include "log/Client.h"
+#include <boost/asio/ip/address.hpp>
 
 namespace logsvc
 {
   namespace client
   {
+    namespace
+    {
+
+      boost::asio::ip::address get_my_ip()
+      {
+        return boost::asio::ip::address_v4();
+      }
+
+    } // anonymous namespace
+
 
     Host::Host(const std::string& appname, const ConnectionFactory& confac) :
       connection(confac.create_session())
     {
+      connection->send(prot::Client(appname, get_my_ip()));
     }
 
     Host::~Host()
