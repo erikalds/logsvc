@@ -30,7 +30,12 @@
 #include "logsvccpp/client/Host.h"
 #include "logsvccpp/client/ConnectionFactory.h"
 #include "logsvccpp/client/SessionConnection.h"
+#include "log/ClientHandle.h"
 #include "log/Deliverable.h"
+#include "log/Executor.h"
+#include "log/FileHandle.h"
+#include "log/ProtObjFactory.h"
+
 #include <set>
 
 BOOST_AUTO_TEST_SUITE(testClientHost)
@@ -45,20 +50,41 @@ public:
   virtual void connection_killed(DummySessionConnection*) const = 0;
 };
 
-class DummySessionConnection : public logsvc::client::SessionConnection
+class DummySessionConnection : public logsvc::client::SessionConnection,
+                               public logsvc::prot::Executor
 {
 public:
-  DummySessionConnection(const DSCKilledListener* listener) : listener(listener) {}
+  DummySessionConnection(const DSCKilledListener* listener) : client_name("UNSET"),
+                                                              client_address("UNSET"),
+                                                              listener(listener) {}
   ~DummySessionConnection() { listener->connection_killed(this); }
 
   virtual void send(const logsvc::prot::Deliverable& deliverable)
   {
-    sent_headers.push_back(deliverable.get_header());
-    sent_payloads.push_back(deliverable.get_payload());
+    logsvc::prot::ProtObjFactory factory;
+    std::unique_ptr<logsvc::prot::Receivable> recv =
+      factory.create(deliverable.get_header());
+    BOOST_REQUIRE(recv != nullptr);
+    recv->read_payload(deliverable.get_payload());
+    recv->act(*this);
   }
 
-  std::vector<std::string> sent_headers;
-  std::vector<std::string> sent_payloads;
+  virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& filename)
+  { return logsvc::prot::FileHandle(); }
+  virtual void close_file(const logsvc::prot::FileHandle& fh) {}
+  virtual void write_message(const logsvc::prot::FileHandle& fh,
+                             const std::string& message)
+  {}
+  virtual logsvc::prot::ClientHandle set_client_info(const std::string& name,
+                                                     const std::string& address)
+  {
+    client_name = name;
+    client_address = address;
+    return logsvc::prot::ClientHandle();
+  }
+
+  std::string client_name;
+  std::string client_address;
 
 private:
   const DSCKilledListener* listener;
@@ -91,17 +117,19 @@ public:
 
 struct F
 {
-  F() : connection_factory(),
-        host(new logsvc::client::Host("appname", connection_factory)) {}
+  F() : connection_factory(), host() { create_host("appname"); }
   ~F() {}
 
-  std::string get_sent_header(std::size_t index) const
+  std::string get_set_client_name() const
   {
-    BOOST_REQUIRE_GT(connection_factory.live_ptrs.size(), 0);
+    BOOST_REQUIRE_EQUAL(connection_factory.live_ptrs.size(), 1);
     DummySessionConnection* conn = *connection_factory.live_ptrs.begin();
-    BOOST_REQUIRE_GT(conn->sent_headers.size(), index);
-    return conn->sent_headers[index];
+    BOOST_REQUIRE(conn != nullptr);
+    return conn->client_name;
   }
+
+  void create_host(const std::string& appname)
+  { host.reset(new logsvc::client::Host(appname, connection_factory)); }
 
   DummyConnectionFactory connection_factory;
   std::unique_ptr<logsvc::client::Host> host;
@@ -125,7 +153,9 @@ BOOST_FIXTURE_TEST_CASE(session_connection_dies_with_host, F)
 
 BOOST_FIXTURE_TEST_CASE(sends_prot_client_via_session_connection, F)
 {
-  BOOST_CHECK_EQUAL(get_sent_header(0).substr(4, 4), "clnt");
+  BOOST_CHECK_EQUAL(get_set_client_name(), "appname");
+  create_host("another_appname");
+  BOOST_CHECK_EQUAL(get_set_client_name(), "another_appname");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
