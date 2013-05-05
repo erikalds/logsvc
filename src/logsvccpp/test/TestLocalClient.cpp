@@ -30,6 +30,7 @@
 #include "logsvccpp/client/LocalClient.h"
 #include "logsvccpp/client/ConnectionFactory.h"
 #include "logsvccpp/client/SessionConnection.h"
+#include "logsvccpp/UnableToConnectError.h"
 #include "log/ClientHandle.h"
 #include "log/Deliverable.h"
 #include "log/Executor.h"
@@ -94,10 +95,13 @@ class DummyConnectionFactory : public logsvc::client::ConnectionFactory,
                                public DSCKilledListener
 {
 public:
-  DummyConnectionFactory() : create_count(0), live_ptrs() {}
+  DummyConnectionFactory() : create_count(0), live_ptrs(), unable_to_connect(false) {}
 
   virtual std::unique_ptr<logsvc::client::SessionConnection> create_session() const
   {
+    if (unable_to_connect)
+      return std::unique_ptr<logsvc::client::SessionConnection>();
+
     ++create_count;
     DummySessionConnection* conn = new DummySessionConnection(this);
     live_ptrs.insert(conn);
@@ -113,6 +117,7 @@ public:
 
   mutable int create_count;
   mutable std::set<DummySessionConnection*> live_ptrs;
+  bool unable_to_connect;
 };
 
 struct F
@@ -145,17 +150,24 @@ BOOST_FIXTURE_TEST_CASE(keeps_session_connection, F)
   BOOST_CHECK_EQUAL(1, connection_factory.live_count());
 }
 
-BOOST_FIXTURE_TEST_CASE(session_connection_dies_with_host, F)
+BOOST_FIXTURE_TEST_CASE(session_connection_dies_with_local_client, F)
 {
-  host.reset();
+  local_client.reset();
   BOOST_CHECK_EQUAL(0, connection_factory.live_count());
 }
 
 BOOST_FIXTURE_TEST_CASE(sends_prot_client_via_session_connection, F)
 {
   BOOST_CHECK_EQUAL(get_set_client_name(), "appname");
-  create_host("another_appname");
+  create_local_client("another_appname");
   BOOST_CHECK_EQUAL(get_set_client_name(), "another_appname");
+}
+
+BOOST_FIXTURE_TEST_CASE(throws_UnableToConnectError_when_ConnectionFactory_creates_nullptr,
+                        F)
+{
+  connection_factory.unable_to_connect = true;
+  BOOST_CHECK_THROW(create_local_client("appname"), logsvc::UnableToConnectError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

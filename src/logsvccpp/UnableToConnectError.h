@@ -1,4 +1,7 @@
-/* Source file created: 2013-05-04
+#ifndef UNABLETOCONNECTERROR_H_
+#define UNABLETOCONNECTERROR_H_
+
+/* Header created: 2013-05-05
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -24,41 +27,15 @@
     NORWAY
 */
 
-#include "logsvccpp/client/LocalClient.h"
-
-#include "logsvccpp/client/ConnectionFactory.h"
-#include "logsvccpp/client/SessionConnection.h"
-#include "logsvccpp/UnableToConnectError.h"
-#include "log/Client.h"
-#include <boost/asio/ip/address.hpp>
+#include <stdexcept>
 
 namespace logsvc
 {
-  namespace client
+  class UnableToConnectError : public std::runtime_error
   {
-    namespace
-    {
-
-      boost::asio::ip::address get_my_ip()
-      {
-        return boost::asio::ip::address_v4();
-      }
-
-    } // anonymous namespace
-
-
-    LocalClient::LocalClient(const std::string& appname, const ConnectionFactory& confac) :
-      connection(confac.create_session())
-    {
-      if (!connection)
-        throw UnableToConnectError();
-
-      connection->send(prot::Client(appname, get_my_ip()));
-    }
-
-    LocalClient::~LocalClient()
-    {
-    }
-
-  } // namespace client
+  public:
+    UnableToConnectError() : std::runtime_error("Unable to connect") {}
+  };
 } // namespace logsvc
+
+#endif // UNABLETOCONNECTERROR_H_
