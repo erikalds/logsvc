@@ -24,7 +24,7 @@
     NORWAY
 */
 
-#include "logsvccpp/client/Host.h"
+#include "logsvccpp/client/LocalClient.h"
 
 #include "logsvccpp/client/ConnectionFactory.h"
 #include "logsvccpp/client/SessionConnection.h"
@@ -46,13 +46,13 @@ namespace logsvc
     } // anonymous namespace
 
 
-    Host::Host(const std::string& appname, const ConnectionFactory& confac) :
+    LocalClient::LocalClient(const std::string& appname, const ConnectionFactory& confac) :
       connection(confac.create_session())
     {
       connection->send(prot::Client(appname, get_my_ip()));
     }
 
-    Host::~Host()
+    LocalClient::~LocalClient()
     {
     }
 

@@ -1,5 +1,5 @@
-#ifndef CLIENT_HOST_H_
-#define CLIENT_HOST_H_
+#ifndef LOCALCLIENT_H_
+#define LOCALCLIENT_H_
 
 /* Header created: 2013-05-04
 
@@ -38,11 +38,11 @@ namespace logsvc
     class ConnectionFactory;
     class SessionConnection;
 
-    class Host
+    class LocalClient
     {
     public:
-      Host(const std::string& appname, const ConnectionFactory& confac);
-      ~Host();
+      LocalClient(const std::string& appname, const ConnectionFactory& confac);
+      ~LocalClient();
 
     private:
       std::unique_ptr<SessionConnection> connection;
@@ -51,4 +51,4 @@ namespace logsvc
   } // namespace client
 } // namespace logsvc
 
-#endif // CLIENT_HOST_H_
+#endif // LOCALCLIENT_H_

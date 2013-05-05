@@ -27,7 +27,7 @@
 #define BOOST_TEST_MODULE "logsvccpp test module"
 #include <boost/test/unit_test.hpp>
 
-#include "logsvccpp/client/Host.h"
+#include "logsvccpp/client/LocalClient.h"
 #include "logsvccpp/client/ConnectionFactory.h"
 #include "logsvccpp/client/SessionConnection.h"
 #include "log/ClientHandle.h"
@@ -38,7 +38,7 @@
 
 #include <set>
 
-BOOST_AUTO_TEST_SUITE(testClientHost)
+BOOST_AUTO_TEST_SUITE(testLocalClient)
 
 class DummySessionConnection;
 
@@ -69,11 +69,11 @@ public:
     recv->act(*this);
   }
 
-  virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& filename)
+  virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& /*filename*/)
   { return logsvc::prot::FileHandle(); }
-  virtual void close_file(const logsvc::prot::FileHandle& fh) {}
-  virtual void write_message(const logsvc::prot::FileHandle& fh,
-                             const std::string& message)
+  virtual void close_file(const logsvc::prot::FileHandle& /*fh*/) {}
+  virtual void write_message(const logsvc::prot::FileHandle& /*fh*/,
+                             const std::string& /*message*/)
   {}
   virtual logsvc::prot::ClientHandle set_client_info(const std::string& name,
                                                      const std::string& address)
@@ -117,7 +117,7 @@ public:
 
 struct F
 {
-  F() : connection_factory(), host() { create_host("appname"); }
+  F() : connection_factory(), local_client() { create_local_client("appname"); }
   ~F() {}
 
   std::string get_set_client_name() const
@@ -128,11 +128,11 @@ struct F
     return conn->client_name;
   }
 
-  void create_host(const std::string& appname)
-  { host.reset(new logsvc::client::Host(appname, connection_factory)); }
+  void create_local_client(const std::string& appname)
+  { local_client.reset(new logsvc::client::LocalClient(appname, connection_factory)); }
 
   DummyConnectionFactory connection_factory;
-  std::unique_ptr<logsvc::client::Host> host;
+  std::unique_ptr<logsvc::client::LocalClient> local_client;
 };
 
 BOOST_FIXTURE_TEST_CASE(constructor_creates_session_connection, F)
