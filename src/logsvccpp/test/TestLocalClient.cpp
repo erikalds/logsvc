@@ -27,82 +27,19 @@
 #define BOOST_TEST_MODULE "logsvccpp test module"
 #include <boost/test/unit_test.hpp>
 
+#include "logsvccpp/test/DummySessionConnection.h"
 #include "logsvccpp/client/LocalClient.h"
 #include "logsvccpp/client/ConnectionFactory.h"
 #include "logsvccpp/client/RemoteLogFile.h"
-#include "logsvccpp/client/SessionConnection.h"
 #include "logsvccpp/UnableToConnectError.h"
 #include "log/Client.h"
-#include "log/ClientHandle.h"
-#include "log/Deliverable.h"
-#include "log/Executor.h"
-#include "log/FileHandle.h"
-#include "log/ProtObjFactory.h"
 
 #include <set>
 
 BOOST_AUTO_TEST_SUITE(testLocalClient)
 
-class DummySessionConnection;
-
-class DSCKilledListener
-{
-public:
-  virtual ~DSCKilledListener() {}
-
-  virtual void connection_killed(DummySessionConnection*) const = 0;
-};
-
-class DummySessionConnection : public logsvc::client::SessionConnection,
-                               public logsvc::prot::Executor
-{
-public:
-  DummySessionConnection(const DSCKilledListener* listener) : client_name("UNSET"),
-                                                              client_address("UNSET"),
-                                                              listener(listener) {}
-  ~DummySessionConnection() { listener->connection_killed(this); }
-
-  virtual void send(const logsvc::prot::Deliverable& deliverable)
-  {
-    logsvc::prot::ProtObjFactory factory;
-    std::unique_ptr<logsvc::prot::Receivable> recv =
-      factory.create(deliverable.get_header());
-    BOOST_REQUIRE(recv != nullptr);
-    recv->read_payload(deliverable.get_payload());
-    recv->act(*this);
-  }
-
-  virtual logsvc::prot::FileHandle
-  open_file(const boost::filesystem::path& filename)
-  {
-    opened_files.push_back(filename);
-    return logsvc::prot::FileHandle(opened_files.size() - 1);
-  }
-
-  virtual void close_file(const logsvc::prot::FileHandle& /*fh*/) {}
-
-  virtual void write_message(const logsvc::prot::FileHandle& /*fh*/,
-                             const std::string& /*message*/)
-  {}
-
-  virtual logsvc::prot::ClientHandle set_client_info(const std::string& name,
-                                                     const std::string& address)
-  {
-    client_name = name;
-    client_address = address;
-    return logsvc::prot::ClientHandle();
-  }
-
-  std::string client_name;
-  std::string client_address;
-  std::vector<boost::filesystem::path> opened_files;
-
-private:
-  const DSCKilledListener* listener;
-};
-
 class DummyConnectionFactory : public logsvc::client::ConnectionFactory,
-                               public DSCKilledListener
+                               public logsvc::mock::DSCKilledListener
 {
 public:
   DummyConnectionFactory() : create_count(0), live_ptrs(), unable_to_connect(false),
@@ -114,7 +51,8 @@ public:
       return std::unique_ptr<logsvc::client::SessionConnection>();
 
     ++create_count;
-    DummySessionConnection* conn = new DummySessionConnection(this);
+    logsvc::mock::DummySessionConnection* conn
+      = new logsvc::mock::DummySessionConnection(this);
     live_ptrs.insert(conn);
     return std::unique_ptr<logsvc::client::SessionConnection>(conn);
   }
@@ -125,7 +63,7 @@ public:
                                 boost::asio::ip::address::from_string(address));
   }
 
-  virtual void connection_killed(DummySessionConnection* conn) const
+  virtual void connection_killed(logsvc::mock::DummySessionConnection* conn) const
   {
     live_ptrs.erase(conn);
   }
@@ -133,7 +71,7 @@ public:
   std::size_t live_count() const { return live_ptrs.size(); }
 
   mutable int create_count;
-  mutable std::set<DummySessionConnection*> live_ptrs;
+  mutable std::set<logsvc::mock::DummySessionConnection*> live_ptrs;
   bool unable_to_connect;
   std::string address;
 };
@@ -143,10 +81,11 @@ struct F
   F() : connection_factory(), local_client() { create_local_client("appname"); }
   ~F() {}
 
-  DummySessionConnection* get_live_connection() const
+  logsvc::mock::DummySessionConnection* get_live_connection() const
   {
     BOOST_REQUIRE_EQUAL(connection_factory.live_ptrs.size(), 1);
-    DummySessionConnection* conn = *connection_factory.live_ptrs.begin();
+    logsvc::mock::DummySessionConnection* conn =
+      *connection_factory.live_ptrs.begin();
     BOOST_REQUIRE(conn != nullptr);
     return conn;
   }
