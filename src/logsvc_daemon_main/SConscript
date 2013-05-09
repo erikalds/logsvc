@@ -12,7 +12,7 @@ env = CoreEnvironment(LIBS=[
 
 cpp_files = env.Glob('*.cpp')
 
-libs = ['logsvc_daemon', 'log', 'network']
+libs = ['logsvc_daemon', 'log', 'network', 'pthread']
 libs += env['LIBS'][:]
 logsvcd = env.Program('logsvcd', cpp_files, LIBPATH='#/build', LIBS=libs)
 installed_logsvcd = env.Install(dir="#/build", source=logsvcd)
