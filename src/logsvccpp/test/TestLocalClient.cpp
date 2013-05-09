@@ -31,6 +31,7 @@
 #include "logsvccpp/client/ConnectionFactory.h"
 #include "logsvccpp/client/SessionConnection.h"
 #include "logsvccpp/UnableToConnectError.h"
+#include "log/Client.h"
 #include "log/ClientHandle.h"
 #include "log/Deliverable.h"
 #include "log/Executor.h"
@@ -95,7 +96,8 @@ class DummyConnectionFactory : public logsvc::client::ConnectionFactory,
                                public DSCKilledListener
 {
 public:
-  DummyConnectionFactory() : create_count(0), live_ptrs(), unable_to_connect(false) {}
+  DummyConnectionFactory() : create_count(0), live_ptrs(), unable_to_connect(false),
+                             address("192.168.1.102") {}
 
   virtual std::unique_ptr<logsvc::client::SessionConnection> create_session() const
   {
@@ -108,6 +110,12 @@ public:
     return std::unique_ptr<logsvc::client::SessionConnection>(conn);
   }
 
+  virtual logsvc::prot::Client create_client_info(const std::string& appname) const
+  {
+    return logsvc::prot::Client(appname,
+                                boost::asio::ip::address::from_string(address));
+  }
+
   virtual void connection_killed(DummySessionConnection* conn) const
   {
     live_ptrs.erase(conn);
@@ -118,6 +126,7 @@ public:
   mutable int create_count;
   mutable std::set<DummySessionConnection*> live_ptrs;
   bool unable_to_connect;
+  std::string address;
 };
 
 struct F
@@ -125,12 +134,22 @@ struct F
   F() : connection_factory(), local_client() { create_local_client("appname"); }
   ~F() {}
 
-  std::string get_set_client_name() const
+  DummySessionConnection* get_live_connection() const
   {
     BOOST_REQUIRE_EQUAL(connection_factory.live_ptrs.size(), 1);
     DummySessionConnection* conn = *connection_factory.live_ptrs.begin();
     BOOST_REQUIRE(conn != nullptr);
-    return conn->client_name;
+    return conn;
+  }
+
+  std::string get_set_client_name() const
+  {
+    return get_live_connection()->client_name;
+  }
+
+  std::string get_set_client_address() const
+  {
+    return get_live_connection()->client_address;
   }
 
   void create_local_client(const std::string& appname)
@@ -168,6 +187,14 @@ BOOST_FIXTURE_TEST_CASE(throws_UnableToConnectError_when_ConnectionFactory_creat
 {
   connection_factory.unable_to_connect = true;
   BOOST_CHECK_THROW(create_local_client("appname"), logsvc::UnableToConnectError);
+}
+
+BOOST_FIXTURE_TEST_CASE(sends_ip_from_connection_factory, F)
+{
+  BOOST_CHECK_EQUAL(get_set_client_address(), connection_factory.address);
+  connection_factory.address = "10.30.30.250";
+  create_local_client("appname");
+  BOOST_CHECK_EQUAL(get_set_client_address(), connection_factory.address);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -36,16 +36,6 @@ namespace logsvc
 {
   namespace client
   {
-    namespace
-    {
-
-      boost::asio::ip::address get_my_ip()
-      {
-        return boost::asio::ip::address_v4();
-      }
-
-    } // anonymous namespace
-
 
     LocalClient::LocalClient(const std::string& appname, const ConnectionFactory& confac) :
       connection(confac.create_session())
@@ -53,7 +43,7 @@ namespace logsvc
       if (!connection)
         throw UnableToConnectError();
 
-      connection->send(prot::Client(appname, get_my_ip()));
+      connection->send(confac.create_client_info(appname));
     }
 
     LocalClient::~LocalClient()

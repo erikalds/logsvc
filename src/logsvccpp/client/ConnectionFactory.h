@@ -28,9 +28,12 @@
 */
 
 #include <memory>
+#include <string>
 
 namespace logsvc
 {
+  namespace prot { class Client; }
+
   namespace client
   {
 
@@ -42,6 +45,7 @@ namespace logsvc
       virtual ~ConnectionFactory() = 0;
 
       virtual std::unique_ptr<SessionConnection> create_session() const = 0;
+      virtual prot::Client create_client_info(const std::string& appname) const = 0;
     };
 
   } // namespace client
