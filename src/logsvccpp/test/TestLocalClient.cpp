@@ -29,6 +29,7 @@
 
 #include "logsvccpp/client/LocalClient.h"
 #include "logsvccpp/client/ConnectionFactory.h"
+#include "logsvccpp/client/RemoteLogFile.h"
 #include "logsvccpp/client/SessionConnection.h"
 #include "logsvccpp/UnableToConnectError.h"
 #include "log/Client.h"
@@ -71,12 +72,19 @@ public:
     recv->act(*this);
   }
 
-  virtual logsvc::prot::FileHandle open_file(const boost::filesystem::path& /*filename*/)
-  { return logsvc::prot::FileHandle(); }
+  virtual logsvc::prot::FileHandle
+  open_file(const boost::filesystem::path& filename)
+  {
+    opened_files.push_back(filename);
+    return logsvc::prot::FileHandle(opened_files.size() - 1);
+  }
+
   virtual void close_file(const logsvc::prot::FileHandle& /*fh*/) {}
+
   virtual void write_message(const logsvc::prot::FileHandle& /*fh*/,
                              const std::string& /*message*/)
   {}
+
   virtual logsvc::prot::ClientHandle set_client_info(const std::string& name,
                                                      const std::string& address)
   {
@@ -87,6 +95,7 @@ public:
 
   std::string client_name;
   std::string client_address;
+  std::vector<boost::filesystem::path> opened_files;
 
 private:
   const DSCKilledListener* listener;
@@ -152,6 +161,11 @@ struct F
     return get_live_connection()->client_address;
   }
 
+  std::vector<boost::filesystem::path> get_opened_files() const
+  {
+    return get_live_connection()->opened_files;
+  }
+
   void create_local_client(const std::string& appname)
   { local_client.reset(new logsvc::client::LocalClient(appname, connection_factory)); }
 
@@ -195,6 +209,22 @@ BOOST_FIXTURE_TEST_CASE(sends_ip_from_connection_factory, F)
   connection_factory.address = "10.30.30.250";
   create_local_client("appname");
   BOOST_CHECK_EQUAL(get_set_client_address(), connection_factory.address);
+}
+
+BOOST_FIXTURE_TEST_CASE(open_log_file, F)
+{
+  std::unique_ptr<logsvc::client::RemoteLogFile> remote_file0
+    = local_client->open_remote_file("asdf.txt");
+  BOOST_CHECK(remote_file0 != nullptr);
+  std::vector<boost::filesystem::path> opened_files = get_opened_files();
+  BOOST_REQUIRE_EQUAL(1, opened_files.size());
+  BOOST_CHECK_EQUAL("asdf.txt", opened_files[0]);
+
+  std::unique_ptr<logsvc::client::RemoteLogFile> remote_file1
+    = local_client->open_remote_file("foobar.txt");
+  opened_files = get_opened_files();
+  BOOST_REQUIRE_EQUAL(2, opened_files.size());
+  BOOST_CHECK_EQUAL("foobar.txt", opened_files[1]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -27,6 +27,7 @@
     NORWAY
 */
 
+#include <boost/filesystem/path.hpp>
 #include <string>
 #include <memory>
 
@@ -36,6 +37,7 @@ namespace logsvc
   {
 
     class ConnectionFactory;
+    class RemoteLogFile;
     class SessionConnection;
 
     class LocalClient
@@ -43,6 +45,9 @@ namespace logsvc
     public:
       LocalClient(const std::string& appname, const ConnectionFactory& confac);
       ~LocalClient();
+
+      std::unique_ptr<RemoteLogFile>
+      open_remote_file(const boost::filesystem::path& filename);
 
     private:
       std::unique_ptr<SessionConnection> connection;

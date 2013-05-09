@@ -1,4 +1,4 @@
-/* Source file created: 2013-05-04
+/* Source file created: 2013-05-09
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -24,39 +24,20 @@
     NORWAY
 */
 
-#include "logsvccpp/client/LocalClient.h"
-
 #include "logsvccpp/client/ConnectedLogFile.h"
-#include "logsvccpp/client/ConnectionFactory.h"
-#include "logsvccpp/client/RemoteLogFile.h"
+
 #include "logsvccpp/client/SessionConnection.h"
-#include "logsvccpp/UnableToConnectError.h"
-#include "log/Client.h"
-#include <boost/asio/ip/address.hpp>
+#include "log/File.h"
 
 namespace logsvc
 {
   namespace client
   {
 
-    LocalClient::LocalClient(const std::string& appname, const ConnectionFactory& confac) :
-      connection(confac.create_session())
+    ConnectedLogFile::ConnectedLogFile(SessionConnection& connection,
+                                       const boost::filesystem::path& path)
     {
-      if (!connection)
-        throw UnableToConnectError();
-
-      connection->send(confac.create_client_info(appname));
-    }
-
-    LocalClient::~LocalClient()
-    {
-    }
-
-    std::unique_ptr<RemoteLogFile>
-    LocalClient::open_remote_file(const boost::filesystem::path& filename)
-    {
-      return std::unique_ptr<RemoteLogFile>(new ConnectedLogFile(*connection,
-                                                                 filename));
+      connection.send(prot::File(path));
     }
 
   } // namespace client
