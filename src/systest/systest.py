@@ -75,6 +75,10 @@ def load_passed_tests():
     with open("passed_tests.txt", 'r') as fd:
         return [line for line in fd.readlines() if line]
 
+def write_passed_tests(passed_tests):
+    with open("passed_tests.txt", 'w') as fd:
+        fd.writelines(passed_tests)
+
 def parse_type(obj):
     t = str(type(obj))
     mo = re.match("<type '([^']+)'>", t)
@@ -94,9 +98,8 @@ def run_test(test):
 def main(argv):
     os.environ['LD_LIBRARY_PATH'] = "build"
 
-    print("Running system test suite...")
     tests = load_tests()
-    print("Running %d tests..." % len(tests))
+    print("Running %d system tests..." % len(tests))
     earlier_passed_tests = load_passed_tests()
     regressions = []
     passed_tests = []
@@ -121,8 +124,7 @@ def main(argv):
             if test not in earlier_passed_tests:
                 earlier_passed_tests.append(test)
 
-    with open("passed_tests.txt", 'w') as fd:
-        fd.writelines(earlier_passed_tests)
+    write_passed_tests(earlier_passed_tests)
 
     print("Passed tests:    %d" % len(passed_tests))
     print("Failed tests:    %d" % len(failed_tests))
