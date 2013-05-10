@@ -60,11 +60,11 @@ def can_start_logsvcd():
 
 
 def load_tests():
-    tests = { "compile_Host_test": compile_Host_test,
-              "compile_Log_test": compile_Log_test,
-              "compile_OutStream_test": compile_OutStream_test,
-              "compile_logtofile": compile_logtofile,
-              "can_start_logsvcd": can_start_logsvcd }
+    tests = { "000_compile_Host_test": compile_Host_test,
+              "000_compile_Log_test": compile_Log_test,
+              "000_compile_OutStream_test": compile_OutStream_test,
+              "000_compile_logtofile": compile_logtofile,
+              "100_can_start_logsvcd": can_start_logsvcd }
     return tests
 
 def load_passed_tests():
@@ -84,7 +84,9 @@ def main(argv):
     regressions = []
     passed_tests = []
     failed_tests = []
-    for test in tests:
+    sorted_tests = tests.keys()
+    sorted_tests.sort()
+    for test in sorted_tests:
         sys.stdout.write(" * %s... " % test)
         sys.stdout.flush()
         testresult = tests[test]()
