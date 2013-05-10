@@ -27,6 +27,7 @@
 #   NORWAY
 
 import os
+import re
 import subprocess
 import sys
 
@@ -74,6 +75,22 @@ def load_passed_tests():
     with open("passed_tests.txt", 'r') as fd:
         return [line for line in fd.readlines() if line]
 
+def parse_type(obj):
+    t = str(type(obj))
+    mo = re.match("<type '([^']+)'>", t)
+    if not mo:
+        return t
+    else:
+        return mo.group(1)
+
+def run_test(test):
+    try:
+        return test()
+    except Exception as e:
+        return (False, "%s: %s\n" % (parse_type(e), e))
+    except:
+        return (False, "Unknown exception occurred")
+
 def main(argv):
     os.environ['LD_LIBRARY_PATH'] = "build"
 
@@ -89,7 +106,7 @@ def main(argv):
     for test in sorted_tests:
         sys.stdout.write(" * %s... " % test)
         sys.stdout.flush()
-        testresult = tests[test]()
+        testresult = run_test(tests[test])
         if not testresult[0]:
             print("FAILED")
             if test in earlier_passed_tests:
