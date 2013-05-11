@@ -12,4 +12,3 @@ logsvccpp = env.Install(dir = '#/build', source = liblogsvccpp)
 SConscript(os.path.join("test", "SConscript"))
 
 Return("logsvccpp")
-

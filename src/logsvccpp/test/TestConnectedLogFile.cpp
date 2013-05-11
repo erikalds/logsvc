@@ -49,6 +49,19 @@ BOOST_FIXTURE_TEST_CASE(ctor_connects, F)
   BOOST_CHECK_EQUAL("foobar.txt", dummy_connection.opened_files[1]);
 }
 
+BOOST_FIXTURE_TEST_CASE(dtor_disconnects, F)
+{
+  logsvc::mock::DummySessionConnection dummy_connection;
+  {
+    logsvc::client::ConnectedLogFile clf0(dummy_connection, "asdf.txt");
+    logsvc::client::ConnectedLogFile clf1(dummy_connection, "foobar.txt");
+  }
+
+  BOOST_REQUIRE_EQUAL(2, dummy_connection.opened_files.size());
+  BOOST_CHECK_EQUAL("CLOSED_FILE(asdf.txt)", dummy_connection.opened_files[0]);
+  BOOST_CHECK_EQUAL("CLOSED_FILE(foobar.txt)", dummy_connection.opened_files[1]);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

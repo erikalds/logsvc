@@ -27,7 +27,9 @@
 #include "logsvccpp/client/ConnectedLogFile.h"
 
 #include "logsvccpp/client/SessionConnection.h"
+#include "log/CloseFile.h"
 #include "log/File.h"
+#include "log/FileHandle.h"
 
 namespace logsvc
 {
@@ -35,9 +37,21 @@ namespace logsvc
   {
 
     ConnectedLogFile::ConnectedLogFile(SessionConnection& connection,
-                                       const boost::filesystem::path& path)
+                                       const boost::filesystem::path& path) :
+      connection(connection)
     {
-      connection.send(prot::File(path));
+      std::unique_ptr<prot::Receivable> recv = connection.send(prot::File(path));
+      recv->act(*this);
+    }
+
+    ConnectedLogFile::~ConnectedLogFile()
+    {
+      connection.send(prot::CloseFile(*file));
+    }
+
+    void ConnectedLogFile::set_file_handle(const prot::FileHandle& fh)
+    {
+      file.reset(new prot::FileHandle(fh));
     }
 
   } // namespace client

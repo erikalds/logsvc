@@ -1,5 +1,6 @@
 env = CoreEnvironment(DEBUG=1,
                       LIBS=[
+        "boost_filesystem",
         "boost_unit_test_framework",
         "boost_system",
         ])
@@ -15,4 +16,3 @@ env.AddPostAction(installed_test, Action("@build/%s" % test_logsvccpp[0]))
 
 env.Alias("build", installed_test)
 env.Default("build")
-

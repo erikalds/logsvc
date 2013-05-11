@@ -30,6 +30,7 @@
 #include "logsvccpp/client/SessionConnection.h"
 #include "log/Executor.h"
 #include <boost/filesystem/path.hpp>
+#include <map>
 #include <vector>
 
 namespace logsvc
@@ -51,21 +52,16 @@ namespace logsvc
                                    public logsvc::prot::Executor
     {
     public:
-      explicit DummySessionConnection(const DSCKilledListener* listener = nullptr) :
-        client_name("UNSET"),
-        client_address("UNSET"),
-        listener(listener)
-      {}
+      explicit DummySessionConnection(const DSCKilledListener* listener = nullptr);
+      ~DummySessionConnection();
 
-      ~DummySessionConnection()
-      { if (listener) listener->connection_killed(this); }
-
-      virtual void send(const logsvc::prot::Deliverable& deliverable);
+      virtual std::unique_ptr<logsvc::prot::Receivable>
+      send(const logsvc::prot::Deliverable& deliverable);
 
       virtual logsvc::prot::FileHandle
       open_file(const boost::filesystem::path& filename);
 
-      virtual void close_file(const logsvc::prot::FileHandle& /*fh*/) {}
+      virtual void close_file(const logsvc::prot::FileHandle& fh);
 
       virtual void write_message(const logsvc::prot::FileHandle& /*fh*/,
                                  const std::string& /*message*/)
@@ -79,6 +75,7 @@ namespace logsvc
       std::vector<boost::filesystem::path> opened_files;
 
     private:
+      std::map<logsvc::prot::FileHandle, std::size_t> fh_to_idx;
       const DSCKilledListener* listener;
     };
 
@@ -86,4 +83,3 @@ namespace logsvc
 } // namespace logsvc
 
 #endif // DUMMYSESSIONCONNECTION_H_
-

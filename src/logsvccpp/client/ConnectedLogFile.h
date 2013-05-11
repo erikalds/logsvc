@@ -28,20 +28,30 @@
 */
 
 #include "logsvccpp/client/RemoteLogFile.h"
+#include "log/ClientExecutor.h"
 #include <boost/filesystem/path.hpp>
 
 namespace logsvc
 {
+  namespace prot { class FileHandle; }
   namespace client
   {
 
     class SessionConnection;
 
-    class ConnectedLogFile : public RemoteLogFile
+    class ConnectedLogFile : public RemoteLogFile,
+                             public prot::ClientExecutor
     {
     public:
       ConnectedLogFile(SessionConnection& connection,
                        const boost::filesystem::path& path);
+      ~ConnectedLogFile();
+
+      virtual void set_file_handle(const prot::FileHandle& fh);
+
+    private:
+      SessionConnection& connection;
+      std::unique_ptr<prot::FileHandle> file;
     };
 
   } // namespace client
