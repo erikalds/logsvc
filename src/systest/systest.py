@@ -41,7 +41,11 @@ def make(target):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     exitcode = proc.wait()
-    return (exitcode == 0, proc.communicate()[1])
+    stdout, stderr = proc.communicate()
+    return (exitcode == 0, stderr)
+
+def make_clean():
+    return make("clean")
 
 def compile_Host_test():
     return make("Host")
@@ -84,12 +88,15 @@ def hup_logsvcd():
 
 class MyTestLoader(TestLoader):
     def load_tests(self):
-        tests = { "000_compile_Host_test": compile_Host_test,
-                  "000_compile_Log_test": compile_Log_test,
-                  "000_compile_OutStream_test": compile_OutStream_test,
-                  "000_compile_logtofile": compile_logtofile,
-                  "100_start_logsvcd": start_logsvcd,
-                  "999_HUP_logsvcd" : hup_logsvcd }
+        tests = {
+            "000_make_clean": make_clean,
+            "010_compile_Host_test": compile_Host_test,
+            "010_compile_Log_test": compile_Log_test,
+            "010_compile_OutStream_test": compile_OutStream_test,
+            "010_compile_logtofile": compile_logtofile,
+            "100_start_logsvcd": start_logsvcd,
+            "999_HUP_logsvcd" : hup_logsvcd
+            }
         return tests
 
 

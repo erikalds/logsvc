@@ -18,3 +18,6 @@ logtofile: logtofile.o
 	g++ -o logtofile logtofile.o -L../build -llogsvccpp
 logtofile.o: logtofile.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h ../logsvccpp/OutStream.h
 	g++ -c -o logtofile.o logtofile.cpp -I..
+
+clean:
+	rm -f Host.o Log.o OutStream.o logtofile.o Host Log OutStream logtofile
