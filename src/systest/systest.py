@@ -30,6 +30,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 from framework import SystemTests, TextProgressPublisher, TextResultsPublisher, TestLoader
 
@@ -65,14 +66,21 @@ def start_logsvcd():
     else:
         return (False, proc.communicate()[1])
 
-def kill_logsvcd():
+def hup_logsvcd():
     global logsvcd
 
     if logsvcd.poll() != None:
         return (False, "logsvcd process has died prematurely")
-    logsvcd.send_signal(subprocess.signal.SIGKILL)
-    errorcode = logsvcd.wait()
-    return (True, "")
+    logsvcd.send_signal(subprocess.signal.SIGHUP)
+    then = time.time()
+    while logsvcd.poll() == None:
+        now = time.time()
+        if (now - then) > 1: # second
+            logsvcd.send_signal(subprocess.signal.SIGKILL)
+            logsvcd.wait()
+            return (False, "logsvcd process failed to respond to SIGHUP within one second")
+
+    return (True, "testing")
 
 class MyTestLoader(TestLoader):
     def load_tests(self):
@@ -81,7 +89,7 @@ class MyTestLoader(TestLoader):
                   "000_compile_OutStream_test": compile_OutStream_test,
                   "000_compile_logtofile": compile_logtofile,
                   "100_start_logsvcd": start_logsvcd,
-                  "999_kill_logsvcd" : kill_logsvcd }
+                  "999_HUP_logsvcd" : hup_logsvcd }
         return tests
 
 
