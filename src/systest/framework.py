@@ -26,6 +26,7 @@
 #   NORWAY
 
 import os
+import re
 import sys
 
 class TestLoader:
@@ -106,7 +107,7 @@ class SystemTests:
         try:
             return test_function()
         except Exception as e:
-            return (False, "%s: %s\n" % (parse_type(e), e))
+            return (False, "%s: %s\n" % (self._parse_type(e), e))
         except:
             return (False, "Unknown exception occurred")
 
