@@ -26,6 +26,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "logsvccpp/FileWriteError.h"
 #include "logsvccpp/OpenFileError.h"
 #include "logsvccpp/client/ConnectedLogFile.h"
 #include "logsvccpp/test/DummySessionConnection.h"
@@ -85,6 +86,38 @@ BOOST_FIXTURE_TEST_CASE(writeln_sends_Message, F)
   BOOST_CHECK_EQUAL("message\n", dummy_connection.file_contents["asdf.txt"]);
   clf.writeln("foobar");
   BOOST_CHECK_EQUAL("message\nfoobar\n", dummy_connection.file_contents["asdf.txt"]);
+}
+
+BOOST_FIXTURE_TEST_CASE(writeln_fails_exception_is_thrown, F)
+{
+  logsvc::client::ConnectedLogFile clf(dummy_connection, "asdf.txt");
+  dummy_connection.write_message_error = "error";
+  BOOST_CHECK_EXCEPTION(clf.writeln("message"),
+                        logsvc::FileWriteError,
+                        [&](const logsvc::FileWriteError& e)
+                        {
+                          const std::string what(e.what());
+                          return "asdf.txt" == e.filename()
+                            && "error" == e.reason()
+                            && what.find("asdf.txt") != std::string::npos
+                            && what.find("error") != std::string::npos;
+                        });
+
+  logsvc::client::ConnectedLogFile clf1(dummy_connection, "foobar.txt");
+  dummy_connection.write_message_error = "failed";
+  BOOST_CHECK_EXCEPTION(clf1.writeln("message"),
+                        logsvc::FileWriteError,
+                        [&](const logsvc::FileWriteError& e)
+                        {
+                          const std::string what(e.what());
+                          return "foobar.txt" == e.filename()
+                            && "failed" == e.reason()
+                            && what.find("foobar.txt") != std::string::npos
+                            && what.find("failed") != std::string::npos;
+                        });
+
+  dummy_connection.write_message_error = "";
+  BOOST_CHECK_NO_THROW(clf1.writeln("message"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

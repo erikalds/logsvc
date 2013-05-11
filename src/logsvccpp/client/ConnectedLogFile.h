@@ -57,6 +57,7 @@ namespace logsvc
       SessionConnection& connection;
       std::unique_ptr<prot::FileHandle> file;
       std::string error_string;
+      boost::filesystem::path file_path;
     };
 
   } // namespace client

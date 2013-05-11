@@ -96,6 +96,9 @@ namespace logsvc
     void DummySessionConnection::write_message(const logsvc::prot::FileHandle& fh,
                                                const std::string& message)
     {
+      if (!write_message_error.empty())
+        throw std::runtime_error(write_message_error);
+
       std::size_t idx = lookup_idx(fh);
       file_contents[opened_files[idx]] += message + "\n";
     }

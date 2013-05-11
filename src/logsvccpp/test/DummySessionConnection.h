@@ -74,6 +74,7 @@ namespace logsvc
       std::vector<boost::filesystem::path> opened_files;
       std::string open_file_error;
       std::map<boost::filesystem::path, std::string> file_contents;
+      std::string write_message_error;
 
     private:
       std::size_t lookup_idx(const logsvc::prot::FileHandle fh) const;

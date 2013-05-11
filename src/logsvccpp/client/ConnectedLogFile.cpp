@@ -27,6 +27,7 @@
 #include "logsvccpp/client/ConnectedLogFile.h"
 
 #include "logsvccpp/client/SessionConnection.h"
+#include "logsvccpp/FileWriteError.h"
 #include "logsvccpp/OpenFileError.h"
 #include "log/CloseFile.h"
 #include "log/File.h"
@@ -42,7 +43,8 @@ namespace logsvc
                                        const boost::filesystem::path& path) :
       connection(connection),
       file(),
-      error_string()
+      error_string(),
+      file_path(path)
     {
       std::unique_ptr<prot::Receivable> recv = connection.send(prot::File(path));
       recv->act(*this);
@@ -57,7 +59,16 @@ namespace logsvc
 
     void ConnectedLogFile::writeln(const std::string& message)
     {
-      connection.send(prot::Message(message, *file));
+      std::unique_ptr<prot::Receivable> recv
+        = connection.send(prot::Message(message, *file));
+      recv->act(*this);
+
+      if (!error_string.empty())
+      {
+        std::string current_error_string;
+        std::swap(current_error_string, error_string);
+        throw FileWriteError(file_path, current_error_string);
+      }
     }
 
     void ConnectedLogFile::set_file_handle(const prot::FileHandle& fh)
