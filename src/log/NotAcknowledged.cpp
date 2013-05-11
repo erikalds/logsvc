@@ -26,6 +26,7 @@
 
 #include "log/NotAcknowledged.h"
 
+#include "log/ClientExecutor.h"
 #include "log/create_header.h"
 
 namespace logsvc
@@ -68,6 +69,11 @@ namespace logsvc
     std::unique_ptr<Deliverable> NotAcknowledged::act(Executor& exec)
     {
       return std::unique_ptr<Deliverable>();
+    }
+
+    void NotAcknowledged::act(ClientExecutor& exec)
+    {
+      exec.set_error(reason);
     }
 
   } // namespace prot

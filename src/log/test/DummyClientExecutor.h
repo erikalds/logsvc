@@ -1,7 +1,7 @@
-#ifndef NOTACKNOWLEDGED_H_
-#define NOTACKNOWLEDGED_H_
+#ifndef DUMMYCLIENTEXECUTOR_H_
+#define DUMMYCLIENTEXECUTOR_H_
 
-/* Header created: 2013-03-27
+/* Header created: 2013-05-11
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -27,36 +27,30 @@
     NORWAY
 */
 
-#include "log/Deliverable.h"
-#include "log/AbstractReceivable.h"
-#include <string>
+#include "log/ClientExecutor.h"
+#include "log/FileHandle.h"
 
 namespace logsvc
 {
-  namespace prot
+  namespace mock
   {
 
-    class NotAcknowledged : public Deliverable,
-                            public AbstractReceivable
+    class DummyClientExecutor : public logsvc::prot::ClientExecutor
     {
     public:
-      explicit NotAcknowledged(std::size_t payload_length);
-      explicit NotAcknowledged(const std::string& reason);
+      DummyClientExecutor() : file_handle(), error_string("NOT SET") {}
 
-      std::string get_reason() const;
+      virtual void set_file_handle(const logsvc::prot::FileHandle& fh)
+      { file_handle = fh; }
 
-      virtual std::string get_header() const;
-      virtual std::string get_payload() const;
+      virtual void set_error(const std::string& s)
+      { error_string = s; }
 
-      virtual void read_payload(const std::string& payload);
-      virtual std::unique_ptr<Deliverable> act(Executor& exec);
-      virtual void act(ClientExecutor& exec);
-
-    private:
-      std::string reason;
+      logsvc::prot::FileHandle file_handle;
+      std::string error_string;
     };
 
-  } // namespace prot
+  } // namespace mock
 } // namespace logsvc
 
-#endif // NOTACKNOWLEDGED_H_
+#endif // DUMMYCLIENTEXECUTOR_H_

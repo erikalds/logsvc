@@ -27,6 +27,7 @@
 #include <boost/test/unit_test.hpp>
 #include "log/Receivable.h"
 #include "log/NotAcknowledged.h"
+#include "log/test/DummyClientExecutor.h"
 
 BOOST_AUTO_TEST_SUITE(testNotAcknowledged)
 
@@ -76,6 +77,22 @@ BOOST_FIXTURE_TEST_CASE(can_read_payload, F)
   BOOST_CHECK_EQUAL(payload.size(), nack.get_payload_length());
   nack.read_payload(payload);
   BOOST_CHECK_EQUAL(payload, nack.get_reason());
+}
+
+BOOST_FIXTURE_TEST_CASE(acts_on_ClientExecutor, F)
+{
+  logsvc::mock::DummyClientExecutor dce;
+  std::string payload("a message");
+  logsvc::prot::NotAcknowledged nack(payload.size());
+  nack.read_payload(payload);
+  nack.act(dce);
+  BOOST_CHECK_EQUAL(dce.error_string, payload);
+
+  payload = "another message";
+  nack = logsvc::prot::NotAcknowledged(payload.size());
+  nack.read_payload(payload);
+  nack.act(dce);
+  BOOST_CHECK_EQUAL(dce.error_string, payload);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

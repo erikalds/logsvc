@@ -48,6 +48,7 @@ namespace logsvc
       ~ConnectedLogFile();
 
       virtual void set_file_handle(const prot::FileHandle& fh);
+      virtual void set_error(const std::string& error_string);
 
     private:
       SessionConnection& connection;

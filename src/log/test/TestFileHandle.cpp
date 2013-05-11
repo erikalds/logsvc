@@ -27,21 +27,8 @@
 #include "log/ClientExecutor.h"
 #include "log/FileHandle.h"
 #include "log/Receivable.h"
+#include "log/test/DummyClientExecutor.h"
 #include <boost/test/unit_test.hpp>
-
-namespace mock
-{
-
-  class DummyClientExecutor : public logsvc::prot::ClientExecutor
-  {
-  public:
-    virtual void set_file_handle(const logsvc::prot::FileHandle& fh)
-    { file_handle = fh; }
-
-    logsvc::prot::FileHandle file_handle;
-  };
-
-} // namespace mock
 
 BOOST_AUTO_TEST_SUITE(testFileHandle)
 
@@ -129,7 +116,7 @@ BOOST_FIXTURE_TEST_CASE(act_on_client_executor, F)
 {
   logsvc::prot::FileHandle fh;
   fh.read_payload(std::string("\x42\x43\0\0", 4));
-  mock::DummyClientExecutor dummy_client_executor;
+  logsvc::mock::DummyClientExecutor dummy_client_executor;
   fh.act(dummy_client_executor);
   BOOST_CHECK(logsvc::prot::FileHandle(0x4342) == dummy_client_executor.file_handle);
   fh.read_payload(std::string("\x43\x42\0\0", 4));

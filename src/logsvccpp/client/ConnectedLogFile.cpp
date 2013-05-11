@@ -54,5 +54,9 @@ namespace logsvc
       file.reset(new prot::FileHandle(fh));
     }
 
+    void ConnectedLogFile::set_error(const std::string& error_string)
+    {
+    }
+
   } // namespace client
 } // namespace logsvc
