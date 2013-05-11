@@ -26,6 +26,7 @@
 
 #include "log/Acknowledged.h"
 
+#include "log/ClientExecutor.h"
 #include "log/create_header.h"
 
 namespace logsvc
@@ -56,5 +57,11 @@ namespace logsvc
     {
       return std::unique_ptr<Deliverable>();
     }
+
+    void Acknowledged::act(ClientExecutor& exec)
+    {
+      exec.success();
+    }
+
   } // namespace prot
 } // namespace logsvc

@@ -64,5 +64,9 @@ namespace logsvc
       error_string = error;
     }
 
+    void ConnectedLogFile::success()
+    {
+    }
+
   } // namespace client
 } // namespace logsvc

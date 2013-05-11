@@ -29,6 +29,7 @@
 
 #include "log/ClientExecutor.h"
 #include "log/FileHandle.h"
+#include <boost/test/unit_test.hpp>
 
 namespace logsvc
 {
@@ -38,7 +39,11 @@ namespace logsvc
     class DummyClientExecutor : public logsvc::prot::ClientExecutor
     {
     public:
-      DummyClientExecutor() : file_handle(), error_string("NOT SET") {}
+      DummyClientExecutor() :
+        file_handle(), error_string("NOT SET"), expected_calls_to_success(0) {}
+
+      ~DummyClientExecutor()
+      { BOOST_CHECK_EQUAL(expected_calls_to_success, 0); }
 
       virtual void set_file_handle(const logsvc::prot::FileHandle& fh)
       { file_handle = fh; }
@@ -46,8 +51,17 @@ namespace logsvc
       virtual void set_error(const std::string& s)
       { error_string = s; }
 
+      virtual void success()
+      { --expected_calls_to_success; }
+
+      void expect_call_to_success()
+      {
+        ++expected_calls_to_success;
+      }
+
       logsvc::prot::FileHandle file_handle;
       std::string error_string;
+      int expected_calls_to_success;
     };
 
   } // namespace mock

@@ -43,6 +43,7 @@ namespace logsvc
 
       virtual void set_file_handle(const FileHandle& fh) = 0;
       virtual void set_error(const std::string& s) = 0;
+      virtual void success() = 0;
     };
 
   } // namespace prot
