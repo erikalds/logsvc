@@ -67,6 +67,8 @@ public:
     return std::unique_ptr<logsvc::prot::Deliverable>(new logsvc::prot::NotAcknowledged("fail"));
   }
 
+  virtual void act(logsvc::prot::ClientExecutor&) {}
+
 private:
   std::string expected_payload;
   bool received_payload;

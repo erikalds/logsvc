@@ -1,7 +1,7 @@
-#ifndef PROT_FILE_H_
-#define PROT_FILE_H_
+#ifndef CLIENTEXECUTOR_H_
+#define CLIENTEXECUTOR_H_
 
-/* Header created: 2013-03-03
+/* Header created: 2013-05-11
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -27,38 +27,24 @@
     NORWAY
 */
 
-#include "log/AbstractReceivable.h"
-#include "log/Deliverable.h"
-#include <boost/filesystem/path.hpp>
-
 namespace logsvc
 {
   namespace prot
   {
 
-    class Executor;
+    class FileHandle;
 
-    class File : public AbstractReceivable,
-                 public Deliverable
+    class ClientExecutor
     {
     public:
-      explicit File(std::size_t payload_length);
-      explicit File(const boost::filesystem::path& fname);
+      virtual ~ClientExecutor() = 0;
 
-      boost::filesystem::path get_name() const;
-
-      virtual void read_payload(const std::string& payload);
-      virtual std::unique_ptr<Deliverable> act(Executor& exec);
-      virtual void act(ClientExecutor& exec) {}
-
-      virtual std::string get_header() const;
-      virtual std::string get_payload() const;
-
-    private:
-      boost::filesystem::path filename;
+      virtual void set_file_handle(const FileHandle& fh) = 0;
     };
 
   } // namespace prot
 } // namespace logsvc
 
-#endif // PROT_FILE_H_
+inline logsvc::prot::ClientExecutor::~ClientExecutor() {}
+
+#endif // CLIENTEXECUTOR_H_

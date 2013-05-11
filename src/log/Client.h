@@ -52,6 +52,7 @@ namespace logsvc
 
       virtual void read_payload(const std::string& payload);
       virtual std::unique_ptr<Deliverable> act(Executor& exec);
+      virtual void act(ClientExecutor& exec) {}
 
       virtual std::string get_header() const;
       virtual std::string get_payload() const;

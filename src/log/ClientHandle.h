@@ -49,6 +49,7 @@ namespace logsvc
 
       virtual void read_payload(const std::string& payload);
       virtual std::unique_ptr<Deliverable> act(Executor& exec);
+      virtual void act(ClientExecutor& exec) {}
 
     private:
       unsigned int ch;

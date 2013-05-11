@@ -26,6 +26,7 @@
 
 #include "log/FileHandle.h"
 
+#include "log/ClientExecutor.h"
 #include "log/create_header.h"
 #include "log/int_codec.h"
 
@@ -71,9 +72,14 @@ namespace logsvc
       fh = decode_32bit_int(payload);;
     }
 
-    std::unique_ptr<Deliverable> FileHandle:: act(Executor& exec)
+    std::unique_ptr<Deliverable> FileHandle::act(Executor& exec)
     {
       return std::unique_ptr<Deliverable>();
+    }
+
+    void FileHandle::act(ClientExecutor& exec)
+    {
+      exec.set_file_handle(*this);
     }
 
   } // namespace prot
