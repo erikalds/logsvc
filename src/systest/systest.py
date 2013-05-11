@@ -36,13 +36,16 @@ from framework import SystemTests, TextProgressPublisher, TextResultsPublisher, 
 
 logsvcd = None
 
-def make(target):
-    proc = subprocess.Popen(["/usr/bin/make", "-C", "systest", target],
+def run(command):
+    proc = subprocess.Popen(command,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     exitcode = proc.wait()
     stdout, stderr = proc.communicate()
     return (exitcode == 0, stderr)
+
+def make(target):
+    return run(["/usr/bin/make", "-C", "systest", target])
 
 def make_clean():
     return make("clean")
@@ -50,11 +53,20 @@ def make_clean():
 def compile_Host_test():
     return make("Host")
 
+def run_Host_test():
+    return run("systest/Host")
+
 def compile_Log_test():
     return make("Log")
 
+def run_Log_test():
+    return run("systest/Log")
+
 def compile_OutStream_test():
     return make("OutStream")
+
+def run_OutStream_test():
+    return run("systest/OutStream")
 
 def compile_logtofile():
     return make("logtofile")
@@ -94,6 +106,9 @@ class MyTestLoader(TestLoader):
             "010_compile_Log_test": compile_Log_test,
             "010_compile_OutStream_test": compile_OutStream_test,
             "010_compile_logtofile": compile_logtofile,
+            "020_run_Host_test": run_Host_test,
+            "020_run_Log_test": run_Log_test,
+            "020_run_OutStream_test": run_OutStream_test,
             "100_start_logsvcd": start_logsvcd,
             "999_HUP_logsvcd" : hup_logsvcd
             }
