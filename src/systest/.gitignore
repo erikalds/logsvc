@@ -1,1 +1,5 @@
 *.pyc
+Host
+Log
+OutStream
+logtofile
