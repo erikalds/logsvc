@@ -26,6 +26,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "logsvccpp/OpenFileError.h"
 #include "logsvccpp/client/ConnectedLogFile.h"
 #include "logsvccpp/test/DummySessionConnection.h"
 
@@ -33,13 +34,14 @@ BOOST_AUTO_TEST_SUITE(testConnectedLogFile)
 
 struct F
 {
-  F() {}
+  F() : dummy_connection() {}
   ~F() {}
+
+  logsvc::mock::DummySessionConnection dummy_connection;
 };
 
 BOOST_FIXTURE_TEST_CASE(ctor_connects, F)
 {
-  logsvc::mock::DummySessionConnection dummy_connection;
   logsvc::client::ConnectedLogFile clf0(dummy_connection, "asdf.txt");
   BOOST_REQUIRE_EQUAL(1, dummy_connection.opened_files.size());
   BOOST_CHECK_EQUAL("asdf.txt", dummy_connection.opened_files[0]);
@@ -51,7 +53,6 @@ BOOST_FIXTURE_TEST_CASE(ctor_connects, F)
 
 BOOST_FIXTURE_TEST_CASE(dtor_disconnects, F)
 {
-  logsvc::mock::DummySessionConnection dummy_connection;
   {
     logsvc::client::ConnectedLogFile clf0(dummy_connection, "asdf.txt");
     logsvc::client::ConnectedLogFile clf1(dummy_connection, "foobar.txt");
@@ -60,6 +61,21 @@ BOOST_FIXTURE_TEST_CASE(dtor_disconnects, F)
   BOOST_REQUIRE_EQUAL(2, dummy_connection.opened_files.size());
   BOOST_CHECK_EQUAL("CLOSED_FILE(asdf.txt)", dummy_connection.opened_files[0]);
   BOOST_CHECK_EQUAL("CLOSED_FILE(foobar.txt)", dummy_connection.opened_files[1]);
+}
+
+BOOST_FIXTURE_TEST_CASE(ctor_throws_if_connection_fails_on_open_file, F)
+{
+  dummy_connection.open_file_error = "some error";
+  BOOST_CHECK_EXCEPTION(logsvc::client::ConnectedLogFile clf(dummy_connection, "asdf.txt"),
+                        logsvc::OpenFileError,
+                        [&](const logsvc::OpenFileError& e)
+                        {
+                          const std::string what(e.what());
+                          return "asdf.txt" == e.filename()
+                            && dummy_connection.open_file_error == e.reason()
+                            && what.find("asdf.txt") != std::string::npos
+                            && what.find(dummy_connection.open_file_error) != std::string::npos;
+                        });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

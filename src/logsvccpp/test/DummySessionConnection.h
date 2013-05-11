@@ -73,6 +73,7 @@ namespace logsvc
       std::string client_name;
       std::string client_address;
       std::vector<boost::filesystem::path> opened_files;
+      std::string open_file_error;
 
     private:
       std::map<logsvc::prot::FileHandle, std::size_t> fh_to_idx;

@@ -1,7 +1,7 @@
-#ifndef CONNECTEDLOGFILE_H_
-#define CONNECTEDLOGFILE_H_
+#ifndef OPENFILEERROR_H_
+#define OPENFILEERROR_H_
 
-/* Header created: 2013-05-09
+/* Header created: 2013-05-11
 
   logsvc - logging as a service
   Copyright (C) 2013 Erik Åldstedt Sund
@@ -26,37 +26,24 @@
     NO-7540 KLÆBU
     NORWAY
 */
-
-#include "logsvccpp/client/RemoteLogFile.h"
-#include "log/ClientExecutor.h"
 #include <boost/filesystem/path.hpp>
+#include <string>
 
 namespace logsvc
 {
-  namespace prot { class FileHandle; }
-  namespace client
+  class OpenFileError : public std::runtime_error
   {
+  public:
+    OpenFileError(const boost::filesystem::path& filename,
+                  const std::string& reason);
 
-    class SessionConnection;
+    boost::filesystem::path filename() const;
+    std::string reason() const;
 
-    class ConnectedLogFile : public RemoteLogFile,
-                             public prot::ClientExecutor
-    {
-    public:
-      ConnectedLogFile(SessionConnection& connection,
-                       const boost::filesystem::path& path);
-      ~ConnectedLogFile();
-
-      virtual void set_file_handle(const prot::FileHandle& fh);
-      virtual void set_error(const std::string& error_string);
-
-    private:
-      SessionConnection& connection;
-      std::unique_ptr<prot::FileHandle> file;
-      std::string error_string;
-    };
-
-  } // namespace client
+  private:
+    boost::filesystem::path the_filename;
+    std::string the_reason;
+  };
 } // namespace logsvc
 
-#endif // CONNECTEDLOGFILE_H_
+#endif // OPENFILEERROR_H_

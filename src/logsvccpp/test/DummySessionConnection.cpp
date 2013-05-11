@@ -29,6 +29,7 @@
 #include "log/ClientHandle.h"
 #include "log/Deliverable.h"
 #include "log/FileHandle.h"
+#include "log/NotAcknowledged.h"
 #include "log/ProtObjFactory.h"
 #include <egen/lookup.h>
 #include <boost/test/unit_test.hpp>
@@ -41,7 +42,8 @@ namespace logsvc
     DummySessionConnection::DummySessionConnection(const DSCKilledListener* listener) :
       client_name("UNSET"),
       client_address("UNSET"),
-      listener(listener)
+      listener(listener),
+      open_file_error()
     {
     }
 
@@ -51,31 +53,41 @@ namespace logsvc
         listener->connection_killed(this);
     }
 
-    std::unique_ptr<logsvc::prot::Receivable>
-    DummySessionConnection::send(const logsvc::prot::Deliverable& deliverable)
+    std::unique_ptr<prot::Receivable>
+    DummySessionConnection::send(const prot::Deliverable& deliverable)
     {
-      logsvc::prot::ProtObjFactory factory;
-      std::unique_ptr<logsvc::prot::Receivable> recv =
+      prot::ProtObjFactory factory;
+      std::unique_ptr<prot::Receivable> recv =
         factory.create(deliverable.get_header());
       BOOST_REQUIRE(recv != nullptr);
       recv->read_payload(deliverable.get_payload());
 
-      std::unique_ptr<logsvc::prot::Deliverable> reply = recv->act(*this);
-      recv = factory.create(reply->get_header());
-      recv->read_payload(reply->get_payload());
-      return std::move(recv);
+      try
+      {
+        std::unique_ptr<prot::Deliverable> reply = recv->act(*this);
+        recv = factory.create(reply->get_header());
+        recv->read_payload(reply->get_payload());
+        return std::move(recv);
+      }
+      catch (const std::exception& e)
+      {
+        return std::unique_ptr<prot::Receivable>(new prot::NotAcknowledged(e.what()));
+      }
     }
 
-    logsvc::prot::FileHandle
+    prot::FileHandle
     DummySessionConnection::open_file(const boost::filesystem::path& filename)
     {
+      if (!open_file_error.empty())
+        throw std::runtime_error(open_file_error);
+
       opened_files.push_back(filename);
-      logsvc::prot::FileHandle fh(opened_files.size() - 1);
+      prot::FileHandle fh(opened_files.size() - 1);
       fh_to_idx[fh] = opened_files.size() - 1;
       return fh;
     }
 
-    void DummySessionConnection::close_file(const logsvc::prot::FileHandle& fh)
+    void DummySessionConnection::close_file(const prot::FileHandle& fh)
     {
       std::size_t idx = egen::lookup(fh, fh_to_idx,
                                      std::numeric_limits<std::size_t>::max());
@@ -83,13 +95,13 @@ namespace logsvc
       opened_files[idx] = "CLOSED_FILE(" + opened_files[idx].string() + ")";
     }
 
-    logsvc::prot::ClientHandle
+    prot::ClientHandle
     DummySessionConnection::set_client_info(const std::string& name,
                                             const std::string& address)
     {
       client_name = name;
       client_address = address;
-      return logsvc::prot::ClientHandle();
+      return prot::ClientHandle();
     }
   }
 } // namespace logsvc
