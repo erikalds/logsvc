@@ -136,7 +136,7 @@ def hup_logsvcd():
 class MyTestLoader(TestLoader):
     def load_tests(self):
         tests = {
-            "000_make_clean": make_clean,
+            #"000_make_clean": make_clean,
             "010_compile_Host_test": compile_Host_test,
             "010_compile_Log_test": compile_Log_test,
             "010_compile_OutStream_test": compile_OutStream_test,
