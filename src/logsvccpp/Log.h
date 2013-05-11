@@ -38,6 +38,9 @@ namespace logsvc
   public:
     Log(const boost::filesystem::path& filename,
         const Host& host);
+
+    Log(const Log&) = delete;
+    Log& operator=(const Log&) = delete;
   };
 
 } // namespace logsvc
