@@ -31,6 +31,7 @@
 #include "log/CloseFile.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
+#include "log/Message.h"
 
 namespace logsvc
 {
@@ -52,6 +53,11 @@ namespace logsvc
     ConnectedLogFile::~ConnectedLogFile()
     {
       connection.send(prot::CloseFile(*file));
+    }
+
+    void ConnectedLogFile::writeln(const std::string& message)
+    {
+      connection.send(prot::Message(message, *file));
     }
 
     void ConnectedLogFile::set_file_handle(const prot::FileHandle& fh)

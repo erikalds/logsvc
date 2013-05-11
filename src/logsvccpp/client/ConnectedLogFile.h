@@ -47,6 +47,8 @@ namespace logsvc
                        const boost::filesystem::path& path);
       ~ConnectedLogFile();
 
+      virtual void writeln(const std::string& message);
+
       virtual void set_file_handle(const prot::FileHandle& fh);
       virtual void set_error(const std::string& error_string);
       virtual void success();

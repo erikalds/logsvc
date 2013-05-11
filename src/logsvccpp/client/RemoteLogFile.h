@@ -27,6 +27,8 @@
     NORWAY
 */
 
+#include <string>
+
 namespace logsvc
 {
   namespace client
@@ -34,9 +36,15 @@ namespace logsvc
 
     class RemoteLogFile
     {
+    public:
+      virtual ~RemoteLogFile() = 0;
+
+      virtual void writeln(const std::string& message) = 0;
     };
 
   } // namespace client
 } // namespace logsvc
+
+inline logsvc::client::RemoteLogFile::~RemoteLogFile() {}
 
 #endif // REMOTELOGFILE_H_

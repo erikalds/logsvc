@@ -78,6 +78,15 @@ BOOST_FIXTURE_TEST_CASE(ctor_throws_if_connection_fails_on_open_file, F)
                         });
 }
 
+BOOST_FIXTURE_TEST_CASE(writeln_sends_Message, F)
+{
+  logsvc::client::ConnectedLogFile clf(dummy_connection, "asdf.txt");
+  clf.writeln("message");
+  BOOST_CHECK_EQUAL("message\n", dummy_connection.file_contents["asdf.txt"]);
+  clf.writeln("foobar");
+  BOOST_CHECK_EQUAL("message\nfoobar\n", dummy_connection.file_contents["asdf.txt"]);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

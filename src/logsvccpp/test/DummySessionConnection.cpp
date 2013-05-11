@@ -89,10 +89,15 @@ namespace logsvc
 
     void DummySessionConnection::close_file(const prot::FileHandle& fh)
     {
-      std::size_t idx = egen::lookup(fh, fh_to_idx,
-                                     std::numeric_limits<std::size_t>::max());
-      BOOST_REQUIRE_NE(idx, std::numeric_limits<std::size_t>::max());
+      std::size_t idx = lookup_idx(fh);
       opened_files[idx] = "CLOSED_FILE(" + opened_files[idx].string() + ")";
+    }
+
+    void DummySessionConnection::write_message(const logsvc::prot::FileHandle& fh,
+                                               const std::string& message)
+    {
+      std::size_t idx = lookup_idx(fh);
+      file_contents[opened_files[idx]] += message + "\n";
     }
 
     prot::ClientHandle
@@ -103,5 +108,14 @@ namespace logsvc
       client_address = address;
       return prot::ClientHandle();
     }
+
+    std::size_t DummySessionConnection::lookup_idx(const logsvc::prot::FileHandle fh) const
+    {
+      std::size_t idx = egen::lookup(fh, fh_to_idx,
+                                     std::numeric_limits<std::size_t>::max());
+      BOOST_REQUIRE_NE(idx, std::numeric_limits<std::size_t>::max());
+      return idx;
+    }
+
   }
 } // namespace logsvc

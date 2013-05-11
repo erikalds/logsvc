@@ -63,9 +63,8 @@ namespace logsvc
 
       virtual void close_file(const logsvc::prot::FileHandle& fh);
 
-      virtual void write_message(const logsvc::prot::FileHandle& /*fh*/,
-                                 const std::string& /*message*/)
-      {}
+      virtual void write_message(const logsvc::prot::FileHandle& fh,
+                                 const std::string& message);
 
       virtual logsvc::prot::ClientHandle
       set_client_info(const std::string& name, const std::string& address);
@@ -74,8 +73,11 @@ namespace logsvc
       std::string client_address;
       std::vector<boost::filesystem::path> opened_files;
       std::string open_file_error;
+      std::map<boost::filesystem::path, std::string> file_contents;
 
     private:
+      std::size_t lookup_idx(const logsvc::prot::FileHandle fh) const;
+
       std::map<logsvc::prot::FileHandle, std::size_t> fh_to_idx;
       const DSCKilledListener* listener;
     };
