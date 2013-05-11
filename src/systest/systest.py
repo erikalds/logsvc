@@ -33,6 +33,8 @@ import sys
 
 from framework import SystemTests, TextProgressPublisher, TextResultsPublisher, TestLoader
 
+logsvcd = None
+
 def make(target):
     proc = subprocess.Popen(["/usr/bin/make", "-C", "systest", target],
                             stdout=subprocess.PIPE,
@@ -52,15 +54,25 @@ def compile_OutStream_test():
 def compile_logtofile():
     return make("logtofile")
 
-def can_start_logsvcd():
+def start_logsvcd():
+    global logsvcd
+
     proc = subprocess.Popen("build/logsvcd", stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     if proc.poll() == None:
-        proc.send_signal(subprocess.signal.SIGKILL)
+        logsvcd = proc
         return (True, "")
     else:
         return (False, proc.communicate()[1])
 
+def kill_logsvcd():
+    global logsvcd
+
+    if logsvcd.poll() != None:
+        return (False, "logsvcd process has died prematurely")
+    logsvcd.send_signal(subprocess.signal.SIGKILL)
+    errorcode = logsvcd.wait()
+    return (True, "")
 
 class MyTestLoader(TestLoader):
     def load_tests(self):
@@ -68,7 +80,8 @@ class MyTestLoader(TestLoader):
                   "000_compile_Log_test": compile_Log_test,
                   "000_compile_OutStream_test": compile_OutStream_test,
                   "000_compile_logtofile": compile_logtofile,
-                  "100_can_start_logsvcd": can_start_logsvcd }
+                  "100_start_logsvcd": start_logsvcd,
+                  "999_kill_logsvcd" : kill_logsvcd }
         return tests
 
 
