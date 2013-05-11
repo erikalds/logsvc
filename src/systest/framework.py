@@ -88,11 +88,16 @@ class SystemTests:
             return []
 
         with open("passed_tests.txt", 'r') as fd:
-            return [line for line in fd.readlines() if line]
+            contents = fd.read()
+            return contents.splitlines()
 
     def _write_passed_tests(self):
+        # we must write the regressions as well, or else it will not
+        # be reported as a regression the next time the system tests
+        # are run
+        passed_tests = self._passed_tests + self._regressions
         with open("passed_tests.txt", 'w') as fd:
-            fd.writelines(self._passed_tests)
+            fd.writelines(["%s\n" % x for x in passed_tests])
 
     def _parse_type(self, obj):
         t = str(type(obj))
