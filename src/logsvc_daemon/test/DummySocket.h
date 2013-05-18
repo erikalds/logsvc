@@ -36,10 +36,30 @@
 namespace mock
 {
 
+  class DummySocket;
+
+  class DummySocketKilledListener
+  {
+  public:
+    virtual ~DummySocketKilledListener() = 0;
+
+    virtual void socket_killed(const DummySocket* socket) = 0;
+  };
+
+  inline DummySocketKilledListener::~DummySocketKilledListener() {}
+
   class DummySocket : public network::Socket
   {
   public:
-    DummySocket() : async_read_call_count(0), current_listener(nullptr), written_bytes() {}
+    explicit DummySocket(DummySocketKilledListener* kill_listener=nullptr) :
+      async_read_call_count(0), current_listener(nullptr), written_bytes(),
+      kill_listener(kill_listener) {}
+
+    ~DummySocket()
+    {
+      if (kill_listener)
+        kill_listener->socket_killed(this);
+    }
 
     virtual void async_read(network::SocketListener& listener, std::size_t read_bytes)
     {
@@ -86,6 +106,7 @@ namespace mock
     network::SocketListener* current_listener;
     std::string written_bytes;
     std::set<network::SocketStateListener*> listeners;
+    DummySocketKilledListener* kill_listener;
   };
 
 } // namespace mock
