@@ -39,10 +39,13 @@ namespace logsvc
     class DefaultConnection : public SessionConnection
     {
     public:
-      DefaultConnection(std::unique_ptr<network::Socket>);
+      DefaultConnection(std::unique_ptr<network::Socket> socket);
 
       virtual std::unique_ptr<prot::Receivable>
       send(const prot::Deliverable& deliverable);
+
+    private:
+      std::unique_ptr<network::Socket> socket;
     };
 
   } // namespace client

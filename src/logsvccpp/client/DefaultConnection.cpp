@@ -27,13 +27,15 @@
 #include "logsvccpp/client/DefaultConnection.h"
 
 #include "log/Receivable.h"
+#include "network/Socket.h"
 
 namespace logsvc
 {
   namespace client
   {
 
-    DefaultConnection::DefaultConnection(std::unique_ptr<network::Socket>)
+    DefaultConnection::DefaultConnection(std::unique_ptr<network::Socket> socket) :
+      socket(std::move(socket))
     {
     }
 
