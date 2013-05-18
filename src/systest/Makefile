@@ -1,23 +1,24 @@
-LIBS=-llogsvccpp -llog -lboost_system-mt -lboost_filesystem-mt
+LIBS=-llogsvccpp -llog -lnetwork -lboost_system-mt -lboost_filesystem-mt -lpthread
 CPPFLAGS=-Wall -std=gnu++11
+DEPLIBS=../build/liblogsvccpp.so ../build/liblog.so ../build/libnetwork.so
 
-Host: Host.o
+Host: Host.o $(DEPLIBS)
 	g++ -o Host Host.o -L../build $(LIBS)
 
 Host.o: Host.cpp ../logsvccpp/Host.h
 	g++ -c -o Host.o Host.cpp $(CPPFLAGS) -I..
 
-Log: Log.o
+Log: Log.o $(DEPLIBS)
 	g++ -o Log Log.o -L../build $(LIBS)
 Log.o: Log.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h
 	g++ -c -o Log.o Log.cpp $(CPPFLAGS) -I..
 
-OutStream: OutStream.o
+OutStream: OutStream.o $(DEPLIBS)
 	g++ -o OutStream OutStream.o -L../build $(LIBS)
 OutStream.o: OutStream.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h ../logsvccpp/OutStream.h
 	g++ -c -o OutStream.o OutStream.cpp $(CPPFLAGS) -I..
 
-logtofile: logtofile.o
+logtofile: logtofile.o $(DEPLIBS)
 	g++ -o logtofile logtofile.o -L../build $(LIBS)
 logtofile.o: logtofile.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h ../logsvccpp/OutStream.h
 	g++ -c -o logtofile.o logtofile.cpp $(CPPFLAGS) -I..

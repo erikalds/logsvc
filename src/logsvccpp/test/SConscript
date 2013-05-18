@@ -6,7 +6,7 @@ env = CoreEnvironment(DEBUG=1,
         ])
 env['CPPDEFINES'] = { 'BOOST_TEST_DYN_LINK': None }
 cpp_files = env.Glob('*.cpp')
-libs = ["logsvccpp", "log"] + env['LIBS']
+libs = ["logsvccpp", "log", "network"] + env['LIBS']
 
 test_logsvccpp = env.Program("test_logsvccpp", cpp_files, LIBS=libs,
                              LIBPATH=["#build"])
