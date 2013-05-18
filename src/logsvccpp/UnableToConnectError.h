@@ -35,6 +35,8 @@ namespace logsvc
   {
   public:
     UnableToConnectError() : std::runtime_error("Unable to connect") {}
+    explicit UnableToConnectError(const std::string& s) :
+      std::runtime_error("Unable to connect: " + s) {}
   };
 } // namespace logsvc
 
