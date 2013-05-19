@@ -26,6 +26,8 @@
 
 #include "logsvccpp/client/DefaultConnection.h"
 #include "logsvc_daemon/test/DummySocket.h"
+#include "log/Deliverable.h"
+#include "log/Receivable.h"
 #include <egen/make_unique.h>
 #include <boost/test/unit_test.hpp>
 
@@ -33,16 +35,25 @@ BOOST_AUTO_TEST_SUITE(testDefaultConnection)
 
 struct F : mock::DummySocketKilledListener
 {
-  F() : live_sockets(0) {}
+  F() : live_sockets(0), dummy_socket(nullptr) {}
   ~F() {}
 
   std::unique_ptr<mock::DummySocket> create_dummy_socket()
-  { ++live_sockets; return egen::make_unique<mock::DummySocket>(this); }
+  {
+    std::unique_ptr<mock::DummySocket> socket(new mock::DummySocket(this));
+    ++live_sockets;
+    dummy_socket = socket.get();
+    return std::move(socket);
+  }
 
-  virtual void socket_killed(const mock::DummySocket*)
-  { --live_sockets; }
+  virtual void socket_killed(const mock::DummySocket* socket_to_die)
+  {
+    BOOST_CHECK_EQUAL(dummy_socket, socket_to_die);
+    --live_sockets;
+  }
 
   int live_sockets;
+  mock::DummySocket* dummy_socket;
 };
 
 BOOST_FIXTURE_TEST_CASE(manages_socket_lifetime, F)
@@ -52,6 +63,29 @@ BOOST_FIXTURE_TEST_CASE(manages_socket_lifetime, F)
     BOOST_CHECK_EQUAL(1, live_sockets);
   }
   BOOST_CHECK_EQUAL(0, live_sockets);
+}
+
+BOOST_FIXTURE_TEST_CASE(no_socket_io_during_construction, F)
+{
+  logsvc::client::DefaultConnection connection(create_dummy_socket());
+  BOOST_CHECK_EQUAL(0, dummy_socket->async_read_call_count);
+  BOOST_CHECK_EQUAL(0, dummy_socket->written_bytes.size());
+}
+
+class DummyDeliverable : public logsvc::prot::Deliverable
+{
+public:
+  virtual std::string get_header() const { return std::string("logsdumm\06\0\0\0", 12); }
+  virtual std::string get_payload() const { return "foobar"; }
+};
+
+BOOST_FIXTURE_TEST_CASE(sending_deliverable_sends_data, F)
+{
+  logsvc::client::DefaultConnection connection(create_dummy_socket());
+  DummyDeliverable dummy_deliverable;
+  connection.send(dummy_deliverable);
+  BOOST_CHECK_EQUAL(dummy_socket->written_bytes,
+                    dummy_deliverable.get_header() + dummy_deliverable.get_payload());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

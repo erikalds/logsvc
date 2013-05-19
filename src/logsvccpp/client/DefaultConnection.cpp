@@ -26,6 +26,7 @@
 
 #include "logsvccpp/client/DefaultConnection.h"
 
+#include "log/Deliverable.h"
 #include "log/Receivable.h"
 #include "network/Socket.h"
 
@@ -42,6 +43,7 @@ namespace logsvc
     std::unique_ptr<prot::Receivable>
     DefaultConnection::send(const prot::Deliverable& deliverable)
     {
+      socket->async_write(deliverable.get_header() + deliverable.get_payload());
       return std::unique_ptr<prot::Receivable>();
     }
 
