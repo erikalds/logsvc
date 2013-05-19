@@ -96,6 +96,14 @@ BOOST_FIXTURE_TEST_CASE(sending_deliverable_waits_for_reply, F)
   BOOST_CHECK_EQUAL(1, dummy_socket->async_read_call_count);
 }
 
+BOOST_FIXTURE_TEST_CASE(sending_deliverable_tries_to_read_bytes_for_a_header, F)
+{
+  logsvc::client::DefaultConnection connection(create_dummy_socket());
+  DummyDeliverable dummy_deliverable;
+  connection.send(dummy_deliverable);
+  BOOST_CHECK_EQUAL(12, dummy_socket->async_read_byte_count);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

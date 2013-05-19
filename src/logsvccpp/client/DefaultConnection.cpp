@@ -44,7 +44,7 @@ namespace logsvc
     DefaultConnection::send(const prot::Deliverable& deliverable)
     {
       socket->async_write(deliverable.get_header() + deliverable.get_payload());
-      socket->async_read(*this, 0);
+      socket->async_read(*this, 12);
       std::promise<std::unique_ptr<prot::Receivable>> promise;
       return promise.get_future();
     }
