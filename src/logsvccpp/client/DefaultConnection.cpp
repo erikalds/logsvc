@@ -40,12 +40,13 @@ namespace logsvc
     {
     }
 
-    std::unique_ptr<prot::Receivable>
+    std::future<std::unique_ptr<prot::Receivable>>
     DefaultConnection::send(const prot::Deliverable& deliverable)
     {
       socket->async_write(deliverable.get_header() + deliverable.get_payload());
       socket->async_read(*this, 0);
-      return std::unique_ptr<prot::Receivable>();
+      std::promise<std::unique_ptr<prot::Receivable>> promise;
+      return promise.get_future();
     }
 
     void DefaultConnection::receive_bytes(const std::string& bytes)

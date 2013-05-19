@@ -43,7 +43,7 @@ namespace logsvc
     public:
       DefaultConnection(std::unique_ptr<network::Socket> socket);
 
-      virtual std::unique_ptr<prot::Receivable>
+      virtual std::future<std::unique_ptr<prot::Receivable>>
       send(const prot::Deliverable& deliverable);
 
     private:

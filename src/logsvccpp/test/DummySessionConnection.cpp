@@ -32,6 +32,7 @@
 #include "log/NotAcknowledged.h"
 #include "log/ProtObjFactory.h"
 #include <egen/lookup.h>
+#include <egen/make_unique.h>
 #include <boost/test/unit_test.hpp>
 
 namespace logsvc
@@ -42,8 +43,8 @@ namespace logsvc
     DummySessionConnection::DummySessionConnection(const DSCKilledListener* listener) :
       client_name("UNSET"),
       client_address("UNSET"),
-      listener(listener),
-      open_file_error()
+      open_file_error(),
+      listener(listener)
     {
     }
 
@@ -53,7 +54,7 @@ namespace logsvc
         listener->connection_killed(this);
     }
 
-    std::unique_ptr<prot::Receivable>
+    std::future<std::unique_ptr<prot::Receivable>>
     DummySessionConnection::send(const prot::Deliverable& deliverable)
     {
       prot::ProtObjFactory factory;
@@ -67,11 +68,17 @@ namespace logsvc
         std::unique_ptr<prot::Deliverable> reply = recv->act(*this);
         recv = factory.create(reply->get_header());
         recv->read_payload(reply->get_payload());
-        return std::move(recv);
+        std::promise<std::unique_ptr<prot::Receivable>> promise;
+        auto future = promise.get_future();
+        promise.set_value(std::move(recv));
+        return future;
       }
       catch (const std::exception& e)
       {
-        return std::unique_ptr<prot::Receivable>(new prot::NotAcknowledged(e.what()));
+        std::promise<std::unique_ptr<prot::Receivable>> promise;
+        auto future = promise.get_future();
+        promise.set_value(egen::make_unique<prot::NotAcknowledged>(e.what()));
+        return future;
       }
     }
 

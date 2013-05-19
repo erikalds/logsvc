@@ -27,6 +27,7 @@
     NORWAY
 */
 
+#include <future>
 #include <memory>
 
 namespace logsvc
@@ -46,7 +47,7 @@ namespace logsvc
     public:
       virtual ~SessionConnection() = 0;
 
-      virtual std::unique_ptr<prot::Receivable>
+      virtual std::future<std::unique_ptr<prot::Receivable>>
       send(const prot::Deliverable& deliverable) = 0;
     };
 

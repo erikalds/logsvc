@@ -55,7 +55,7 @@ namespace logsvc
       explicit DummySessionConnection(const DSCKilledListener* listener = nullptr);
       ~DummySessionConnection();
 
-      virtual std::unique_ptr<logsvc::prot::Receivable>
+      virtual std::future<std::unique_ptr<logsvc::prot::Receivable>>
       send(const logsvc::prot::Deliverable& deliverable);
 
       virtual logsvc::prot::FileHandle

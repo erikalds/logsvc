@@ -46,8 +46,10 @@ namespace logsvc
       error_string(),
       file_path(path)
     {
-      std::unique_ptr<prot::Receivable> recv = connection.send(prot::File(path));
-      recv->act(*this);
+      std::future<std::unique_ptr<prot::Receivable>> recv =
+        connection.send(prot::File(path));
+      recv.wait();
+      recv.get()->act(*this);
       if (!error_string.empty())
         throw OpenFileError(path, error_string);
     }
@@ -59,9 +61,10 @@ namespace logsvc
 
     void ConnectedLogFile::writeln(const std::string& message)
     {
-      std::unique_ptr<prot::Receivable> recv
+      std::future<std::unique_ptr<prot::Receivable>> recv
         = connection.send(prot::Message(message, *file));
-      recv->act(*this);
+      recv.wait();
+      recv.get()->act(*this);
 
       if (!error_string.empty())
       {
