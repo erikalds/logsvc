@@ -44,7 +44,16 @@ namespace logsvc
     DefaultConnection::send(const prot::Deliverable& deliverable)
     {
       socket->async_write(deliverable.get_header() + deliverable.get_payload());
+      socket->async_read(*this, 0);
       return std::unique_ptr<prot::Receivable>();
+    }
+
+    void DefaultConnection::receive_bytes(const std::string& bytes)
+    {
+    }
+
+    void DefaultConnection::error_occurred(const std::string& message)
+    {
     }
 
   } // namespace client

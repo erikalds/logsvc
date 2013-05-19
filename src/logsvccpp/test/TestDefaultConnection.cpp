@@ -88,6 +88,14 @@ BOOST_FIXTURE_TEST_CASE(sending_deliverable_sends_data, F)
                     dummy_deliverable.get_header() + dummy_deliverable.get_payload());
 }
 
+BOOST_FIXTURE_TEST_CASE(sending_deliverable_waits_for_reply, F)
+{
+  logsvc::client::DefaultConnection connection(create_dummy_socket());
+  DummyDeliverable dummy_deliverable;
+  connection.send(dummy_deliverable);
+  BOOST_CHECK_EQUAL(1, dummy_socket->async_read_call_count);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

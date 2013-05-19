@@ -28,6 +28,7 @@
 */
 
 #include "logsvccpp/client/SessionConnection.h"
+#include "network/SocketListener.h"
 
 namespace network { class Socket; }
 
@@ -36,13 +37,18 @@ namespace logsvc
   namespace client
   {
 
-    class DefaultConnection : public SessionConnection
+    class DefaultConnection : public SessionConnection,
+                              public network::SocketListener
     {
     public:
       DefaultConnection(std::unique_ptr<network::Socket> socket);
 
       virtual std::unique_ptr<prot::Receivable>
       send(const prot::Deliverable& deliverable);
+
+    private:
+      virtual void receive_bytes(const std::string& bytes);
+      virtual void error_occurred(const std::string& message);
 
     private:
       std::unique_ptr<network::Socket> socket;
