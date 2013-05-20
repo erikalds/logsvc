@@ -29,6 +29,7 @@
 #include "logsvccpp/UnableToConnectError.h"
 #include "logsvccpp/client/DefaultConnection.h"
 #include "log/Client.h"
+#include "log/ProtObjFactory.h"
 #include "network/DefaultSocket.h"
 #include <egen/make_unique.h>
 #include <boost/asio/connect.hpp>
@@ -111,9 +112,10 @@ namespace logsvc
                                    else
                                      error_promise.set_value("");
                                  });
-      future_error.wait();
+      std::unique_ptr<prot::ReceivableFactory> recvfactory(new prot::ProtObjFactory);
       if (future_error.get().empty())
-        return egen::make_unique<DefaultConnection>(std::move(socket));
+        return egen::make_unique<DefaultConnection>(std::move(socket),
+                                                    std::move(recvfactory));
       else
         throw UnableToConnectError(future_error.get());
     }

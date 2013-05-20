@@ -25,6 +25,7 @@
 */
 
 #include "logsvccpp/client/DefaultConnection.h"
+#include "logsvc_daemon/test/DummyReceivableFactory.h"
 #include "logsvc_daemon/test/DummySocket.h"
 #include "log/Deliverable.h"
 #include "log/Receivable.h"
@@ -46,6 +47,19 @@ struct F : mock::DummySocketKilledListener
     return std::move(socket);
   }
 
+  std::unique_ptr<mock::DummyReceivableFactory> create_dummy_receivable_factory()
+  {
+    std::unique_ptr<mock::DummyReceivableFactory> dummy(new mock::DummyReceivableFactory);
+    drf = dummy.get();
+    return std::move(dummy);
+  }
+
+  logsvc::client::DefaultConnection create_connection()
+  {
+    return logsvc::client::DefaultConnection(create_dummy_socket(),
+                                             create_dummy_receivable_factory());
+  }
+
   virtual void socket_killed(const mock::DummySocket* socket_to_die)
   {
     BOOST_CHECK_EQUAL(dummy_socket, socket_to_die);
@@ -54,12 +68,13 @@ struct F : mock::DummySocketKilledListener
 
   int live_sockets;
   mock::DummySocket* dummy_socket;
+  mock::DummyReceivableFactory* drf;
 };
 
 BOOST_FIXTURE_TEST_CASE(manages_socket_lifetime, F)
 {
   {
-    logsvc::client::DefaultConnection connection(create_dummy_socket());
+    logsvc::client::DefaultConnection connection = create_connection();
     BOOST_CHECK_EQUAL(1, live_sockets);
   }
   BOOST_CHECK_EQUAL(0, live_sockets);
@@ -67,7 +82,7 @@ BOOST_FIXTURE_TEST_CASE(manages_socket_lifetime, F)
 
 BOOST_FIXTURE_TEST_CASE(no_socket_io_during_construction, F)
 {
-  logsvc::client::DefaultConnection connection(create_dummy_socket());
+  logsvc::client::DefaultConnection connection = create_connection();
   BOOST_CHECK_EQUAL(0, dummy_socket->async_read_call_count);
   BOOST_CHECK_EQUAL(0, dummy_socket->written_bytes.size());
 }
@@ -81,7 +96,7 @@ public:
 
 BOOST_FIXTURE_TEST_CASE(sending_deliverable_sends_data, F)
 {
-  logsvc::client::DefaultConnection connection(create_dummy_socket());
+  logsvc::client::DefaultConnection connection = create_connection();
   DummyDeliverable dummy_deliverable;
   connection.send(dummy_deliverable);
   BOOST_CHECK_EQUAL(dummy_socket->written_bytes,
@@ -90,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE(sending_deliverable_sends_data, F)
 
 BOOST_FIXTURE_TEST_CASE(sending_deliverable_waits_for_reply, F)
 {
-  logsvc::client::DefaultConnection connection(create_dummy_socket());
+  logsvc::client::DefaultConnection connection = create_connection();
   DummyDeliverable dummy_deliverable;
   connection.send(dummy_deliverable);
   BOOST_CHECK_EQUAL(1, dummy_socket->async_read_call_count);
@@ -98,10 +113,41 @@ BOOST_FIXTURE_TEST_CASE(sending_deliverable_waits_for_reply, F)
 
 BOOST_FIXTURE_TEST_CASE(sending_deliverable_tries_to_read_bytes_for_a_header, F)
 {
-  logsvc::client::DefaultConnection connection(create_dummy_socket());
+  logsvc::client::DefaultConnection connection = create_connection();
   DummyDeliverable dummy_deliverable;
   connection.send(dummy_deliverable);
   BOOST_CHECK_EQUAL(12, dummy_socket->async_read_byte_count);
+}
+
+BOOST_FIXTURE_TEST_CASE(after_receiving_header_tries_to_read_payload, F)
+{
+  logsvc::client::DefaultConnection connection = create_connection();
+  DummyDeliverable dummy_deliverable;
+  connection.send(dummy_deliverable);
+  const std::string header("123456789012");
+  drf->expected_payload = "Test";
+  dummy_socket->receive_bytes(header);
+  BOOST_CHECK_EQUAL(header, drf->received_bytes);
+  BOOST_CHECK_EQUAL(drf->expected_payload.size(), dummy_socket->async_read_byte_count);
+  dummy_socket->receive_bytes(drf->expected_payload);
+}
+
+BOOST_FIXTURE_TEST_CASE(tries_to_read_new_message_after_next_send, F)
+{
+  logsvc::client::DefaultConnection connection = create_connection();
+  DummyDeliverable dummy_deliverable;
+  connection.send(dummy_deliverable);
+  const std::string header("123456789012");
+  drf->expected_payload = "Test";
+  dummy_socket->receive_bytes(header);
+  dummy_socket->receive_bytes(drf->expected_payload);
+
+  connection.send(dummy_deliverable);
+  drf->expected_payload = "foobar";
+  dummy_socket->receive_bytes(header);
+
+  BOOST_CHECK_EQUAL(drf->expected_payload.size(), dummy_socket->async_read_byte_count);
+  dummy_socket->receive_bytes("foobar");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

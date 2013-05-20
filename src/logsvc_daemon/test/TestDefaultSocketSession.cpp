@@ -27,6 +27,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "log/test/DummyExecutor.h"
+#include "logsvc_daemon/test/DummyReceivableFactory.h"
 #include "logsvc_daemon/test/DummySocket.h"
 #include "logsvc_daemon/test/MyStreamBuf.h"
 #include "logsvc_daemon/SocketSession.h"
@@ -39,53 +40,6 @@
 #include <egen/lookup.h>
 
 BOOST_AUTO_TEST_SUITE(testDefaultSocketSession)
-
-class DummyReceivable : public logsvc::prot::Receivable
-{
-public:
-  DummyReceivable(const std::string& expected_payload) :
-    expected_payload(expected_payload), received_payload(false) {}
-  ~DummyReceivable()
-  {
-    if (!expected_payload.empty())
-      BOOST_CHECK(received_payload == true);
-  }
-
-  virtual std::size_t get_payload_length() const
-  {
-    return expected_payload.size();
-  }
-
-  virtual void read_payload(const std::string& payload)
-  {
-    BOOST_CHECK_EQUAL(expected_payload, payload);
-    received_payload = true;
-  }
-  virtual std::unique_ptr<logsvc::prot::Deliverable> act(logsvc::prot::Executor& exec)
-  {
-    exec.write_message(logsvc::prot::FileHandle(0x42), "Hello");
-    return std::unique_ptr<logsvc::prot::Deliverable>(new logsvc::prot::NotAcknowledged("fail"));
-  }
-
-  virtual void act(logsvc::prot::ClientExecutor&) {}
-
-private:
-  std::string expected_payload;
-  bool received_payload;
-};
-
-class DummyReceivableFactory : public logsvc::prot::ReceivableFactory
-{
-public:
-  std::unique_ptr<logsvc::prot::Receivable> create(const std::string& header)
-  {
-    received_bytes += header;
-    return std::unique_ptr<logsvc::prot::Receivable>(new DummyReceivable(expected_payload));
-  }
-
-  std::string received_bytes;
-  std::string expected_payload;
-};
 
 class MySocketSessionListener : public logsvc::daemon::SocketSessionListener
 {
@@ -107,7 +61,7 @@ struct F : ClogInterceptor
 
   mock::DummySocket* socket;
   mock::DummyExecutor* exec;
-  DummyReceivableFactory* drf;
+  mock::DummyReceivableFactory* drf;
   logsvc::daemon::DefaultSocketSession ss;
 
   std::unique_ptr<network::Socket> create_socket()
@@ -124,7 +78,7 @@ struct F : ClogInterceptor
 
   std::unique_ptr<logsvc::prot::ReceivableFactory> create_receivable_factory()
   {
-    drf = new DummyReceivableFactory;
+    drf = new mock::DummyReceivableFactory;
     return std::unique_ptr<logsvc::prot::ReceivableFactory>(drf);
   }
 };

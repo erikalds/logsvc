@@ -28,6 +28,7 @@
 
 #include "log/Deliverable.h"
 #include "log/Receivable.h"
+#include "log/ReceivableFactory.h"
 #include "network/Socket.h"
 
 namespace logsvc
@@ -35,8 +36,15 @@ namespace logsvc
   namespace client
   {
 
-    DefaultConnection::DefaultConnection(std::unique_ptr<network::Socket> socket) :
-      socket(std::move(socket))
+    DefaultConnection::DefaultConnection(std::unique_ptr<network::Socket> socket,
+                                         std::unique_ptr<prot::ReceivableFactory> factory) :
+      socket(std::move(socket)),
+      receivable_factory(std::move(factory)),
+      current_receivable()
+    {
+    }
+
+    DefaultConnection::~DefaultConnection()
     {
     }
 
@@ -51,6 +59,16 @@ namespace logsvc
 
     void DefaultConnection::receive_bytes(const std::string& bytes)
     {
+      if (!current_receivable)
+      {
+        current_receivable = receivable_factory->create(bytes);
+        socket->async_read(*this, current_receivable->get_payload_length());
+      }
+      else
+      {
+        current_receivable->read_payload(bytes);
+        current_receivable = nullptr;
+      }
     }
 
     void DefaultConnection::error_occurred(const std::string& message)

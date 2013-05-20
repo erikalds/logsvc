@@ -34,6 +34,7 @@ namespace network { class Socket; }
 
 namespace logsvc
 {
+  namespace prot { class ReceivableFactory; }
   namespace client
   {
 
@@ -41,7 +42,12 @@ namespace logsvc
                               public network::SocketListener
     {
     public:
-      DefaultConnection(std::unique_ptr<network::Socket> socket);
+      DefaultConnection(std::unique_ptr<network::Socket> socket,
+                        std::unique_ptr<prot::ReceivableFactory> factory);
+      DefaultConnection(DefaultConnection&&) = default;
+      DefaultConnection(const DefaultConnection&) = delete;
+      DefaultConnection& operator=(const DefaultConnection&) = delete;
+      ~DefaultConnection();
 
       virtual std::future<std::unique_ptr<prot::Receivable>>
       send(const prot::Deliverable& deliverable);
@@ -52,6 +58,8 @@ namespace logsvc
 
     private:
       std::unique_ptr<network::Socket> socket;
+      std::unique_ptr<prot::ReceivableFactory> receivable_factory;
+      std::unique_ptr<prot::Receivable> current_receivable;
     };
 
   } // namespace client
