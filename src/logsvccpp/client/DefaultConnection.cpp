@@ -26,6 +26,7 @@
 
 #include "logsvccpp/client/DefaultConnection.h"
 
+#include "logsvccpp/SocketError.h"
 #include "log/Deliverable.h"
 #include "log/Receivable.h"
 #include "log/ReceivableFactory.h"
@@ -75,6 +76,8 @@ namespace logsvc
 
     void DefaultConnection::error_occurred(const std::string& message)
     {
+      current_receivable.reset();
+      current_promise.set_exception(std::make_exception_ptr(SocketError(message)));
     }
 
   } // namespace client

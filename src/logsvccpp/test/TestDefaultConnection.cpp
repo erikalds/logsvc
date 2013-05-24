@@ -25,6 +25,7 @@
 */
 
 #include "logsvccpp/client/DefaultConnection.h"
+#include "logsvccpp/SocketError.h"
 #include "logsvc_daemon/test/DummyReceivableFactory.h"
 #include "logsvc_daemon/test/DummySocket.h"
 #include "log/test/DummyExecutor.h"
@@ -191,6 +192,43 @@ BOOST_FIXTURE_TEST_CASE(gets_expected_receivable, F)
                                      std::string("Incorrect receivable."));
   BOOST_CHECK_EQUAL("Hello", message);
 }
+
+BOOST_FIXTURE_TEST_CASE(if_error_occurs_exception_is_thrown_from_future, F)
+{
+  logsvc::client::DefaultConnection connection = create_connection();
+  DummyDeliverable dummy_deliverable;
+  std::future<std::unique_ptr<logsvc::prot::Receivable>> future_recv
+    = connection.send(dummy_deliverable);
+  const std::string error("the particular error message");
+  dummy_socket->make_error_occur(error);
+  BOOST_REQUIRE(std::future_status::ready
+                == future_recv.wait_for(std::chrono::microseconds(0)));
+  BOOST_CHECK_EXCEPTION(future_recv.get(),
+                        logsvc::SocketError,
+                        [&](const logsvc::SocketError& e) -> bool
+                        {
+                          const std::string what(e.what());
+                          return what.find(error) != std::string::npos;
+                        });
+}
+
+BOOST_FIXTURE_TEST_CASE(behaves_correctly_if_error_occurs, F)
+{
+  logsvc::client::DefaultConnection connection = create_connection();
+  DummyDeliverable dummy_deliverable;
+  std::future<std::unique_ptr<logsvc::prot::Receivable>> future_recv
+    = connection.send(dummy_deliverable);
+  const std::string error("the particular error message");
+  dummy_socket->make_error_occur(error);
+  future_recv = connection.send(dummy_deliverable);
+  dummy_socket->receive_bytes("foobarfoobar");
+  dummy_socket->make_error_occur(error);
+  future_recv = connection.send(dummy_deliverable);
+  drf->expected_payload = "foo";
+  dummy_socket->receive_bytes("foobarfoobar");
+  dummy_socket->receive_bytes("foo");
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
