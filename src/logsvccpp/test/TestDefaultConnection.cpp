@@ -150,6 +150,26 @@ BOOST_FIXTURE_TEST_CASE(tries_to_read_new_message_after_next_send, F)
   dummy_socket->receive_bytes("foobar");
 }
 
+BOOST_FIXTURE_TEST_CASE(future_value_set_when_payload_received, F)
+{
+  logsvc::client::DefaultConnection connection = create_connection();
+  DummyDeliverable dummy_deliverable;
+  std::future<std::unique_ptr<logsvc::prot::Receivable>> future_recv
+    = connection.send(dummy_deliverable);
+  BOOST_CHECK(std::future_status::timeout
+              == future_recv.wait_for(std::chrono::microseconds(0)));
+
+  const std::string header("123456789012");
+  drf->expected_payload = "Test";
+  dummy_socket->receive_bytes(header);
+  BOOST_CHECK(std::future_status::timeout
+              == future_recv.wait_for(std::chrono::microseconds(0)));
+
+  dummy_socket->receive_bytes(drf->expected_payload);
+  BOOST_CHECK(std::future_status::ready
+              == future_recv.wait_for(std::chrono::microseconds(0)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

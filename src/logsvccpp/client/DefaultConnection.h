@@ -60,6 +60,7 @@ namespace logsvc
       std::unique_ptr<network::Socket> socket;
       std::unique_ptr<prot::ReceivableFactory> receivable_factory;
       std::unique_ptr<prot::Receivable> current_receivable;
+      std::promise<std::unique_ptr<prot::Receivable>> current_promise;
     };
 
   } // namespace client

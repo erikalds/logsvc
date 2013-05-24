@@ -40,7 +40,8 @@ namespace logsvc
                                          std::unique_ptr<prot::ReceivableFactory> factory) :
       socket(std::move(socket)),
       receivable_factory(std::move(factory)),
-      current_receivable()
+      current_receivable(),
+      current_promise()
     {
     }
 
@@ -53,8 +54,8 @@ namespace logsvc
     {
       socket->async_write(deliverable.get_header() + deliverable.get_payload());
       socket->async_read(*this, 12);
-      std::promise<std::unique_ptr<prot::Receivable>> promise;
-      return promise.get_future();
+      current_promise = std::promise<std::unique_ptr<prot::Receivable>>();
+      return current_promise.get_future();
     }
 
     void DefaultConnection::receive_bytes(const std::string& bytes)
@@ -67,7 +68,8 @@ namespace logsvc
       else
       {
         current_receivable->read_payload(bytes);
-        current_receivable = nullptr;
+        current_receivable.reset();
+        current_promise.set_value(std::unique_ptr<prot::Receivable>());
       }
     }
 
