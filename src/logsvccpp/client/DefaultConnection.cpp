@@ -29,6 +29,7 @@
 #include "log/Deliverable.h"
 #include "log/Receivable.h"
 #include "log/ReceivableFactory.h"
+#include "log/Message.h"
 #include "network/Socket.h"
 
 namespace logsvc
@@ -68,8 +69,7 @@ namespace logsvc
       else
       {
         current_receivable->read_payload(bytes);
-        current_receivable.reset();
-        current_promise.set_value(std::unique_ptr<prot::Receivable>());
+        current_promise.set_value(std::move(current_receivable));
       }
     }
 

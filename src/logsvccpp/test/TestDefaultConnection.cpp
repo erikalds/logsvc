@@ -27,8 +27,10 @@
 #include "logsvccpp/client/DefaultConnection.h"
 #include "logsvc_daemon/test/DummyReceivableFactory.h"
 #include "logsvc_daemon/test/DummySocket.h"
+#include "log/test/DummyExecutor.h"
 #include "log/Deliverable.h"
 #include "log/Receivable.h"
+#include <egen/lookup.h>
 #include <egen/make_unique.h>
 #include <boost/test/unit_test.hpp>
 
@@ -168,6 +170,26 @@ BOOST_FIXTURE_TEST_CASE(future_value_set_when_payload_received, F)
   dummy_socket->receive_bytes(drf->expected_payload);
   BOOST_CHECK(std::future_status::ready
               == future_recv.wait_for(std::chrono::microseconds(0)));
+}
+
+BOOST_FIXTURE_TEST_CASE(gets_expected_receivable, F)
+{
+  logsvc::client::DefaultConnection connection = create_connection();
+  DummyDeliverable dummy_deliverable;
+  std::future<std::unique_ptr<logsvc::prot::Receivable>> future_recv
+    = connection.send(dummy_deliverable);
+  const std::string header("123456789012");
+  drf->expected_payload = "Test";
+  dummy_socket->receive_bytes(header);
+  dummy_socket->receive_bytes(drf->expected_payload);
+  std::unique_ptr<logsvc::prot::Receivable> recv = future_recv.get();
+  BOOST_REQUIRE(recv != nullptr);
+  mock::DummyExecutor exec;
+  recv->act(exec);
+  std::string message = egen::lookup(logsvc::prot::FileHandle(0x42),
+                                     exec.messages,
+                                     std::string("Incorrect receivable."));
+  BOOST_CHECK_EQUAL("Hello", message);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
