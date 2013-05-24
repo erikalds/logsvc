@@ -37,13 +37,15 @@ namespace logsvc
     class HostConnectionFactory : public ConnectionFactory
     {
     public:
-      HostConnectionFactory(const std::string& hostname_or_ip);
+      HostConnectionFactory(const std::string& hostname_or_ip,
+                            const std::string& local_ip);
 
       virtual std::unique_ptr<SessionConnection> create_session() const;
       virtual prot::Client create_client_info(const std::string& appname) const;
 
     private:
       std::string hostname_or_ip;
+      std::string local_ip;
     };
 
   } // namespace client

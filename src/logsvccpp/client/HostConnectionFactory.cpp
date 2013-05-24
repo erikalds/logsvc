@@ -85,8 +85,10 @@ namespace logsvc
 
     } // anonymous namespace
 
-    HostConnectionFactory::HostConnectionFactory(const std::string& hostname_or_ip) :
-      hostname_or_ip(hostname_or_ip)
+    HostConnectionFactory::HostConnectionFactory(const std::string& hostname_or_ip,
+                                                 const std::string& local_ip) :
+      hostname_or_ip(hostname_or_ip),
+      local_ip(local_ip)
     {
     }
 
@@ -123,7 +125,7 @@ namespace logsvc
     prot::Client
     HostConnectionFactory::create_client_info(const std::string& appname) const
     {
-      return prot::Client("a");
+      return prot::Client(appname, boost::asio::ip::address::from_string(local_ip));
     }
 
   } // namespace client
