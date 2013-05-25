@@ -25,10 +25,31 @@
 */
 
 #include "logsvccpp/Host.h"
+#include <csignal>
+#include <iostream>
+
+void abort_handler(int sig)
+{
+  std::cerr << "Abort called: " << sig << std::endl;
+}
 
 int main()
 {
-  logsvc::Host host0("appname");
-  logsvc::Host host1("appname", "hostname");
-  return 0;
+  std::signal(SIGABRT, &abort_handler);
+  try
+  {
+    logsvc::Host host0("appname");
+    logsvc::Host host1("appname", "127.0.0.1");
+    return 0;
+  }
+  catch (const std::exception& e)
+  {
+    std::cerr << "Host: exception caught: " << e.what() << std::endl;
+    return 1;
+  }
+  catch (...)
+  {
+    std::cerr << "Host: unknown exception caught." << std::endl;
+    return 2;
+  }
 }

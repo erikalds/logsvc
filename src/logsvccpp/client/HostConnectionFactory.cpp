@@ -67,8 +67,12 @@ namespace logsvc
           instance().thread =
             std::thread([&]()
                         {
-                          instance().my_io_service.run();
-                          std::cerr << "WARNING: The io_service.run() function has returned.\n";
+                          boost::system::error_code error;
+                          instance().my_io_service.run(error);
+                          std::cerr << "WARNING: The io_service.run() function returned";
+                          if (error)
+                            std::cerr << " with an error: " << error;
+                          std::cerr << ".\n";
                         });
       }
 
@@ -99,8 +103,6 @@ namespace logsvc
       boost::asio::ip::tcp::resolver::query query(hostname_or_ip, "5607");
       boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
 
-      IOServiceSingleton::make_sure_it_runs();
-
       std::unique_ptr<network::DefaultSocket> socket =
         egen::make_unique<network::DefaultSocket>(IOServiceSingleton::io_service());
       std::promise<std::string> error_promise;
@@ -114,6 +116,9 @@ namespace logsvc
                                    else
                                      error_promise.set_value("");
                                  });
+
+      IOServiceSingleton::make_sure_it_runs();
+
       std::unique_ptr<prot::ReceivableFactory> recvfactory(new prot::ProtObjFactory);
       if (future_error.get().empty())
         return egen::make_unique<DefaultConnection>(std::move(socket),

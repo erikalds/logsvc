@@ -31,16 +31,22 @@
 
 namespace logsvc
 {
+  namespace client { class RemoteLogFile; }
+
   class Host;
 
   class Log
   {
   public:
     Log(const boost::filesystem::path& filename,
-        const Host& host);
+        Host& host);
+    ~Log();
 
     Log(const Log&) = delete;
     Log& operator=(const Log&) = delete;
+
+  private:
+    std::unique_ptr<client::RemoteLogFile> remote_file;
   };
 
 } // namespace logsvc

@@ -30,43 +30,69 @@ import os
 import re
 import subprocess
 import sys
+import threading
 import time
 
 from framework import SystemTests, TextProgressPublisher, TextResultsPublisher, TestLoader
 
 logsvcd = None
 
-def run(command):
-    proc = subprocess.Popen(command,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    exitcode = proc.wait()
-    stdout, stderr = proc.communicate()
-    return (exitcode == 0, stderr)
+class Command:
+    def __init__(self, command):
+        self._command = command
+
+    def run(self, timeout):
+        def in_thread():
+            self.exitcode = None
+            self.proc = subprocess.Popen(self._command,
+                                         stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+            self.exitcode = self.proc.wait()
+
+        thread = threading.Thread(target=in_thread)
+        thread.start()
+        if timeout != None:
+            thread.join(timeout)
+        else:
+            thread.join()
+
+        if self.exitcode != None:
+            stdout, stderr = self.proc.communicate()
+            return (self.exitcode == 0, stderr)
+        else:
+            self.proc.terminate()
+            joined_cmd = " ".join(self._command) \
+                if type(self._command) == type([]) \
+                else self._command
+            return (False, "Subprocess timed out (%s)\n%s" % (joined_cmd,
+                                                              self.proc.stderr.read()))
+
+
+
+def run(command, timeout=None):
+    cmd = Command(command)
+    return cmd.run(timeout)
 
 def make(target):
     return run(["/usr/bin/make", "-C", "systest", target])
-
-def make_clean():
-    return make("clean")
 
 def compile_Host_test():
     return make("Host")
 
 def run_Host_test():
-    return run("systest/Host")
+    return run("systest/Host", 2)
 
 def compile_Log_test():
     return make("Log")
 
 def run_Log_test():
-    return run("systest/Log")
+    return run("systest/Log", 2)
 
 def compile_OutStream_test():
     return make("OutStream")
 
 def run_OutStream_test():
-    return run("systest/OutStream")
+    return run("systest/OutStream", 2)
 
 def compile_logtofile():
     return make("logtofile")
@@ -87,7 +113,9 @@ def log_string_to_file_test():
     if os.path.exists(fname):
         os.unlink(fname)
 
-    run(["systest/logtofile", fname, "a string"])
+    result = run(["systest/logtofile", fname, "a string"], 10)
+    if not result[0]:
+        return result
 
     if not os.path.exists(fname):
         return (False, "   - logtofile did not even create the file.\n")
@@ -136,15 +164,14 @@ def hup_logsvcd():
 class MyTestLoader(TestLoader):
     def load_tests(self):
         tests = {
-            #"000_make_clean": make_clean,
             "010_compile_Host_test": compile_Host_test,
             "010_compile_Log_test": compile_Log_test,
             "010_compile_OutStream_test": compile_OutStream_test,
             "010_compile_logtofile": compile_logtofile,
+            "015_start_logsvcd": start_logsvcd,
             "020_run_Host_test": run_Host_test,
             "020_run_Log_test": run_Log_test,
             "020_run_OutStream_test": run_OutStream_test,
-            "100_start_logsvcd": start_logsvcd,
             "200_log_string_to_file_test": log_string_to_file_test,
             "999_HUP_logsvcd" : hup_logsvcd
             }

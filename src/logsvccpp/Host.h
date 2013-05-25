@@ -27,15 +27,30 @@
     NORWAY
 */
 
+#include <boost/filesystem/path.hpp>
 #include <string>
+#include <memory>
 
 namespace logsvc
 {
+  namespace client { class LocalClient; class RemoteLogFile; }
 
   class Host
   {
+    friend class Log;
+
   public:
     Host(const std::string& appname, const std::string& hostname="localhost");
+
+  private:
+    std::unique_ptr<client::RemoteLogFile>
+    open_remote(const boost::filesystem::path& file);
+
+    client::LocalClient& get_connected_client();
+
+    std::shared_ptr<client::LocalClient> local_client;
+    std::string appname;
+    std::string hostname;
   };
 
 } // namespace logsvc

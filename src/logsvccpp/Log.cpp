@@ -26,11 +26,19 @@
 
 #include "logsvccpp/Log.h"
 
+#include "logsvccpp/Host.h"
+#include "logsvccpp/client/RemoteLogFile.h"
+
 namespace logsvc
 {
 
   Log::Log(const boost::filesystem::path& filename,
-           const Host& host)
-  {}
+           Host& host) :
+    remote_file(host.open_remote(filename))
+  {
+  }
 
+  Log::~Log()
+  {
+  }
 } // namespace logsvc

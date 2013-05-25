@@ -26,11 +26,33 @@
 
 #include "logsvccpp/Host.h"
 
+#include "logsvccpp/client/HostConnectionFactory.h"
+#include "logsvccpp/client/LocalClient.h"
+#include "logsvccpp/client/RemoteLogFile.h"
+
 namespace logsvc
 {
 
-  Host::Host(const std::string& appname, const std::string& hostname)
+  Host::Host(const std::string& appname, const std::string& hostname) :
+    appname(appname),
+    hostname(hostname)
   {
+  }
+
+  std::unique_ptr<client::RemoteLogFile>
+  Host::open_remote(const boost::filesystem::path& file)
+  {
+    return get_connected_client().open_remote_file(file);
+  }
+
+  client::LocalClient& Host::get_connected_client()
+  {
+    if (!local_client)
+    {
+      client::HostConnectionFactory connfac(hostname, "127.0.0.1");
+      local_client = std::make_shared<client::LocalClient>(appname, connfac);
+    }
+    return *local_client;
   }
 
 } // namespace logsvc
