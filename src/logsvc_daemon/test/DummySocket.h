@@ -79,7 +79,7 @@ namespace mock
       BOOST_REQUIRE(current_listener != nullptr);
       network::SocketListener* this_listener = nullptr;
       std::swap(current_listener, this_listener);
-      this_listener->receive_bytes(bytes);
+      this_listener->bytes_received(bytes);
     }
 
     virtual void add_socket_state_listener(network::SocketStateListener* listener)

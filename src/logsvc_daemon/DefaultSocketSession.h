@@ -66,7 +66,7 @@ namespace logsvc
       virtual void remove_socket_session_listener(SocketSessionListener*);
 
     private:
-      virtual void receive_bytes(const std::string& bytes);
+      virtual void bytes_received(const std::string& bytes);
       virtual void error_occurred(const std::string& message);
 
       virtual void connection_lost(network::Socket* socket);

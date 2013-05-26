@@ -72,7 +72,7 @@ namespace logsvc
       listeners.erase(l);
     }
 
-    void DefaultSocketSession::receive_bytes(const std::string& bytes)
+    void DefaultSocketSession::bytes_received(const std::string& bytes)
     {
       if (!current_receivable)
       {

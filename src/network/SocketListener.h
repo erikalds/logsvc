@@ -37,7 +37,9 @@ namespace network
   public:
     virtual ~SocketListener() = 0;
 
-    virtual void receive_bytes(const std::string& bytes) = 0;
+    /// Called when a read operation succeeds.
+    virtual void bytes_received(const std::string& bytes) = 0;
+    /// Called when a read operation fails.
     virtual void error_occurred(const std::string& message) = 0;
   };
 

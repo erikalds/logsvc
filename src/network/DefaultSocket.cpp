@@ -51,7 +51,7 @@ namespace network
                               if (!error)
                               {
                                 std::string bytes(buf.get(), bytes_received);
-                                listener.receive_bytes(bytes);
+                                listener.bytes_received(bytes);
                               }
                               else
                               {

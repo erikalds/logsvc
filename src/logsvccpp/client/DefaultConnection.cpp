@@ -60,7 +60,7 @@ namespace logsvc
       return current_promise.get_future();
     }
 
-    void DefaultConnection::receive_bytes(const std::string& bytes)
+    void DefaultConnection::bytes_received(const std::string& bytes)
     {
       if (!current_receivable)
       {
