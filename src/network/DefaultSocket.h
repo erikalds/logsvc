@@ -48,6 +48,8 @@ namespace network
     virtual void add_socket_state_listener(SocketStateListener* listener);
     virtual void remove_socket_state_listener(SocketStateListener* listener);
 
+    virtual void keep_alive() {}
+
     boost::asio::ip::tcp::socket& asio_socket();
 
   private:

@@ -45,6 +45,8 @@ namespace network
 
     virtual void add_socket_state_listener(SocketStateListener* listener) = 0;
     virtual void remove_socket_state_listener(SocketStateListener* listener) = 0;
+
+    virtual void keep_alive() = 0;
   };
 
   inline Socket::~Socket() {}

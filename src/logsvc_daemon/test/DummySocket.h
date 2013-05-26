@@ -101,6 +101,8 @@ namespace mock
       this_listener->error_occurred(msg);
     }
 
+    virtual void keep_alive() {}
+
     int async_read_call_count;
     std::size_t async_read_byte_count;
     network::SocketListener* current_listener;
