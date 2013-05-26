@@ -39,7 +39,9 @@ namespace network
 
     /// Called when a read operation succeeds.
     virtual void bytes_received(const std::string& bytes) = 0;
-    /// Called when a read operation fails.
+    /// Called when a write operation succeeds.
+    virtual void write_succeeded() = 0;
+    /// Called when a read or write operation fails.
     virtual void error_occurred(const std::string& message) = 0;
   };
 
