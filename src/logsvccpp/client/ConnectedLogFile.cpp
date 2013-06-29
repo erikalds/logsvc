@@ -56,7 +56,8 @@ namespace logsvc
 
     ConnectedLogFile::~ConnectedLogFile()
     {
-      connection.send(prot::CloseFile(*file));
+      if (file)
+        connection.send(prot::CloseFile(*file));
     }
 
     void ConnectedLogFile::writeln(const std::string& message)
@@ -76,6 +77,7 @@ namespace logsvc
 
     void ConnectedLogFile::set_file_handle(const prot::FileHandle& fh)
     {
+      std::clog << "INFO [ConnectedLogFile] Setting file handle" << std::endl;
       file.reset(new prot::FileHandle(fh));
     }
 
