@@ -29,7 +29,15 @@
 
 int main()
 {
-  logsvc::Host h("Log");
-  logsvc::Log log("filename.txt", h);
+  try
+  {
+    logsvc::Host h("Log");
+    logsvc::Log log("filename.txt", h);
+  }
+  catch (const std::exception& e)
+  {
+    std::cerr << "Exception caught: " << e.what() << std::endl;
+    return -1;
+  }
   return 0;
 }
