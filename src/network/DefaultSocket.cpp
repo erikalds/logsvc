@@ -28,43 +28,67 @@
 
 #include "network/SocketListener.h"
 #include "network/SocketStateListener.h"
+#include <boost/asio/buffer.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/bind.hpp>
 #include <boost/scoped_array.hpp>
 
 namespace network
 {
 
   DefaultSocket::DefaultSocket(boost::asio::io_service& io_service) :
-    the_socket(io_service)
+    the_socket(io_service),
+    state_listeners(),
+    write_queue_mutex(),
+    write_queue(),
+    io_service(io_service),
+    idle_work(),
+    write_queue_active(false)
   {
+  }
+
+  DefaultSocket::~DefaultSocket()
+  {
+    boost::system::error_code error;
+    the_socket.close(error);
+    if (error)
+      std::cerr << "ERROR [DefaultSocket]: Error occurred during socket close: " << error.message() << std::endl;
   }
 
   void DefaultSocket::async_read(SocketListener& listener, std::size_t read_bytes)
   {
-    boost::scoped_array<char> buf(new char[read_bytes]);
+    boost::shared_array<char> buf(new char[read_bytes]);
     boost::asio::async_read(the_socket,
                             boost::asio::buffer(buf.get(), read_bytes),
-                            [&](const boost::system::error_code& error,
-                                std::size_t bytes_received)
-                            {
-                              if (!error)
-                              {
-                                std::string bytes(buf.get(), bytes_received);
-                                listener.bytes_received(bytes);
-                              }
-                              else
-                              {
-                                listener.error_occurred(error.message());
-                                notify_state_listeners_of_connection_lost();
-                              }
-                            });
+                            boost::bind(&DefaultSocket::handle_read, this, buf,
+                                        &listener, _1, _2));
+    idle_work.reset();
   }
 
-  void DefaultSocket::async_write(const std::string& data)
+  void DefaultSocket::handle_read(boost::shared_array<char> buf, SocketListener* listener,
+                                  const boost::system::error_code& error,
+                                  std::size_t bytes_received)
   {
-    add_to_write_queue(data);
+    if (!error)
+    {
+      std::string bytes(buf.get(), bytes_received);
+      std::clog << "INFO [DefaultSocket]: received " << bytes_received << " bytes: \"" << bytes << "\"" << std::endl;
+      listener->bytes_received(bytes);
+    }
+    else
+    {
+      std::clog << "ERROR [DefaultSocket]: error occurred during read: " << error.message() << std::endl;
+      listener->error_occurred(error.message());
+      notify_state_listeners_of_connection_lost();
+    }
+  }
+
+  void DefaultSocket::async_write(SocketListener& listener, const std::string& data)
+  {
+    add_to_write_queue(data, &listener);
     write_front();
+    idle_work.reset();
   }
 
   void DefaultSocket::add_socket_state_listener(SocketStateListener* listener)
@@ -75,6 +99,11 @@ namespace network
   void DefaultSocket::remove_socket_state_listener(SocketStateListener* listener)
   {
     state_listeners.erase(listener);
+  }
+
+  void DefaultSocket::keep_alive()
+  {
+    idle_work.reset(new boost::asio::io_service::work(io_service));
   }
 
   boost::asio::ip::tcp::socket& DefaultSocket::asio_socket()
@@ -88,35 +117,48 @@ namespace network
       listener->connection_lost(this);
   }
 
-  void DefaultSocket::add_to_write_queue(const std::string& msg)
+  void DefaultSocket::add_to_write_queue(const std::string& msg, SocketListener* listener)
   {
-    write_queue.push_back(msg);
+    std::lock_guard<std::mutex> guard(write_queue_mutex);
+    write_queue.push_back(std::pair<std::string, SocketListener*>(msg, listener));
   }
 
   void DefaultSocket::pop_write_queue()
   {
+    std::lock_guard<std::mutex> guard(write_queue_mutex);
+    assert(!write_queue.empty());
     write_queue.pop_front();
   }
 
-  std::string DefaultSocket::front_of_write_queue()
+  const std::pair<std::string, SocketListener*>& DefaultSocket::front_of_write_queue()
   {
+    std::lock_guard<std::mutex> guard(write_queue_mutex);
     return write_queue.front();
   }
 
   bool DefaultSocket::is_write_queue_empty() const
   {
+    std::lock_guard<std::mutex> guard(write_queue_mutex);
     return write_queue.empty();
   }
 
-  void DefaultSocket::handle_write(const boost::system::error_code& error)
+  void DefaultSocket::handle_write(const boost::system::error_code& error,
+                                   SocketListener* listener)
   {
+    pop_write_queue();
+    write_queue_active = false;
+
     if (error)
     {
-      notify_state_listeners_of_connection_lost();
+      std::clog << "ERROR [DefaultSocket]: error occurred during write: " << error.message() << std::endl;
+      listener->error_occurred(error.message());
+      //notify_state_listeners_of_connection_lost();
       return;
     }
 
-    pop_write_queue();
+    std::clog << "INFO [DefaultSocket]: write succeeded." << std::endl;
+    listener->write_succeeded();
+
     if (is_write_queue_empty())
       return;
 
@@ -125,12 +167,18 @@ namespace network
 
   void DefaultSocket::write_front()
   {
-    std::string to_write = front_of_write_queue();
+    bool active_before_exchanged = write_queue_active.exchange(true);
+    if (active_before_exchanged)
+      return;
+
+    const std::pair<std::string, SocketListener*>& to_write = front_of_write_queue();
+    std::clog << "INFO [DefaultSocket]: writing \"" << to_write.first << "\"" << std::endl;
     boost::asio::async_write(the_socket,
-                             boost::asio::buffer(to_write.data(), to_write.length()),
+                             boost::asio::buffer(to_write.first.data(),
+                                                 to_write.first.length()),
                              [&](const boost::system::error_code& error,
                                  std::size_t /*bytes_written*/)
-                             { handle_write(error); });
+                             { handle_write(error, to_write.second); });
   }
 
 

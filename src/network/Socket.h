@@ -41,7 +41,7 @@ namespace network
     virtual ~Socket() = 0;
 
     virtual void async_read(SocketListener& listener, std::size_t read_bytes) = 0;
-    virtual void async_write(const std::string& data) = 0;
+    virtual void async_write(SocketListener& listener, const std::string& data) = 0;
 
     virtual void add_socket_state_listener(SocketStateListener* listener) = 0;
     virtual void remove_socket_state_listener(SocketStateListener* listener) = 0;

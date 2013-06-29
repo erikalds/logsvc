@@ -31,7 +31,9 @@
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/shared_array.hpp>
 #include <deque>
+#include <mutex>
 #include <set>
 
 namespace network
@@ -41,30 +43,40 @@ namespace network
   {
   public:
     DefaultSocket(boost::asio::io_service& io_service);
+    ~DefaultSocket();
 
     virtual void async_read(SocketListener& listener, std::size_t read_bytes);
-    virtual void async_write(const std::string& data);
+    virtual void async_write(SocketListener& listener, const std::string& data);
 
     virtual void add_socket_state_listener(SocketStateListener* listener);
     virtual void remove_socket_state_listener(SocketStateListener* listener);
 
-    virtual void keep_alive() {}
+    virtual void keep_alive();
 
     boost::asio::ip::tcp::socket& asio_socket();
 
   private:
+    void handle_read(boost::shared_array<char> buf, SocketListener* listener,
+                     const boost::system::error_code& error,
+                     std::size_t bytes_received);
+
     void notify_state_listeners_of_connection_lost();
 
-    void add_to_write_queue(const std::string& msg);
+    void add_to_write_queue(const std::string& msg, SocketListener* listener);
     void pop_write_queue();
-    std::string front_of_write_queue();
+    const std::pair<std::string, SocketListener*>& front_of_write_queue();
     bool is_write_queue_empty() const;
     void write_front();
-    void handle_write(const boost::system::error_code& error);
+    void handle_write(const boost::system::error_code& error,
+                      SocketListener* listener);
 
     boost::asio::ip::tcp::socket the_socket;
     std::set<SocketStateListener*> state_listeners;
-    std::deque<std::string> write_queue;
+    mutable std::mutex write_queue_mutex;
+    std::deque<std::pair<std::string, SocketListener*>> write_queue;
+    boost::asio::io_service& io_service;
+    std::unique_ptr<boost::asio::io_service::work> idle_work;
+    std::atomic<bool> write_queue_active;
   };
 
 } // namespace network
