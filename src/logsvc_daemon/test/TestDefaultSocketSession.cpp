@@ -137,6 +137,8 @@ BOOST_FIXTURE_TEST_CASE(after_it_has_acted_the_Deliverable_is_written_to_the_Soc
   socket->receive_bytes(header);
   socket->receive_bytes(payload);
 
+  socket->finish_write_op();
+
   BOOST_CHECK_EQUAL(socket->written_bytes, std::string("logsnack\4\0\0\0fail", 16));
 }
 
@@ -149,6 +151,7 @@ BOOST_FIXTURE_TEST_CASE(can_read_several_protocol_objects, F)
 
   socket->receive_bytes(header0);
   socket->receive_bytes(payload0);
+  socket->finish_write_op();
 
   std::string header1("logsopen\x10\0\0\0", 12);
   std::string payload1("path/to/file.txt");
@@ -157,6 +160,7 @@ BOOST_FIXTURE_TEST_CASE(can_read_several_protocol_objects, F)
   socket->receive_bytes(header1);
   BOOST_CHECK_EQUAL(16, socket->async_read_byte_count);
   socket->receive_bytes(payload1);
+  socket->finish_write_op();
 }
 
 BOOST_FIXTURE_TEST_CASE(is_a_SocketSession, F)

@@ -66,6 +66,7 @@ struct F : mock::DummySocketKilledListener
   virtual void socket_killed(const mock::DummySocket* socket_to_die)
   {
     BOOST_CHECK_EQUAL(dummy_socket, socket_to_die);
+    dummy_socket = nullptr;
     --live_sockets;
   }
 
@@ -102,6 +103,7 @@ BOOST_FIXTURE_TEST_CASE(sending_deliverable_sends_data, F)
   logsvc::client::DefaultConnection connection = create_connection();
   DummyDeliverable dummy_deliverable;
   connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   BOOST_CHECK_EQUAL(dummy_socket->written_bytes,
                     dummy_deliverable.get_header() + dummy_deliverable.get_payload());
 }
@@ -111,6 +113,7 @@ BOOST_FIXTURE_TEST_CASE(sending_deliverable_waits_for_reply, F)
   logsvc::client::DefaultConnection connection = create_connection();
   DummyDeliverable dummy_deliverable;
   connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   BOOST_CHECK_EQUAL(1, dummy_socket->async_read_call_count);
 }
 
@@ -119,6 +122,7 @@ BOOST_FIXTURE_TEST_CASE(sending_deliverable_tries_to_read_bytes_for_a_header, F)
   logsvc::client::DefaultConnection connection = create_connection();
   DummyDeliverable dummy_deliverable;
   connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   BOOST_CHECK_EQUAL(12, dummy_socket->async_read_byte_count);
 }
 
@@ -127,6 +131,7 @@ BOOST_FIXTURE_TEST_CASE(after_receiving_header_tries_to_read_payload, F)
   logsvc::client::DefaultConnection connection = create_connection();
   DummyDeliverable dummy_deliverable;
   connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   const std::string header("123456789012");
   drf->expected_payload = "Test";
   dummy_socket->receive_bytes(header);
@@ -140,12 +145,14 @@ BOOST_FIXTURE_TEST_CASE(tries_to_read_new_message_after_next_send, F)
   logsvc::client::DefaultConnection connection = create_connection();
   DummyDeliverable dummy_deliverable;
   connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   const std::string header("123456789012");
   drf->expected_payload = "Test";
   dummy_socket->receive_bytes(header);
   dummy_socket->receive_bytes(drf->expected_payload);
 
   connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   drf->expected_payload = "foobar";
   dummy_socket->receive_bytes(header);
 
@@ -159,6 +166,7 @@ BOOST_FIXTURE_TEST_CASE(future_value_set_when_payload_received, F)
   DummyDeliverable dummy_deliverable;
   std::future<std::unique_ptr<logsvc::prot::Receivable>> future_recv
     = connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   BOOST_CHECK(std::future_status::timeout
               == future_recv.wait_for(std::chrono::microseconds(0)));
 
@@ -179,6 +187,7 @@ BOOST_FIXTURE_TEST_CASE(gets_expected_receivable, F)
   DummyDeliverable dummy_deliverable;
   std::future<std::unique_ptr<logsvc::prot::Receivable>> future_recv
     = connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   const std::string header("123456789012");
   drf->expected_payload = "Test";
   dummy_socket->receive_bytes(header);
@@ -221,9 +230,11 @@ BOOST_FIXTURE_TEST_CASE(behaves_correctly_if_error_occurs, F)
   const std::string error("the particular error message");
   dummy_socket->make_error_occur(error);
   future_recv = connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   dummy_socket->receive_bytes("foobarfoobar");
   dummy_socket->make_error_occur(error);
   future_recv = connection.send(dummy_deliverable);
+  dummy_socket->finish_write_op();
   drf->expected_payload = "foo";
   dummy_socket->receive_bytes("foobarfoobar");
   dummy_socket->receive_bytes("foo");
