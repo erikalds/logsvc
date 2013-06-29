@@ -59,6 +59,7 @@ namespace logsvc
 
     void DefaultSocketSession::start_listen()
     {
+      std::clog << "INFO [DefaultSocketSession]: listening for header..." << std::endl;
       the_socket->async_read(*this, constants::header_length);
     }
 
@@ -74,6 +75,7 @@ namespace logsvc
 
     void DefaultSocketSession::bytes_received(const std::string& bytes)
     {
+      std::clog << "INFO [DefaultSocketSession]: received " << bytes.size() << " bytes." << std::endl;
       if (!current_receivable)
       {
         current_receivable = the_receivable_factory->create(bytes);
@@ -84,10 +86,15 @@ namespace logsvc
         current_receivable->read_payload(bytes);
         std::unique_ptr<prot::Deliverable> deliverable =
           current_receivable->act(*executor);
-        the_socket->async_write(deliverable->get_header() + deliverable->get_payload());
-
-        listen_for_new_header();
+        the_socket->async_write(*this,
+                                deliverable->get_header() + deliverable->get_payload());
       }
+    }
+
+    void DefaultSocketSession::write_succeeded()
+    {
+      std::clog << "INFO [DefaultSocketSession]: write succeeded." << std::endl;
+      listen_for_new_header();
     }
 
     void DefaultSocketSession::error_occurred(const std::string& message)

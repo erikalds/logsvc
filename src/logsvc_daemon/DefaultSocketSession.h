@@ -67,7 +67,7 @@ namespace logsvc
 
     private:
       virtual void bytes_received(const std::string& bytes);
-      virtual void write_succeeded() { /* no action necessary */ }
+      virtual void write_succeeded();
       virtual void error_occurred(const std::string& message);
 
       virtual void connection_lost(network::Socket* socket);
