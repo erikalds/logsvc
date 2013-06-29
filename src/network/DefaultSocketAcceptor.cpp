@@ -28,6 +28,8 @@
 
 #include "network/DefaultSocket.h"
 #include "network/SocketAcceptListener.h"
+#include <boost/asio/placeholders.hpp>
+#include <boost/bind.hpp>
 
 using namespace boost::asio;
 
@@ -40,22 +42,42 @@ namespace network
   {
   }
 
+  namespace {
+
+    void handle_accept(DefaultSocket* socket,
+                       SocketAcceptListener* listener,
+                       const boost::system::error_code& error)
+    {
+      std::unique_ptr<DefaultSocket> api_socket(socket);
+      if (!error)
+      {
+        std::clog << "INFO [DefaultSocketAcceptor]: async accept succeeded." << std::endl;
+        listener->accept_requested(std::move(api_socket));
+      }
+      else
+      {
+        std::clog << "INFO [DefaultSocketAcceptor]: async accept failed: "
+                  << error.message() << std::endl;
+        listener->error_occurred(error.message());
+      }
+    }
+
+  } // anonymous namespace
+
   void DefaultSocketAcceptor::async_accept(SocketAcceptListener& listener)
   {
     std::unique_ptr<DefaultSocket> api_socket(new DefaultSocket(io_service));
-    acceptor.async_accept(api_socket->asio_socket(),
-                          [&](const boost::system::error_code& error)
-                          {
-                            if (!error)
-                              listener.accept_requested(std::move(api_socket));
-                            else
-                              listener.error_occurred(error.message());
-                          });
+    std::clog << "INFO [DefaultSocketAcceptor]: async accept is waiting..." << std::endl;
+    boost::asio::ip::tcp::socket& asio_socket = api_socket->asio_socket();
+    acceptor.async_accept(asio_socket,
+                          boost::bind(handle_accept, api_socket.release(),
+                                      &listener, boost::asio::placeholders::error));
   }
 
   void DefaultSocketAcceptor::run()
   {
     io_service.run();
+    std::cerr << "ERROR [DefaultSocketAcceptor]: io_service.run has returned..." << std::endl;
   }
 
 } // namespace network
