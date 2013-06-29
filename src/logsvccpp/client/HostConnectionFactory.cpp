@@ -54,6 +54,11 @@ namespace logsvc
 
       private:
         IOServiceSingleton() : my_io_service() {}
+        ~IOServiceSingleton()
+        {
+          if (instance().thread.joinable())
+            instance().thread.join();
+        }
 
         static IOServiceSingleton& instance();
 
@@ -105,26 +110,35 @@ namespace logsvc
 
       std::unique_ptr<network::DefaultSocket> socket =
         egen::make_unique<network::DefaultSocket>(IOServiceSingleton::io_service());
-      std::promise<std::string> error_promise;
-      std::future<std::string> future_error = error_promise.get_future();
+      std::promise<bool> connection_promise;
+      std::future<bool> future_connection = connection_promise.get_future();
       boost::asio::async_connect(socket->asio_socket(), endpoint_iterator,
                                  [&](const boost::system::error_code& error,
                                      boost::asio::ip::tcp::resolver::iterator /*iterator*/)
                                  {
+                                   std::cout << "Handling async_connect: " << error.message() << std::endl;
                                    if (error)
-                                     error_promise.set_value(error.message());
+                                   {
+                                     UnableToConnectError utce(error.message());
+                                     std::exception_ptr exception
+                                       = std::make_exception_ptr(utce);
+                                     connection_promise.set_exception(exception);
+                                   }
                                    else
-                                     error_promise.set_value("");
+                                   {
+                                     socket->keep_alive();
+                                     connection_promise.set_value(true);
+                                   }
                                  });
 
       IOServiceSingleton::make_sure_it_runs();
 
       std::unique_ptr<prot::ReceivableFactory> recvfactory(new prot::ProtObjFactory);
-      if (future_error.get().empty())
-        return egen::make_unique<DefaultConnection>(std::move(socket),
-                                                    std::move(recvfactory));
-      else
-        throw UnableToConnectError(future_error.get());
+      if (!future_connection.get())
+        throw UnableToConnectError("Unspecified connect error.");
+
+      return egen::make_unique<DefaultConnection>(std::move(socket),
+                                                  std::move(recvfactory));
     }
 
     prot::Client
