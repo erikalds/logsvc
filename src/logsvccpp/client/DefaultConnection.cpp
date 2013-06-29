@@ -45,6 +45,7 @@ namespace logsvc
       current_receivable(),
       current_promise()
     {
+      this->socket->keep_alive();
     }
 
     DefaultConnection::~DefaultConnection()
@@ -54,8 +55,7 @@ namespace logsvc
     std::future<std::unique_ptr<prot::Receivable>>
     DefaultConnection::send(const prot::Deliverable& deliverable)
     {
-      socket->async_write(deliverable.get_header() + deliverable.get_payload());
-      socket->async_read(*this, 12);
+      socket->async_write(*this, deliverable.get_header() + deliverable.get_payload());
       current_promise = std::promise<std::unique_ptr<prot::Receivable>>();
       return current_promise.get_future();
     }
@@ -71,13 +71,20 @@ namespace logsvc
       {
         current_receivable->read_payload(bytes);
         current_promise.set_value(std::move(current_receivable));
+        socket->keep_alive();
       }
+    }
+
+    void DefaultConnection::write_succeeded()
+    {
+      socket->async_read(*this, 12);
     }
 
     void DefaultConnection::error_occurred(const std::string& message)
     {
       current_receivable.reset();
       current_promise.set_exception(std::make_exception_ptr(SocketError(message)));
+      socket->keep_alive();
     }
 
   } // namespace client
