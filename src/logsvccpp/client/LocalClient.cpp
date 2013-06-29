@@ -45,7 +45,9 @@ namespace logsvc
       if (!connection)
         throw UnableToConnectError();
 
-      connection->send(confac.create_client_info(appname));
+      std::future<std::unique_ptr<prot::Receivable> > recv
+        = connection->send(confac.create_client_info(appname));
+      recv.wait();
     }
 
     LocalClient::~LocalClient()
