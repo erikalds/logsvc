@@ -54,7 +54,7 @@ public:
   DummySocketSession(DummySocketDeleteListener* listener) :
     is_listening(false), delete_listener(listener) {}
   ~DummySocketSession()
-  { delete_listener->deleting(this); }
+  { BOOST_CHECK(listeners.empty()); delete_listener->deleting(this); }
 
   virtual void start_listen() { is_listening = true; }
   virtual void add_socket_session_listener(SocketSessionListener* listener)

@@ -49,12 +49,14 @@ namespace logsvc
 
     SessionInitiator::~SessionInitiator()
     {
+      for (auto iter = std::begin(live_sessions); iter != std::end(live_sessions); ++iter)
+        (*iter)->remove_socket_session_listener(this);
     }
 
     void SessionInitiator::accept_requested(std::unique_ptr<network::Socket> socket)
     {
       std::unique_ptr<SocketSession> session = factory.create_session(std::move(socket));
-      std::clog << "INFO [SessionInitiator]: accepted socket session " << session.get() << std::endl;
+      //std::clog << "INFO [SessionInitiator]: accepted socket session " << session.get() << std::endl;
       session->start_listen();
       session->add_socket_session_listener(this);
       live_sessions.insert(std::move(session));
@@ -69,7 +71,8 @@ namespace logsvc
 
     void SessionInitiator::connection_lost(SocketSession* session)
     {
-      std::clog << "INFO [SessionInitiator]: connection lost " << session << std::endl;
+      //std::clog << "INFO [SessionInitiator]: connection lost " << session << std::endl;
+      session->remove_socket_session_listener(this);
       auto iter = std::find_if(live_sessions.begin(), live_sessions.end(),
                                [&](const std::unique_ptr<SocketSession>& ss)
                                { return ss.get() == session; });
