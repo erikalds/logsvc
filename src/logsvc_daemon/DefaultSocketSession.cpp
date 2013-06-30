@@ -106,7 +106,10 @@ namespace logsvc
     void DefaultSocketSession::connection_lost(network::Socket* /*socket*/)
     {
       std::clog << "INFO [DefaultSocketSession]: connection lost, notifying " << listeners.size() << " listeners." << std::endl;
-      for (SocketSessionListener* listener : listeners)
+      // make a copy, since our owner might try to destroy us when it
+      // is notified that the connection is lost
+      std::set<SocketSessionListener*> copied_listeners(listeners);
+      for (SocketSessionListener* listener : copied_listeners)
       {
         std::clog << "INFO [DefaultSocketSession]: Notifying socket session listener: " << listener << std::endl;
         listener->connection_lost(this);
