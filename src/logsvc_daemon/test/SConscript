@@ -14,8 +14,8 @@ libs = [logsvc_daemon, log] + env['LIBS']
 
 test_logsvc_daemon = env.Program("test_logsvc_daemon", cpp_files, LIBS=libs)
 installed_test = env.Install(source = test_logsvc_daemon, dir = "#/build")
-env.AddPostAction(installed_test, Action("@build/%s" % test_logsvc_daemon[0]))
+run_test = env.AddPostAction(installed_test, Action("@build/%s" % test_logsvc_daemon[0]))
+env.AlwaysBuild(run_test)
 
 env.Alias("build", installed_test)
 env.Default("build")
-

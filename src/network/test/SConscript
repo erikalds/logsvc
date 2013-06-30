@@ -11,8 +11,8 @@ libs = [network] + env['LIBS']
 
 test_network = env.Program("test_network", cpp_files, LIBS=libs)
 installed_test = env.Install(source = test_network, dir = "#/build")
-env.AddPostAction(installed_test, Action("@build/%s" % test_network[0]))
+run_test = env.AddPostAction(installed_test, Action("@build/%s" % test_network[0]))
+env.AlwaysBuild(run_test)
 
 env.Alias("build", installed_test)
 env.Default("build")
-

@@ -13,8 +13,8 @@ libs = [log] + env['LIBS']
 
 test_log = env.Program("test_log", cpp_files, LIBS=libs)
 installed_test = env.Install(source = test_log, dir = "#/build")
-env.AddPostAction(installed_test, Action("@build/%s" % test_log[0]))
+run_test = env.AddPostAction(installed_test, Action("@build/%s" % test_log[0]))
+env.AlwaysBuild(run_test)
 
 env.Alias("build", installed_test)
 env.Default("build")
-

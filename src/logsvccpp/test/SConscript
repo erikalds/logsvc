@@ -12,7 +12,8 @@ test_logsvccpp = env.Program("test_logsvccpp", cpp_files, LIBS=libs,
                              LIBPATH=["#build"])
 installed_test = env.Install(source = test_logsvccpp, dir = "#/build")
 env['ENV']['LD_LIBRARY_PATH'] = Dir("#/build")
-env.AddPostAction(installed_test, Action("@build/%s" % test_logsvccpp[0]))
+run_test = env.AddPostAction(installed_test, Action("@build/%s" % test_logsvccpp[0]))
+env.AlwaysBuild(run_test)
 
 env.Alias("build", installed_test)
 env.Default("build")
