@@ -59,17 +59,18 @@ namespace logsvc
 
     void DefaultSocketSession::start_listen()
     {
-      std::clog << "INFO [DefaultSocketSession]: listening for header..." << std::endl;
       the_socket->async_read(*this, constants::header_length);
     }
 
     void DefaultSocketSession::add_socket_session_listener(SocketSessionListener* l)
     {
+      std::clog << "INFO [DefaultSocketSession]: Inserting socket session listener: " << l << std::endl;
       listeners.insert(l);
     }
 
     void DefaultSocketSession::remove_socket_session_listener(SocketSessionListener* l)
     {
+      std::clog << "INFO [DefaultSocketSession]: Erasing socket session listener: " << l << std::endl;
       listeners.erase(l);
     }
 
@@ -105,8 +106,12 @@ namespace logsvc
 
     void DefaultSocketSession::connection_lost(network::Socket* /*socket*/)
     {
+      std::clog << "INFO [DefaultSocketSession]: connection lost, notifying " << listeners.size() << " listeners." << std::endl;
       for (SocketSessionListener* listener : listeners)
+      {
+        std::clog << "INFO [DefaultSocketSession]: Notifying socket session listener: " << listener << std::endl;
         listener->connection_lost(this);
+      }
     }
 
     void DefaultSocketSession::listen_for_new_header()
