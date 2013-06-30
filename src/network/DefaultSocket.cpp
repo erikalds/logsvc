@@ -50,6 +50,7 @@ namespace network
 
   DefaultSocket::~DefaultSocket()
   {
+    std::clog << "INFO [DefaultSocket]: Closing socket..." << std::endl;
     boost::system::error_code error;
     the_socket.close(error);
     if (error)
@@ -58,6 +59,7 @@ namespace network
 
   void DefaultSocket::async_read(SocketListener& listener, std::size_t read_bytes)
   {
+    std::clog << "INFO [DefaultSocket]: async_read " << read_bytes << " bytes..." << std::endl;
     boost::shared_array<char> buf(new char[read_bytes]);
     boost::asio::async_read(the_socket,
                             boost::asio::buffer(buf.get(), read_bytes),
@@ -152,7 +154,7 @@ namespace network
     {
       std::clog << "ERROR [DefaultSocket]: error occurred during write: " << error.message() << std::endl;
       listener->error_occurred(error.message());
-      //notify_state_listeners_of_connection_lost();
+      notify_state_listeners_of_connection_lost();
       return;
     }
 
