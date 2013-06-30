@@ -56,8 +56,8 @@ namespace logsvc
         IOServiceSingleton() : my_io_service() {}
         ~IOServiceSingleton()
         {
-          if (instance().thread.joinable())
-            instance().thread.join();
+          if (thread.joinable())
+            thread.join();
         }
 
         static IOServiceSingleton& instance();
