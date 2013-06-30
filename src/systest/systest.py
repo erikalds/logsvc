@@ -143,7 +143,7 @@ def log_string_to_file_test():
     if report:
         report += "\nLog contents was:\n" + contents + "\n"
 
-    return (bool(report), report)
+    return (not bool(report), report)
 
 def hup_logsvcd():
     global logsvcd
