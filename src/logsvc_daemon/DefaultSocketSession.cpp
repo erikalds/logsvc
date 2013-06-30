@@ -101,7 +101,6 @@ namespace logsvc
     void DefaultSocketSession::error_occurred(const std::string& message)
     {
       std::clog << "ERROR [DefaultSocketSession]: " << message << std::endl;
-      listen_for_new_header();
     }
 
     void DefaultSocketSession::connection_lost(network::Socket* /*socket*/)

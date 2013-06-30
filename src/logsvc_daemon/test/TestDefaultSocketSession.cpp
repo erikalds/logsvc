@@ -185,7 +185,7 @@ BOOST_FIXTURE_TEST_CASE(is_not_notified_when_socket_connection_dropped_and_unreg
   BOOST_CHECK_EQUAL(0, listener.notification_count);
 }
 
-BOOST_FIXTURE_TEST_CASE(Socket_error_occur_during_read_starts_listening_for_new_header, F)
+BOOST_FIXTURE_TEST_CASE(Socket_error_occur_during_read_does_not_start_listening_for_new_header, F)
 {
   intercept_clog();
   ss.start_listen();
@@ -193,10 +193,7 @@ BOOST_FIXTURE_TEST_CASE(Socket_error_occur_during_read_starts_listening_for_new_
   socket->receive_bytes(header);
   BOOST_CHECK_EQUAL(2, socket->async_read_call_count);
   socket->make_error_occur("asdf");
-  BOOST_CHECK_EQUAL(3, socket->async_read_call_count);
-  BOOST_CHECK_EQUAL(12, socket->async_read_byte_count);
-  socket->receive_bytes(header);
-  BOOST_CHECK_EQUAL(4, socket->async_read_call_count);
+  BOOST_CHECK_EQUAL(2, socket->async_read_call_count);
 }
 
 BOOST_FIXTURE_TEST_CASE(Socket_error_occur_during_read_is_logged_to_clog, F)
