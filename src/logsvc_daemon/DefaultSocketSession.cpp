@@ -55,11 +55,14 @@ namespace logsvc
 
     DefaultSocketSession::~DefaultSocketSession()
     {
+      std::unique_ptr<network::Socket> tmp = std::move(the_socket);
+      tmp.reset();
     }
 
     void DefaultSocketSession::start_listen()
     {
-      the_socket->async_read(*this, constants::header_length);
+      if (the_socket)
+        the_socket->async_read(*this, constants::header_length);
     }
 
     void DefaultSocketSession::add_socket_session_listener(SocketSessionListener* l)
@@ -80,15 +83,17 @@ namespace logsvc
       if (!current_receivable)
       {
         current_receivable = the_receivable_factory->create(bytes);
-        the_socket->async_read(*this, current_receivable->get_payload_length());
+        if (the_socket)
+          the_socket->async_read(*this, current_receivable->get_payload_length());
       }
       else
       {
         current_receivable->read_payload(bytes);
         std::unique_ptr<prot::Deliverable> deliverable =
           current_receivable->act(*executor);
-        the_socket->async_write(*this,
-                                deliverable->get_header() + deliverable->get_payload());
+        if (the_socket)
+          the_socket->async_write(*this,
+                                  deliverable->get_header() + deliverable->get_payload());
       }
     }
 
