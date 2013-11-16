@@ -1,4 +1,4 @@
-LIBS=-llogsvccpp -llog -lnetwork -lboost_system-mt -lboost_filesystem-mt -lpthread
+LIBS=-llogsvccpp -llog -lnetwork -lboost_system -lboost_filesystem -lpthread
 CPPFLAGS=-Wall -std=gnu++11
 DEPLIBS=../build/liblogsvccpp.so ../build/liblog.so ../build/libnetwork.so
 
