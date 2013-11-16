@@ -4,6 +4,7 @@ Import("log")
 env = CoreEnvironment(DEBUG=1,
                       LIBS=[
         "boost_unit_test_framework",
+        "boost_filesystem",
         "boost_system",
         "boost_regex",
         ])
