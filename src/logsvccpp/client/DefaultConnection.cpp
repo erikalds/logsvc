@@ -50,6 +50,8 @@ namespace logsvc
 
     DefaultConnection::~DefaultConnection()
     {
+      std::unique_ptr<network::Socket> tmp = std::move(socket);
+      tmp.reset();
     }
 
     std::future<std::unique_ptr<prot::Receivable>>
@@ -65,26 +67,30 @@ namespace logsvc
       if (!current_receivable)
       {
         current_receivable = receivable_factory->create(bytes);
-        socket->async_read(*this, current_receivable->get_payload_length());
+        if (socket)
+          socket->async_read(*this, current_receivable->get_payload_length());
       }
       else
       {
         current_receivable->read_payload(bytes);
         current_promise.set_value(std::move(current_receivable));
-        socket->keep_alive();
+        if (socket)
+          socket->keep_alive();
       }
     }
 
     void DefaultConnection::write_succeeded()
     {
-      socket->async_read(*this, 12);
+      if (socket)
+        socket->async_read(*this, 12);
     }
 
     void DefaultConnection::error_occurred(const std::string& message)
     {
       current_receivable.reset();
       current_promise.set_exception(std::make_exception_ptr(SocketError(message)));
-      socket->keep_alive();
+      if (socket)
+        socket->keep_alive();
     }
 
   } // namespace client
