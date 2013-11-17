@@ -63,6 +63,7 @@ namespace mock {
     }
 
     virtual void act(logsvc::prot::ClientExecutor&) {}
+    virtual bool is_final_message() const { return false; }
 
   private:
     std::string expected_payload;

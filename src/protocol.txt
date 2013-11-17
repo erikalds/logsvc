@@ -4,6 +4,7 @@ prot-obj-type :=
        "open" # open file, prot::File, return prot::FileHandle, nack
     || "clos" # close file, prot::FileHandle, return ackn, nack
     || "clnt" # client description, prot::Client, return ackn, nack
+    || "disc" # Disconnect client, client handle, return ackn, nack
     || "mesg" # message to write to open log file, prot::Message, return ackn, nack
     || "filh" # Handle to open file, prot::FileHandle
     || "clnh" # Handle for client to present, prot::ClientHandle

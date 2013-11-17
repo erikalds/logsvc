@@ -40,6 +40,7 @@ namespace logsvc
       AbstractReceivable(std::size_t pll) : payload_length(pll) {}
 
       virtual std::size_t get_payload_length() const { return payload_length; }
+      virtual bool is_final_message() const { return false; }
 
     private:
       std::size_t payload_length;

@@ -48,6 +48,7 @@ namespace logsvc
       virtual void read_payload(const std::string& payload) = 0;
       virtual std::unique_ptr<Deliverable> act(Executor& exec) = 0;
       virtual void act(ClientExecutor& exec) = 0;
+      virtual bool is_final_message() const = 0;
     };
 
     inline Receivable::~Receivable() {}
