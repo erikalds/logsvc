@@ -50,11 +50,21 @@ namespace network
 
   DefaultSocket::~DefaultSocket()
   {
-    std::clog << "INFO [DefaultSocket]: Closing socket..." << std::endl;
-    boost::system::error_code error;
-    the_socket.close(error);
-    if (error)
-      std::cerr << "ERROR [DefaultSocket]: Error occurred during socket close: " << error.message() << std::endl;
+    if (the_socket.is_open())
+    {
+      std::clog << "INFO [DefaultSocket]: Closing socket..." << std::endl;
+      boost::system::error_code error;
+      the_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
+      if (error)
+        std::cerr << "ERROR [DefaultSocket]: Error occurred during socket shutdown: " << error.message() << std::endl;
+      the_socket.close(error);
+      if (error)
+        std::cerr << "ERROR [DefaultSocket]: Error occurred during socket close: " << error.message() << std::endl;
+    }
+    else
+    {
+      std::clog << "INFO [DefaultSocket]: No need to close the socket, it was already closed." << std::endl;
+    }
   }
 
   void DefaultSocket::async_read(SocketListener& listener, std::size_t read_bytes)
