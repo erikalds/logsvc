@@ -78,6 +78,7 @@ namespace network
     boost::asio::io_service& io_service;
     std::unique_ptr<boost::asio::io_service::work> idle_work;
     std::atomic<bool> write_queue_active;
+    std::atomic<bool> were_dying;
   };
 
 } // namespace network

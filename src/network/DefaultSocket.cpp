@@ -44,12 +44,14 @@ namespace network
     write_queue(),
     io_service(io_service),
     idle_work(),
-    write_queue_active(false)
+    write_queue_active(false),
+    were_dying(false)
   {
   }
 
   DefaultSocket::~DefaultSocket()
   {
+    were_dying = true;
     if (the_socket.is_open())
     {
       std::clog << "INFO [DefaultSocket]: shutdown socket..." << std::endl;
@@ -74,6 +76,13 @@ namespace network
 
   void DefaultSocket::async_read(SocketListener& listener, std::size_t read_bytes)
   {
+    if (were_dying)
+    {
+      std::cerr << "INFO [DefaultSocket]: async_read called while we're dying..." << std::endl;
+      listener.error_occurred("Socket closed.");
+      return;
+    }
+
     std::clog << "INFO [DefaultSocket]: async_read " << read_bytes << " bytes..." << std::endl;
     boost::shared_array<char> buf(new char[read_bytes]);
     boost::asio::async_read(the_socket,
@@ -87,6 +96,12 @@ namespace network
                                   const boost::system::error_code& error,
                                   std::size_t bytes_received)
   {
+    if (were_dying)
+    {
+      std::cerr << "INFO [DefaultSocket]: handle_read called while we're dying..." << std::endl;
+      return;
+    }
+
     if (!error)
     {
       std::string bytes(buf.get(), bytes_received);
@@ -103,6 +118,13 @@ namespace network
 
   void DefaultSocket::async_write(SocketListener& listener, const std::string& data)
   {
+    if (were_dying)
+    {
+      std::cerr << "INFO [DefaultSocket]: async_write called while we're dying..." << std::endl;
+      listener.error_occurred("Socket closed.");
+      return;
+    }
+
     add_to_write_queue(data, &listener);
     write_front();
     idle_work.reset();
@@ -120,6 +142,11 @@ namespace network
 
   void DefaultSocket::keep_alive()
   {
+    if (were_dying)
+    {
+      std::cerr << "INFO [DefaultSocket]: keep_alive called while we're dying...  Returning." << std::endl;
+      return;
+    }
     idle_work.reset(new boost::asio::io_service::work(io_service));
   }
 
@@ -162,6 +189,12 @@ namespace network
   void DefaultSocket::handle_write(const boost::system::error_code& error,
                                    SocketListener* listener)
   {
+    if (were_dying)
+    {
+      std::cerr << "INFO [DefaultSocket]: handle_write called while we're dying... Error is: " << error.message() << std::endl;
+      return;
+    }
+
     pop_write_queue();
     write_queue_active = false;
 
