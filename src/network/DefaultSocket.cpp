@@ -52,11 +52,16 @@ namespace network
   {
     if (the_socket.is_open())
     {
-      std::clog << "INFO [DefaultSocket]: Closing socket..." << std::endl;
+      std::clog << "INFO [DefaultSocket]: shutdown socket..." << std::endl;
       boost::system::error_code error;
       the_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
       if (error)
         std::cerr << "ERROR [DefaultSocket]: Error occurred during socket shutdown: " << error.message() << std::endl;
+      std::clog << "INFO [DefaultSocket]: cancel socket..." << std::endl;
+      the_socket.cancel(error);
+      if (error)
+        std::cerr << "ERROR [DefaultSocket]: Error occurred during socket cancel: " << error.message() << std::endl;
+      std::clog << "INFO [DefaultSocket]: close socket..." << std::endl;
       the_socket.close(error);
       if (error)
         std::cerr << "ERROR [DefaultSocket]: Error occurred during socket close: " << error.message() << std::endl;
