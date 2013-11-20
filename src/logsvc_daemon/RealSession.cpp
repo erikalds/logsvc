@@ -93,6 +93,7 @@ namespace logsvc
 
     void RealSession::close_file(const FileHandle& fh)
     {
+      write_message(fh, "Log closed.");
       auto iter = open_files.find(fh);
       if (iter != open_files.end())
         open_files.erase(iter);

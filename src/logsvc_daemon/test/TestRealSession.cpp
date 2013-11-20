@@ -143,6 +143,13 @@ struct F
     msgpos = contents.find("hallo");
   }
 
+  void erase_dummy_file_contents(const std::string& fname)
+  {
+    DummyFile* dummy = ff.get_file(fname);
+    BOOST_REQUIRE(dummy != nullptr);
+    dummy->contents.clear();
+  }
+
   void write_message_and_find_line_positions()
   {
     logsvc::prot::FileHandle fh = open_file("asdf.txt");
@@ -289,6 +296,18 @@ BOOST_FIXTURE_TEST_CASE(close_then_reopen_gives_valid_file_handle, F)
   logsvc::prot::FileHandle fh1 = session.open_file("asdf.txt");
   BOOST_CHECK(fh1 == fh0);
   BOOST_CHECK_NO_THROW(session.write_message(fh1, "test"));
+}
+
+BOOST_FIXTURE_TEST_CASE(close_file_writes_message_to_log_file, F)
+{
+  logsvc::prot::FileHandle fh = session.open_file("asdf.txt");
+  erase_dummy_file_contents("asdf.txt");
+  session.close_file(fh);
+  find_line_positions("asdf.txt");
+  BOOST_REQUIRE_NE(clientpos, std::string::npos);
+  BOOST_REQUIRE_NE(bracket_close_pos, std::string::npos);
+  BOOST_CHECK_EQUAL("Log closed.\n",
+                    contents.substr(bracket_close_pos + 2));
 }
 
 BOOST_FIXTURE_TEST_CASE(uses_client_handle_from_factory, F)
