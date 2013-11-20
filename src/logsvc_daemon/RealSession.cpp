@@ -123,6 +123,9 @@ namespace logsvc
 
     void RealSession::disconnect_client(const prot::ClientHandle& client)
     {
+      if (client != *client_handle)
+        throw std::runtime_error("Tried to disconnect wrong client handle.");
+
       for (auto f : open_files)
         write_message(f.first, "Disconnected from logsvc daemon.");
     }

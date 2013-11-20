@@ -350,6 +350,16 @@ BOOST_FIXTURE_TEST_CASE(disconnect_client_on_correct_client_handle_writes_to_ope
                     contents.substr(bracket_close_pos + 2));
 }
 
+BOOST_FIXTURE_TEST_CASE(disconnect_fails_if_wrong_client_handle, F)
+{
+  BOOST_CHECK_EXCEPTION(session.disconnect_client(logsvc::prot::ClientHandle()),
+                        std::runtime_error,
+                        [](const std::runtime_error& e)
+                        {
+                          return std::string(e.what()) == "Tried to disconnect wrong client handle.";
+                        });
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
