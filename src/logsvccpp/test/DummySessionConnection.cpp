@@ -119,6 +119,11 @@ namespace logsvc
       return prot::ClientHandle();
     }
 
+    void DummySessionConnection::
+    disconnect_client(const logsvc::prot::ClientHandle&)
+    {
+    }
+
     std::size_t DummySessionConnection::lookup_idx(const logsvc::prot::FileHandle fh) const
     {
       std::size_t idx = egen::lookup(fh, fh_to_idx,

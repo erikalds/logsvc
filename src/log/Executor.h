@@ -49,6 +49,7 @@ namespace logsvc
                                  const std::string& message) = 0;
       virtual ClientHandle set_client_info(const std::string& name,
                                            const std::string& address) = 0;
+      virtual void disconnect_client(const ClientHandle& client) = 0;
     };
 
     inline Executor::~Executor() {}

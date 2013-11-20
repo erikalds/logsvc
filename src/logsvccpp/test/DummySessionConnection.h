@@ -69,6 +69,8 @@ namespace logsvc
       virtual logsvc::prot::ClientHandle
       set_client_info(const std::string& name, const std::string& address);
 
+      void disconnect_client(const logsvc::prot::ClientHandle& client) override;
+
       std::string client_name;
       std::string client_address;
       std::vector<boost::filesystem::path> opened_files;

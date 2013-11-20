@@ -80,6 +80,13 @@ namespace mock
       return client_handle;
     }
 
+    void disconnect_client(const logsvc::prot::ClientHandle& client)
+    {
+      if (client != client_handle)
+        throw std::runtime_error(error_msg_on_wrong_client_handle_in_disconnect);
+      client_name = "DISCONNECTED";
+    }
+
     boost::filesystem::path opened_file;
     unsigned int fh_counter;
     bool open_file_fails;
@@ -95,6 +102,8 @@ namespace mock
 
     logsvc::prot::FileHandle closed_file;
     bool close_file_fails;
+
+    std::string error_msg_on_wrong_client_handle_in_disconnect;
   };
 
 } // namespace mock

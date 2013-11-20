@@ -130,12 +130,9 @@ struct F
     return session.open_file(boost::filesystem::path(filename));
   }
 
-  void write_message_and_find_line_positions()
+  void find_line_positions(const std::string& fname)
   {
-    logsvc::prot::FileHandle fh = open_file("asdf.txt");
-    tsfac.stamp = "the timestamp";
-    session.write_message(fh, "hallo");
-    DummyFile* dummy = ff.get_file("asdf.txt");
+    DummyFile* dummy = ff.get_file(fname);
     BOOST_REQUIRE(dummy != nullptr);
     contents = dummy->contents;
     bracket_open_pos = contents.find("[");
@@ -144,6 +141,14 @@ struct F
     ip_pos = contents.find(client_address);
     bracket_close_pos = contents.find("]");
     msgpos = contents.find("hallo");
+  }
+
+  void write_message_and_find_line_positions()
+  {
+    logsvc::prot::FileHandle fh = open_file("asdf.txt");
+    tsfac.stamp = "the timestamp";
+    session.write_message(fh, "hallo");
+    find_line_positions("asdf.txt");
   }
 };
 
@@ -306,6 +311,24 @@ BOOST_FIXTURE_TEST_CASE(new_client_info_used_in_message, F)
   write_message_and_find_line_positions();
   BOOST_CHECK_NE(clientpos, std::string::npos);
   BOOST_CHECK_NE(ip_pos, std::string::npos);
+}
+
+BOOST_FIXTURE_TEST_CASE(disconnect_client_on_correct_client_handle_writes_to_open_log_files,
+                        F)
+{
+  open_file("asdf.txt");
+  open_file("foobar.txt");
+  session.disconnect_client(client_handle);
+  find_line_positions("asdf.txt");
+  BOOST_REQUIRE_NE(clientpos, std::string::npos);
+  BOOST_REQUIRE_NE(bracket_close_pos, std::string::npos);
+  BOOST_CHECK_EQUAL("Disconnected from logsvc daemon.\n",
+                    contents.substr(bracket_close_pos + 2));
+  find_line_positions("foobar.txt");
+  BOOST_REQUIRE_NE(clientpos, std::string::npos);
+  BOOST_REQUIRE_NE(bracket_close_pos, std::string::npos);
+  BOOST_CHECK_EQUAL("Disconnected from logsvc daemon.\n",
+                    contents.substr(bracket_close_pos + 2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -120,5 +120,11 @@ namespace logsvc
       return *client_handle;
     }
 
+    void RealSession::disconnect_client(const prot::ClientHandle& client)
+    {
+      for (auto f : open_files)
+        write_message(f.first, "Disconnected from logsvc daemon.");
+    }
+
   } // namespace daemon
 } // namespace logsvc

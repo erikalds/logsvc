@@ -61,6 +61,7 @@ namespace logsvc
                                  const std::string& message);
       virtual prot::ClientHandle set_client_info(const std::string& name,
                                                  const std::string& address);
+      void disconnect_client(const prot::ClientHandle& client) override;
 
     private:
       prot::FileHandle get_filehandle_for_path(const boost::filesystem::path& filename);
