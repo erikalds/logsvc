@@ -65,6 +65,7 @@ namespace logsvc
     {
       FileHandle fh = get_filehandle_for_path(filename);
       open_file_if_necessary(fh, filename);
+      write_message(fh, "Log opened by \"" + client_name + "\".");
       return fh;
     }
 
@@ -93,7 +94,7 @@ namespace logsvc
 
     void RealSession::close_file(const FileHandle& fh)
     {
-      write_message(fh, "Log closed.");
+      write_message(fh, "Log closed by \"" + client_name + "\".");
       auto iter = open_files.find(fh);
       if (iter != open_files.end())
         open_files.erase(iter);

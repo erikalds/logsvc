@@ -152,10 +152,12 @@ struct F
 
   void write_message_and_find_line_positions()
   {
-    logsvc::prot::FileHandle fh = open_file("asdf.txt");
+    const std::string fname("asdf.txt");
+    logsvc::prot::FileHandle fh = open_file(fname);
+    erase_dummy_file_contents(fname);
     tsfac.stamp = "the timestamp";
     session.write_message(fh, "hallo");
-    find_line_positions("asdf.txt");
+    find_line_positions(fname);
   }
 };
 
@@ -179,6 +181,16 @@ BOOST_FIXTURE_TEST_CASE(openFile_returnsFileHandle, F)
 BOOST_FIXTURE_TEST_CASE(openSameFileTwice_sameFileHandle, F)
 {
   BOOST_CHECK(open_file("foo.txt") == open_file("foo.txt"));
+}
+
+BOOST_FIXTURE_TEST_CASE(open_file_writes_to_log_file, F)
+{
+  logsvc::prot::FileHandle fh = session.open_file("asdf.txt");
+  find_line_positions("asdf.txt");
+  BOOST_REQUIRE_NE(clientpos, std::string::npos);
+  BOOST_REQUIRE_NE(bracket_close_pos, std::string::npos);
+  BOOST_CHECK_EQUAL("Log opened by \"" + client_name + "\".\n",
+                    contents.substr(bracket_close_pos + 2));
 }
 
 BOOST_FIXTURE_TEST_CASE(writeToOpenedFile_stringIsAdded, F)
@@ -306,7 +318,7 @@ BOOST_FIXTURE_TEST_CASE(close_file_writes_message_to_log_file, F)
   find_line_positions("asdf.txt");
   BOOST_REQUIRE_NE(clientpos, std::string::npos);
   BOOST_REQUIRE_NE(bracket_close_pos, std::string::npos);
-  BOOST_CHECK_EQUAL("Log closed.\n",
+  BOOST_CHECK_EQUAL("Log closed by \"" + client_name + "\".\n",
                     contents.substr(bracket_close_pos + 2));
 }
 
@@ -335,15 +347,19 @@ BOOST_FIXTURE_TEST_CASE(new_client_info_used_in_message, F)
 BOOST_FIXTURE_TEST_CASE(disconnect_client_on_correct_client_handle_writes_to_open_log_files,
                         F)
 {
-  open_file("asdf.txt");
-  open_file("foobar.txt");
+  const std::string fname0("asdf.txt");
+  const std::string fname1("foobar.txt");
+  open_file(fname0);
+  erase_dummy_file_contents(fname0);
+  open_file(fname1);
+  erase_dummy_file_contents(fname1);
   session.disconnect_client(client_handle);
-  find_line_positions("asdf.txt");
+  find_line_positions(fname0);
   BOOST_REQUIRE_NE(clientpos, std::string::npos);
   BOOST_REQUIRE_NE(bracket_close_pos, std::string::npos);
   BOOST_CHECK_EQUAL("Disconnected from logsvc daemon.\n",
                     contents.substr(bracket_close_pos + 2));
-  find_line_positions("foobar.txt");
+  find_line_positions(fname1);
   BOOST_REQUIRE_NE(clientpos, std::string::npos);
   BOOST_REQUIRE_NE(bracket_close_pos, std::string::npos);
   BOOST_CHECK_EQUAL("Disconnected from logsvc daemon.\n",
