@@ -28,6 +28,7 @@
 
 #include "log/Acknowledged.h"
 #include "log/ClientHandle.h"
+#include "log/create_header.h"
 #include "log/Deliverable.h"
 #include "log/Executor.h"
 #include "log/NotAcknowledged.h"
@@ -81,5 +82,15 @@ namespace logsvc
       return true;
     }
 
+    std::string Disconnect::get_header() const
+    {
+      return create_header("disc", 4);
+    }
+
+    std::string Disconnect::get_payload() const
+    {
+      assert(client != nullptr);
+      return client->get_payload();
+    }
   } // namespace prot
 } // namespace logsvc

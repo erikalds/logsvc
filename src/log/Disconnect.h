@@ -28,6 +28,7 @@
 */
 
 #include "log/AbstractReceivable.h"
+#include "log/Deliverable.h"
 
 namespace logsvc
 {
@@ -35,7 +36,8 @@ namespace logsvc
   {
     class ClientHandle;
 
-    class Disconnect : public AbstractReceivable
+    class Disconnect : public AbstractReceivable,
+                       public Deliverable
     {
     public:
       Disconnect();
@@ -46,6 +48,9 @@ namespace logsvc
       virtual std::unique_ptr<Deliverable> act(Executor& exec);
       virtual void act(ClientExecutor& exec);
       virtual bool is_final_message() const;
+
+      virtual std::string get_header() const;
+      virtual std::string get_payload() const;
 
     private:
       std::unique_ptr<ClientHandle> client;

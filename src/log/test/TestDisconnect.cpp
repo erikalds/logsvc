@@ -77,6 +77,7 @@ namespace
     void set_file_handle(const logsvc::prot::FileHandle&) override { ++actions; }
     void set_error(const std::string& msg) override { ++actions; error = msg; }
     void success() override { ++actions; }
+    void set_client_handle(const logsvc::prot::ClientHandle&) override {}
 
     unsigned int actions;
     std::string error;
@@ -140,6 +141,31 @@ BOOST_FIXTURE_TEST_CASE(reads_client_handle_payload, F)
   disconnect.read_payload(client.get_payload());
   disconnect.act(exec);
   BOOST_CHECK_EQUAL("DISCONNECTED", exec.client_name);
+}
+
+BOOST_FIXTURE_TEST_CASE(is_a_Deliverable, F)
+{
+  logsvc::prot::Disconnect disconnect;
+  BOOST_CHECK(dynamic_cast<logsvc::prot::Deliverable*>(&disconnect));
+}
+
+BOOST_FIXTURE_TEST_CASE(get_correct_header, F)
+{
+  logsvc::prot::Disconnect disconnect;
+  BOOST_CHECK_EQUAL(std::string("logsdisc\x04\0\0\0", 12),
+                    disconnect.get_header());
+}
+
+BOOST_FIXTURE_TEST_CASE(get_correct_payload, F)
+{
+  logsvc::prot::ClientHandle ch0(0x1234);
+  logsvc::prot::Disconnect disconnect0(ch0);
+  BOOST_CHECK_EQUAL(ch0.get_payload(),
+                    disconnect0.get_payload());
+  logsvc::prot::ClientHandle ch1(0x12345678);
+  logsvc::prot::Disconnect disconnect1(ch1);
+  BOOST_CHECK_EQUAL(ch1.get_payload(),
+                    disconnect1.get_payload());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
