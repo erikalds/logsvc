@@ -28,6 +28,7 @@
 */
 
 #include "log/ClientExecutor.h"
+#include "log/ClientHandle.h"
 #include "log/FileHandle.h"
 #include <boost/test/unit_test.hpp>
 
@@ -45,7 +46,7 @@ namespace logsvc
       ~DummyClientExecutor()
       { BOOST_CHECK_EQUAL(expected_calls_to_success, 0); }
 
-      virtual void set_file_handle(const logsvc::prot::FileHandle& fh)
+      virtual void set_file_handle(const prot::FileHandle& fh)
       { file_handle = fh; }
 
       virtual void set_error(const std::string& s)
@@ -53,15 +54,18 @@ namespace logsvc
 
       virtual void success()
       { --expected_calls_to_success; }
+      void set_client_handle(const prot::ClientHandle& ch) override
+      { client_handle = ch; }
 
       void expect_call_to_success()
       {
         ++expected_calls_to_success;
       }
 
-      logsvc::prot::FileHandle file_handle;
+      prot::FileHandle file_handle;
       std::string error_string;
       int expected_calls_to_success;
+      prot::ClientHandle client_handle;
     };
 
   } // namespace mock

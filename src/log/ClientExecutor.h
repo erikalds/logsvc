@@ -35,6 +35,7 @@ namespace logsvc
   {
 
     class FileHandle;
+    class ClientHandle;
 
     class ClientExecutor
     {
@@ -42,6 +43,7 @@ namespace logsvc
       virtual ~ClientExecutor() = 0;
 
       virtual void set_file_handle(const FileHandle& fh) = 0;
+      virtual void set_client_handle(const ClientHandle& ch) = 0;
       virtual void set_error(const std::string& s) = 0;
       virtual void success() = 0;
     };
