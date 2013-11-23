@@ -26,6 +26,7 @@
 
 #include "log/ClientHandle.h"
 
+#include "log/ClientExecutor.h"
 #include "log/create_header.h"
 #include "log/int_codec.h"
 #include <ostream>
@@ -75,6 +76,11 @@ namespace logsvc
     std::unique_ptr<Deliverable> ClientHandle::act(Executor& exec)
     {
       return std::unique_ptr<Deliverable>();
+    }
+
+    void ClientHandle::act(ClientExecutor& exec)
+    {
+      exec.set_client_handle(*this);
     }
 
     std::ostream& operator<<(std::ostream& out, const ClientHandle& ch)

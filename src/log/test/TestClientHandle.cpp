@@ -26,6 +26,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "log/test/DummyClientExecutor.h"
 #include "log/ClientHandle.h"
 #include "log/Receivable.h"
 
@@ -105,6 +106,16 @@ BOOST_AUTO_TEST_CASE(can_stream_out)
   ost1 << ch1;
   BOOST_CHECK_EQUAL(ost0.str(), "ClientHandle[0x12345]");
   BOOST_CHECK_EQUAL(ost1.str(), "ClientHandle[0x654321]");
+}
+
+BOOST_AUTO_TEST_CASE(act_on_ClientExecutor_sets_client_handle)
+{
+  ClientHandle ch0(0x12345), ch1(0x654321);
+  logsvc::mock::DummyClientExecutor exec;
+  ch0.act(exec);
+  BOOST_CHECK_EQUAL(ch0, exec.client_handle);
+  ch1.act(exec);
+  BOOST_CHECK_EQUAL(ch1, exec.client_handle);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
