@@ -77,7 +77,6 @@ namespace logsvc
 
     void ConnectedLogFile::set_file_handle(const prot::FileHandle& fh)
     {
-      std::clog << "INFO [ConnectedLogFile] Setting file handle" << std::endl;
       file.reset(new prot::FileHandle(fh));
     }
 
