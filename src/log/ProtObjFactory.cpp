@@ -31,6 +31,7 @@
 #include "log/Client.h"
 #include "log/ClientHandle.h"
 #include "log/CloseFile.h"
+#include "log/Disconnect.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include "log/MalformedHeader.h"
@@ -74,6 +75,8 @@ namespace logsvc
                                               return new Acknowledged; };
       creators["nack"] = [](std::size_t pl) { return new NotAcknowledged(pl); };
       creators["clnt"] = [](std::size_t pl) { return new Client(pl); };
+      creators["disc"] = [](std::size_t pl) { check_payload_length(pl, 4, "disc");
+                                              return new Disconnect; };
     }
 
     std::unique_ptr<Receivable> ProtObjFactory::create(const std::string& header)

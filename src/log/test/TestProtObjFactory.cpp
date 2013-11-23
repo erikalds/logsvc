@@ -30,6 +30,7 @@
 #include "log/Client.h"
 #include "log/ClientHandle.h"
 #include "log/CloseFile.h"
+#include "log/Disconnect.h"
 #include "log/File.h"
 #include "log/FileHandle.h"
 #include "log/MalformedHeader.h"
@@ -71,13 +72,14 @@ BOOST_FIXTURE_TEST_CASE(is_a_ReceivableFactory, F)
 }
 
 // [X] "open" # open file, prot::File, return prot::FileHandle, nack
-// [ ] "clos" # close file, prot::FileHandle, return ackn, nack
+// [X] "clos" # close file, prot::FileHandle, return ackn, nack
 // [X] "clnt" # client description, prot::Client, return ackn, nack
 // [X] "mesg" # message to write to open log file, prot::Message, return ackn, nack
 // [X] "filh" # Handle to open file, prot::FileHandle
 // [X] "clnh" # Handle for client to present, prot::ClientHandle
 // [X] "ackn" # Acknowledged, prot::Ack
 // [X] "nack" # Not Acknowledged, prot::Nack
+// [X] "disc" # Disconnect, prot::Disconnect
 
 
 BOOST_FIXTURE_TEST_CASE(can_create_File, F)
@@ -118,6 +120,11 @@ BOOST_FIXTURE_TEST_CASE(can_create_NotAcknowledged, F)
 BOOST_FIXTURE_TEST_CASE(can_create_CloseFile, F)
 {
   can_create_<CloseFile>("clos", 4);
+}
+
+BOOST_FIXTURE_TEST_CASE(can_create_Disconnect, F)
+{
+  can_create_<Disconnect>("disc", 4);
 }
 
 BOOST_FIXTURE_TEST_CASE(error_on_unknown_type, F)
