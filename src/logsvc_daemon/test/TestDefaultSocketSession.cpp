@@ -205,6 +205,18 @@ BOOST_FIXTURE_TEST_CASE(Socket_error_occur_during_read_is_logged_to_clog, F)
                     clog_contents());
 }
 
+BOOST_FIXTURE_TEST_CASE(Does_not_listen_for_new_header_after_final_message_received, F)
+{
+  intercept_clog();
+  ss.start_listen();
+  std::string header("logsdisc\x04\0\0\0", 12);
+  std::string payload("\x01\0\0\0", 4);
+  drf->expected_payload = payload;
+  socket->receive_bytes(header);
+  socket->receive_bytes(payload);
+  BOOST_CHECK_EQUAL(2, socket->async_read_call_count);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

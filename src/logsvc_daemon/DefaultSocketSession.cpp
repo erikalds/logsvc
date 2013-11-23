@@ -123,8 +123,10 @@ namespace logsvc
 
     void DefaultSocketSession::listen_for_new_header()
     {
+      bool final = current_receivable->is_final_message();
       current_receivable.reset();
-      start_listen();
+      if (!final)
+        start_listen();
     }
 
   } // namespace daemon
