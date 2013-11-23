@@ -28,6 +28,7 @@
 */
 
 #include "logsvccpp/client/SessionConnection.h"
+#include "log/ClientHandle.h"
 #include "log/Executor.h"
 #include <boost/filesystem/path.hpp>
 #include <map>
@@ -77,6 +78,9 @@ namespace logsvc
       std::string open_file_error;
       std::map<boost::filesystem::path, std::string> file_contents;
       std::string write_message_error;
+      logsvc::prot::ClientHandle client_handle;
+      bool disconnected;
+      std::string set_client_info_error;
 
     private:
       std::size_t lookup_idx(const logsvc::prot::FileHandle fh) const;

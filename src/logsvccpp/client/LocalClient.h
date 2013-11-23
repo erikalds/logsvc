@@ -27,6 +27,7 @@
     NORWAY
 */
 
+#include "log/ClientExecutor.h"
 #include <boost/filesystem/path.hpp>
 #include <string>
 #include <memory>
@@ -40,7 +41,7 @@ namespace logsvc
     class RemoteLogFile;
     class SessionConnection;
 
-    class LocalClient
+    class LocalClient : public prot::ClientExecutor
     {
     public:
       LocalClient(const std::string& appname, const ConnectionFactory& confac);
@@ -49,8 +50,15 @@ namespace logsvc
       std::unique_ptr<RemoteLogFile>
       open_remote_file(const boost::filesystem::path& filename);
 
+      void set_file_handle(const prot::FileHandle&) override {}
+      void set_client_handle(const prot::ClientHandle& ch) override;
+      void set_error(const std::string& s) override;
+      void success() override {}
+
     private:
       std::unique_ptr<SessionConnection> connection;
+      std::unique_ptr<prot::ClientHandle> client_handle;
+      std::string error;
     };
 
   } // namespace client

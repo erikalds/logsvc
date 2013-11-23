@@ -44,6 +44,8 @@ namespace logsvc
       client_name("UNSET"),
       client_address("UNSET"),
       open_file_error(),
+      disconnected(false),
+      set_client_info_error(),
       listener(listener)
     {
     }
@@ -114,14 +116,19 @@ namespace logsvc
     DummySessionConnection::set_client_info(const std::string& name,
                                             const std::string& address)
     {
+      if (!set_client_info_error.empty())
+        throw std::runtime_error(set_client_info_error);
+
       client_name = name;
       client_address = address;
-      return prot::ClientHandle();
+      return client_handle;
     }
 
     void DummySessionConnection::
-    disconnect_client(const logsvc::prot::ClientHandle&)
+    disconnect_client(const logsvc::prot::ClientHandle& ch)
     {
+      BOOST_CHECK_EQUAL(ch, client_handle);
+      disconnected = true;
     }
 
     std::size_t DummySessionConnection::lookup_idx(const logsvc::prot::FileHandle fh) const

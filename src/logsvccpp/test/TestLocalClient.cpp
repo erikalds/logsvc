@@ -53,6 +53,8 @@ public:
     ++create_count;
     logsvc::mock::DummySessionConnection* conn
       = new logsvc::mock::DummySessionConnection(this);
+    conn->client_handle = client_handle;
+    conn->set_client_info_error = set_client_info_error;
     live_ptrs.insert(conn);
     return std::unique_ptr<logsvc::client::SessionConnection>(conn);
   }
@@ -66,6 +68,7 @@ public:
   virtual void connection_killed(logsvc::mock::DummySessionConnection* conn) const
   {
     live_ptrs.erase(conn);
+    was_disconnected_before_killed = conn->disconnected;
   }
 
   std::size_t live_count() const { return live_ptrs.size(); }
@@ -74,6 +77,9 @@ public:
   mutable std::set<logsvc::mock::DummySessionConnection*> live_ptrs;
   bool unable_to_connect;
   std::string address;
+  mutable bool was_disconnected_before_killed;
+  logsvc::prot::ClientHandle client_handle;
+  std::string set_client_info_error;
 };
 
 struct F
@@ -164,6 +170,30 @@ BOOST_FIXTURE_TEST_CASE(open_log_file, F)
   opened_files = get_opened_files();
   BOOST_REQUIRE_EQUAL(2, opened_files.size());
   BOOST_CHECK_EQUAL("foobar.txt", opened_files[1]);
+}
+
+BOOST_FIXTURE_TEST_CASE(disconnects_when_destroyed, F)
+{
+  connection_factory.client_handle = logsvc::prot::ClientHandle(23456);
+  create_local_client("appname");
+  BOOST_CHECK(!get_live_connection()->disconnected);
+  local_client.reset();
+  BOOST_CHECK(connection_factory.was_disconnected_before_killed);
+}
+
+BOOST_FIXTURE_TEST_CASE(Throws_UnableToConnectError_if_sending_client_info_fails,
+                        F)
+{
+  connection_factory.set_client_info_error = "The set_client_info error.";
+  BOOST_CHECK_EXCEPTION(create_local_client("appname"),
+                        logsvc::UnableToConnectError,
+                        [&](const logsvc::UnableToConnectError& utce)
+                        {
+                          const std::string estr =
+                            connection_factory.set_client_info_error;
+                          return std::string(utce.what()).find(estr)
+                            != std::string::npos;
+                        });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

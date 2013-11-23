@@ -32,6 +32,8 @@
 #include "logsvccpp/client/SessionConnection.h"
 #include "logsvccpp/UnableToConnectError.h"
 #include "log/Client.h"
+#include "log/ClientHandle.h"
+#include "log/Disconnect.h"
 #include <boost/asio/ip/address.hpp>
 
 namespace logsvc
@@ -47,11 +49,22 @@ namespace logsvc
 
       std::future<std::unique_ptr<prot::Receivable> > recv
         = connection->send(confac.create_client_info(appname));
-      recv.wait();
+      recv.get()->act(*this);
+      if (!error.empty())
+        throw UnableToConnectError(error);
     }
 
     LocalClient::~LocalClient()
     {
+      try
+      {
+        std::future<std::unique_ptr<prot::Receivable> > recv
+          = connection->send(prot::Disconnect(*client_handle));
+        recv.wait();
+      }
+      catch (...)
+      {
+      }
     }
 
     std::unique_ptr<RemoteLogFile>
@@ -61,5 +74,14 @@ namespace logsvc
                                                                  filename));
     }
 
+    void LocalClient::set_client_handle(const prot::ClientHandle& ch)
+    {
+      client_handle.reset(new prot::ClientHandle(ch));
+    }
+
+    void LocalClient::set_error(const std::string& s)
+    {
+      error = s;
+    }
   } // namespace client
 } // namespace logsvc
