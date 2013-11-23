@@ -28,6 +28,7 @@
 
 #include "log/create_header.h"
 #include "log/int_codec.h"
+#include <ostream>
 
 namespace logsvc
 {
@@ -74,6 +75,11 @@ namespace logsvc
     std::unique_ptr<Deliverable> ClientHandle::act(Executor& exec)
     {
       return std::unique_ptr<Deliverable>();
+    }
+
+    std::ostream& operator<<(std::ostream& out, const ClientHandle& ch)
+    {
+      return out << "ClientHandle[0x" << std::hex << ch.ch << std::dec << "]";
     }
   } // namespace prot
 } // namespace logsvc

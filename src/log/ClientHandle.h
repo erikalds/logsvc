@@ -53,6 +53,7 @@ namespace logsvc
 
     private:
       unsigned int ch;
+      friend std::ostream& operator<<(std::ostream& out, const ClientHandle& ch);
     };
 
     inline bool operator!=(const ClientHandle& lhs, const ClientHandle& rhs)
@@ -63,6 +64,7 @@ namespace logsvc
     { return !(lhs <= rhs); }
     inline bool operator>=(const ClientHandle& lhs, const ClientHandle& rhs)
     { return !(lhs < rhs); }
+    std::ostream& operator<<(std::ostream& out, const ClientHandle& ch);
   } // namespace prot
 } // namespace logsvc
 

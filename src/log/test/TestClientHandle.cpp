@@ -90,6 +90,23 @@ BOOST_AUTO_TEST_CASE(read_payload)
   BOOST_CHECK(ClientHandle(0x42) == ch);
 }
 
+BOOST_AUTO_TEST_CASE(can_boost_check_equal)
+{
+  ClientHandle ch0, ch1;
+  BOOST_CHECK_EQUAL(ch0, ch1);
+}
+
+BOOST_AUTO_TEST_CASE(can_stream_out)
+{
+  ClientHandle ch0(0x12345), ch1(0x654321);
+  std::ostringstream ost0;
+  ost0 << ch0;
+  std::ostringstream ost1;
+  ost1 << ch1;
+  BOOST_CHECK_EQUAL(ost0.str(), "ClientHandle[0x12345]");
+  BOOST_CHECK_EQUAL(ost1.str(), "ClientHandle[0x654321]");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*
