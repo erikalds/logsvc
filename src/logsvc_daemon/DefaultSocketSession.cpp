@@ -67,19 +67,16 @@ namespace logsvc
 
     void DefaultSocketSession::add_socket_session_listener(SocketSessionListener* l)
     {
-      std::clog << "INFO [DefaultSocketSession]: Inserting socket session listener: " << l << std::endl;
       listeners.insert(l);
     }
 
     void DefaultSocketSession::remove_socket_session_listener(SocketSessionListener* l)
     {
-      std::clog << "INFO [DefaultSocketSession]: Erasing socket session listener: " << l << std::endl;
       listeners.erase(l);
     }
 
     void DefaultSocketSession::bytes_received(const std::string& bytes)
     {
-      std::clog << "INFO [DefaultSocketSession]: received " << bytes.size() << " bytes." << std::endl;
       if (!current_receivable)
       {
         current_receivable = the_receivable_factory->create(bytes);
@@ -99,7 +96,6 @@ namespace logsvc
 
     void DefaultSocketSession::write_succeeded()
     {
-      std::clog << "INFO [DefaultSocketSession]: write succeeded." << std::endl;
       listen_for_new_header();
     }
 
@@ -110,15 +106,11 @@ namespace logsvc
 
     void DefaultSocketSession::connection_lost(network::Socket* /*socket*/)
     {
-      std::clog << "INFO [DefaultSocketSession]: connection lost, notifying " << listeners.size() << " listeners." << std::endl;
       // make a copy, since our owner might try to destroy us when it
       // is notified that the connection is lost
       std::set<SocketSessionListener*> copied_listeners(listeners);
       for (SocketSessionListener* listener : copied_listeners)
-      {
-        std::clog << "INFO [DefaultSocketSession]: Notifying socket session listener: " << listener << std::endl;
         listener->connection_lost(this);
-      }
     }
 
     void DefaultSocketSession::listen_for_new_header()
