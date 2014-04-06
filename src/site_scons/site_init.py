@@ -82,6 +82,7 @@ class MyEnvironment:
 
         self.env = conf.Finish()
         self.env['CPPPATH'] = '#'
+        self.env['CONFIGURED_LIBS'] = {}
         self.initiated = True
 
 _g_basic_env = MyEnvironment()
@@ -104,10 +105,15 @@ def CoreEnvironment(**kwargs):
     env['LIBS'] = []
 
     for lib in libs:
-        if not conf.CheckLib(lib + "-mt", language="C++"):
-            if not conf.CheckLib(lib, language="C++"):
-                print "We need C/C++ library %s." % lib
-                Exit(1)
+        if lib in env['CONFIGURED_LIBS']:
+            env.Append(LIBS=env['CONFIGURED_LIBS'][lib])
+        elif conf.CheckLib(lib + "-mt", language="C++"):
+            _g_basic_env.env['CONFIGURED_LIBS'][lib] = lib + "-mt"
+        elif conf.CheckLib(lib, language="C++"):
+            _g_basic_env.env['CONFIGURED_LIBS'][lib] = lib
+        else:
+            print "We need C/C++ library %s." % lib
+            Exit(1)
 
     env = conf.Finish()
 
