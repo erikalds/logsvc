@@ -29,6 +29,7 @@
 
 #include "logsvccpp/client/SessionConnection.h"
 #include "network/SocketListener.h"
+#include <vector>
 
 namespace network { class Socket; }
 
@@ -57,11 +58,16 @@ namespace logsvc
       virtual void write_succeeded();
       virtual void error_occurred(const std::string& message);
 
+      void serialized_send_message(const std::string& data,
+                                   std::promise<std::unique_ptr<prot::Receivable>> promise);
+
     private:
       std::unique_ptr<network::Socket> socket;
+      std::unique_ptr<std::mutex> socket_mutex;
       std::unique_ptr<prot::ReceivableFactory> receivable_factory;
       std::unique_ptr<prot::Receivable> current_receivable;
       std::promise<std::unique_ptr<prot::Receivable>> current_promise;
+      std::vector<std::thread> threads;
     };
 
   } // namespace client

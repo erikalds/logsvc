@@ -32,6 +32,7 @@
 #include "log/ReceivableFactory.h"
 #include "log/Message.h"
 #include "network/Socket.h"
+#include <iostream>
 
 namespace logsvc
 {
@@ -41,6 +42,7 @@ namespace logsvc
     DefaultConnection::DefaultConnection(std::unique_ptr<network::Socket> socket,
                                          std::unique_ptr<prot::ReceivableFactory> factory) :
       socket(std::move(socket)),
+      socket_mutex(new std::mutex),
       receivable_factory(std::move(factory)),
       current_receivable(),
       current_promise()
@@ -50,16 +52,25 @@ namespace logsvc
 
     DefaultConnection::~DefaultConnection()
     {
-      std::unique_ptr<network::Socket> tmp = std::move(socket);
-      tmp.reset();
+      socket.reset();
+
+      for (std::thread& t : threads)
+      {
+        if (t.joinable())
+          t.join();
+      }
     }
 
     std::future<std::unique_ptr<prot::Receivable>>
     DefaultConnection::send(const prot::Deliverable& deliverable)
     {
-      socket->async_write(*this, deliverable.get_header() + deliverable.get_payload());
-      current_promise = std::promise<std::unique_ptr<prot::Receivable>>();
-      return current_promise.get_future();
+      std::promise<std::unique_ptr<prot::Receivable>> the_promise;
+      auto the_future = the_promise.get_future();
+      std::thread t(&DefaultConnection::serialized_send_message, this,
+                    deliverable.get_header() + deliverable.get_payload(),
+                    std::move(the_promise));
+      threads.push_back(std::move(t));
+      return the_future;
     }
 
     void DefaultConnection::bytes_received(const std::string& bytes)
@@ -76,6 +87,8 @@ namespace logsvc
         current_promise.set_value(std::move(current_receivable));
         if (socket)
           socket->keep_alive();
+
+        socket_mutex->unlock();
       }
     }
 
@@ -91,7 +104,29 @@ namespace logsvc
       current_promise.set_exception(std::make_exception_ptr(SocketError(message)));
       if (socket)
         socket->keep_alive();
+
+      socket_mutex->unlock();
     }
 
+    void DefaultConnection::
+    serialized_send_message(const std::string& data,
+                            std::promise<std::unique_ptr<prot::Receivable>> promise)
+    {
+      try {
+        if (!socket)
+          return;
+
+        socket_mutex->lock();
+        current_promise = std::move(promise);
+        if (socket)
+        {
+          socket->async_write(*this, data);
+        }
+      }
+      catch (const std::exception& e)
+      {
+        std::cerr << "serialized_send_message caught exception: " << e.what() << std::endl;
+      }
+    }
   } // namespace client
 } // namespace logsvc
