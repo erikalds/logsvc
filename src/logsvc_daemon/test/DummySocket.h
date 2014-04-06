@@ -144,8 +144,8 @@ namespace mock
     void receive_bytes(const std::string& bytes)
     {
       BOOST_REQUIRE_GE(op_queue.size(), 1);
-      std::unique_ptr<IOOperation> op = std::move(op_queue.front());
-      op->perform(bytes);
+      IOOperation& op = *op_queue.front();
+      op.perform(bytes);
       op_queue.pop();
     }
 
@@ -159,16 +159,16 @@ namespace mock
     void finish_write_op()
     {
       BOOST_REQUIRE_GE(op_queue.size(), 1);
-      std::unique_ptr<IOOperation> op = std::move(op_queue.front());
-      op->perform();
+      IOOperation& op = *op_queue.front();
+      op.perform();
       op_queue.pop();
     }
 
     void make_error_occur(const std::string& msg)
     {
       BOOST_REQUIRE_GE(op_queue.size(), 1);
-      std::unique_ptr<IOOperation> op = std::move(op_queue.front());
-      op->make_error_occur(msg);
+      IOOperation& op = *op_queue.front();
+      op.make_error_occur(msg);
       op_queue.pop();
     }
 
@@ -187,11 +187,9 @@ namespace mock
     void remove_front_if_noop()
     {
       BOOST_REQUIRE_GE(op_queue.size(), 1);
-      std::unique_ptr<IOOperation> op = std::move(op_queue.front());
-      if (dynamic_cast<NoOp*>(op.get()))
+      const IOOperation& op = *op_queue.front();
+      if (dynamic_cast<const NoOp*>(&op))
         op_queue.pop();
-      else
-        op_queue.front() = std::move(op);
     }
 
     virtual void add_socket_state_listener(network::SocketStateListener* listener)
