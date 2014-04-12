@@ -5,12 +5,18 @@ env = CoreEnvironment(LIBS=[
                       DEBUG=1)
 
 cpp_files = env.Glob('*.cpp')
-liblogsvc_daemon = env.SharedLibrary("logsvc_daemon", cpp_files)
-logsvc_daemon = env.Install(dir = '#/build', source = liblogsvc_daemon)
+logsvc_daemon = env.SharedLibrary("#/build/logsvc_daemon", cpp_files)
 
 Export("logsvc_daemon")
-SConscript(os.path.join("test", "SConscript"))
-#env.Depends(logsvc_daemon, run_tests)
+env = CoreEnvironment(DEBUG=1,
+                      LIBS=[
+        "boost_filesystem",
+        "boost_regex",
+        "boost_system",
+        "boost_unit_test_framework",
+        ])
+Import("log")
+env.Append(LIBS=log)
+env.TestLibrary(logsvc_daemon)
 
 Return("logsvc_daemon")
-

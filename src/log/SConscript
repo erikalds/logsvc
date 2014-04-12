@@ -5,12 +5,16 @@ env = CoreEnvironment(LIBS=[
                       DEBUG=1)
 
 cpp_files = env.Glob('*.cpp')
-liblog = env.SharedLibrary("log", cpp_files)
-log = env.Install(dir = '#/build', source = liblog)
+log = env.SharedLibrary("#/build/log", cpp_files)
 
 Export("log")
-SConscript(os.path.join("test", "SConscript"))
-#env.Depends(log, run_tests)
+env = CoreEnvironment(DEBUG=1,
+                      LIBS=[
+        "boost_unit_test_framework",
+        "boost_filesystem",
+        "boost_system",
+        "boost_regex",
+        ])
+env.TestLibrary(log)
 
 Return("log")
-

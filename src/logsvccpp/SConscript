@@ -6,9 +6,16 @@ env = CoreEnvironment(LIBS=[
 
 cpp_files = env.Glob('*.cpp')
 cpp_files += env.Glob(os.path.join("client", "*.cpp"))
-liblogsvccpp = env.SharedLibrary("logsvccpp", cpp_files)
-logsvccpp = env.Install(dir = '#/build', source = liblogsvccpp)
+logsvccpp = env.SharedLibrary("#/build/logsvccpp", cpp_files)
 
-SConscript(os.path.join("test", "SConscript"))
+env = CoreEnvironment(DEBUG=1,
+                      LIBS=[
+        "boost_filesystem",
+        "boost_unit_test_framework",
+        "boost_system",
+        ])
+Import(['log', 'network'])
+env.Append(LIBS=[log, network])
+env.TestLibrary(logsvccpp)
 
 Return("logsvccpp")

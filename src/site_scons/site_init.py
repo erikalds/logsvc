@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 def checkForGCCOption(conf, option):
@@ -39,6 +40,21 @@ class PkgConfig:
             cflags.extend(Split(p.stdout.read()))
 
         return cflags
+
+
+def TestLibrary(env, library):
+    if not 'CPPDEFINES' in env:
+        env['CPPDEFINES'] = {}
+    env['CPPDEFINES']['BOOST_TEST_DYN_LINK'] = None
+    cpp_files = env.Glob(os.path.join('test', '*.cpp'))
+    libs = [library] + env['LIBS']
+    libname = os.path.splitext(library[0].name)[0]
+    test_prog = env.Program(os.path.join('#', 'build', 'test_%s' % libname),
+                                         cpp_files, LIBS=libs)
+    run_test = env.AddPostAction(test_prog, Action("@%s" % test_prog[0]))
+    #env.AlwaysBuild(run_test)
+    env.Alias("build", run_test)
+    env.Default("build")
 
 
 class MyEnvironment:
@@ -83,6 +99,7 @@ class MyEnvironment:
         self.env = conf.Finish()
         self.env['CPPPATH'] = '#'
         self.env['CONFIGURED_LIBS'] = {}
+        self.env.AddMethod(TestLibrary)
         self.initiated = True
 
 _g_basic_env = MyEnvironment()
