@@ -18,10 +18,10 @@ OutStream: OutStream.o $(DEPLIBS)
 OutStream.o: OutStream.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h ../logsvccpp/OutStream.h
 	g++ -c -o OutStream.o OutStream.cpp $(CPPFLAGS) -I..
 
-logtofile: logtofile.o $(DEPLIBS)
-	g++ -o logtofile logtofile.o -L../build $(LIBS)
-logtofile.o: logtofile.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h ../logsvccpp/OutStream.h
-	g++ -c -o logtofile.o logtofile.cpp $(CPPFLAGS) -I..
+logviastream: logviastream.o $(DEPLIBS)
+	g++ -o logviastream logviastream.o -L../build $(LIBS)
+logviastream.o: logviastream.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h ../logsvccpp/OutStream.h
+	g++ -c -o logviastream.o logviastream.cpp $(CPPFLAGS) -I..
 
 clean:
-	rm -f Host.o Log.o OutStream.o logtofile.o Host Log OutStream logtofile
+	rm -f Host.o Log.o OutStream.o logviastream.o Host Log OutStream logviastream

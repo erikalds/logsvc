@@ -94,8 +94,8 @@ def compile_OutStream_test():
 def run_OutStream_test():
     return run("systest/OutStream", 2)
 
-def compile_logtofile():
-    return make("logtofile")
+def compile_logviastream():
+    return make("logviastream")
 
 def start_logsvcd():
     global logsvcd
@@ -108,24 +108,24 @@ def start_logsvcd():
     else:
         return (False, proc.communicate()[1])
 
-def log_string_to_file_test():
+def log_string_via_stream_test():
     fname = "system_test_output_log.txt"
     if os.path.exists(fname):
         os.unlink(fname)
 
-    result = run(["systest/logtofile", fname, "a string"], 10)
+    result = run(["systest/logviastream", fname, "a string"], 10)
     if not result[0]:
         return result
 
     if not os.path.exists(fname):
-        return (False, "   - logtofile did not even create the file.\n")
+        return (False, "   - logviastream did not even create the file.\n")
 
     contents = None
     with open(fname, 'r') as fd:
         contents = fd.read()
 
-    mo_log_opened = re.search("Log opened by \"logtofile\"", contents)
-    mo_log_closed = re.search("Log closed by \"logtofile\"", contents)
+    mo_log_opened = re.search("Log opened by \"logviastream\"", contents)
+    mo_log_closed = re.search("Log closed by \"logviastream\"", contents)
     mo_string = re.search("a string", contents)
 
     report = ""
@@ -167,12 +167,12 @@ class MyTestLoader(TestLoader):
             "010_compile_Host_test": compile_Host_test,
             "010_compile_Log_test": compile_Log_test,
             "010_compile_OutStream_test": compile_OutStream_test,
-            "010_compile_logtofile": compile_logtofile,
+            "010_compile_logviastream": compile_logviastream,
             "015_start_logsvcd": start_logsvcd,
             "020_run_Host_test": run_Host_test,
             "020_run_Log_test": run_Log_test,
             "020_run_OutStream_test": run_OutStream_test,
-            "200_log_string_to_file_test": log_string_to_file_test,
+            "200_log_string_via_stream_test": log_string_via_stream_test,
             "999_HUP_logsvcd" : hup_logsvcd
             }
         return tests

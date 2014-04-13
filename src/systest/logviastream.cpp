@@ -33,7 +33,7 @@ int main(int argc, const char* argv[])
   if (argc < 3)
     return 0;
 
-  logsvc::Host h("logtofile");
+  logsvc::Host h("logviastream");
   logsvc::Log log(argv[1], h);
   logsvc::OutStream ost(log);
 

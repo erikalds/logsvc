@@ -2,4 +2,4 @@
 Host
 Log
 OutStream
-logtofile
+logviastream
