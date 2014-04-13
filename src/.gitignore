@@ -1,5 +1,8 @@
 .sconf_temp
 .sconsign.dblite
 build
-config.log
-passed_tests.txt
+/config.log
+/passed_tests.txt
+/filename.txt
+/systest.log
+/system_test_output_log.txt
