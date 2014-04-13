@@ -14,10 +14,10 @@ cpp_files = env.Glob('*.cpp')
 
 libs = ['logsvc_daemon', 'log', 'network', 'pthread']
 libs += env['LIBS'][:]
-logsvcd = env.Program('logsvcd', cpp_files, LIBPATH='#/build', LIBS=libs)
-installed_logsvcd = env.Install(dir="#/build", source=logsvcd)
+logsvcd = env.Program('#/build/logsvcd', cpp_files,
+                      LIBPATH='#/build', LIBS=libs)
 
-env.Alias("build", installed_logsvcd)
+env.Alias("build", logsvcd)
 env.Default("build")
 
-Return("installed_logsvcd")
+Return("logsvcd")
