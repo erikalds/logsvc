@@ -41,4 +41,9 @@ namespace logsvc
   Log::~Log()
   {
   }
+
+  void Log::logln(const std::string& line)
+  {
+    remote_file->writeln(line);
+  }
 } // namespace logsvc

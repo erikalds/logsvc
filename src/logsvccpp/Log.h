@@ -45,6 +45,8 @@ namespace logsvc
     Log(const Log&) = delete;
     Log& operator=(const Log&) = delete;
 
+    void logln(const std::string& line);
+
   private:
     std::unique_ptr<client::RemoteLogFile> remote_file;
   };
