@@ -120,7 +120,7 @@ def log_line_to_file_test():
     if os.path.exists(fname):
         os.unlink(fname)
 
-    result = run(["systest/loglinetofile", fname, "a few strings"], 10)
+    result = run(["systest/loglinetofile", fname, "a", "few", "strings"], 10)
     if not result[0]:
         return result
 
@@ -133,9 +133,9 @@ def log_line_to_file_test():
 
     mo_log_opened = re.search("Log opened by \"loglinetofile\"", contents)
     mo_log_closed = re.search("Log closed by \"loglinetofile\"", contents)
-    mo_line_1 = re.search(": a\n", contents)
-    mo_line_2 = re.search(": few\n", contents)
-    mo_line_3 = re.search(": strings\n", contents)
+    mo_line_1 = re.search("] a\n", contents)
+    mo_line_2 = re.search("] few\n", contents)
+    mo_line_3 = re.search("] strings\n", contents)
 
     report = ""
     if not mo_log_opened:

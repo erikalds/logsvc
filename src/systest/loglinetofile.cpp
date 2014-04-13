@@ -32,10 +32,10 @@ int main(int argc, const char* argv[])
   if (argc < 3)
     return 0;
 
-  logsvc::Host h("logtofile");
+  logsvc::Host h("loglinetofile");
   logsvc::Log log(argv[1], h);
 
-  for (int i = 1; i < argc; ++i)
+  for (int i = 2; i < argc; ++i)
     log.logln(argv[i]);
 
   return 0;
