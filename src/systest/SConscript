@@ -1,11 +1,12 @@
 import os
 
-Import("daemon")
+Import(Split("daemon libs"))
 
 st = os.path.join("systest", "systest.py")
-runtest = Command(st, None, st)
+systestlog = Command("#/systest.log", "systest.py", "%s $TARGET" % st)
 
-Depends(runtest, daemon)
+for lib in libs:
+    Depends(systestlog, lib)
+Depends(systestlog, daemon)
 
-Default(runtest)
-
+Default(systestlog)
