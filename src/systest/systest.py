@@ -33,7 +33,7 @@ import sys
 import threading
 import time
 
-from framework import SystemTests, TextProgressPublisher, TextResultsPublisher, TestLoader
+from framework import SystemTests, TextProgressPublisher, TextResultsPublisher, TestLoader, StdoutAndLogPublisher
 
 logsvcd = None
 
@@ -183,8 +183,12 @@ def main(argv):
 
     tests = SystemTests(MyTestLoader())
     progress_publisher = TextProgressPublisher()
-    tests.run(progress_publisher)
     results_publisher = TextResultsPublisher()
+    if len(argv) > 1:
+        progress_publisher = StdoutAndLogPublisher(argv[1])
+        results_publisher = progress_publisher
+
+    tests.run(progress_publisher)
     tests.publish_results(results_publisher)
 
     return tests.regression_count()

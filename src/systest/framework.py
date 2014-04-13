@@ -28,6 +28,7 @@
 import os
 import re
 import sys
+import time
 
 class TestLoader:
     def load_tests(self):
@@ -148,3 +149,48 @@ class TextResultsPublisher:
 
     def report_status(self, success):
         print("\nsystemtest: *** %s ***\n" % ("OK" if success else "FAILED"))
+
+class StdoutAndLogPublisher:
+    def __init__(self, filename):
+        self._filename = filename
+
+    def tests_are_about_to_start(self, test_count):
+        self._logln("Running %d system tests..." % test_count)
+
+    def test_is_about_to_start(self, test):
+        self._log(" * %s... " % test)
+
+    def test_failed(self, test, message, is_regression):
+        self._logln("FAILED")
+        if is_regression:
+            self._logln("########## REGRESSION ##########")
+
+        self._logln(message)
+
+    def test_passed(self, test):
+        self._logln("OK")
+
+    def report_passed_tests(self, passed_tests):
+        self._logln("Passed tests:    %d" % len(passed_tests))
+
+    def report_failed_tests(self, failed_tests):
+        self._logln("Failed tests:    %d" % len(failed_tests))
+
+    def report_regressions(self, regressions):
+        self._logln("Regressed tests: %d" % len(regressions))
+
+    def report_status(self, success):
+        self._logln("\nsystemtest: *** %s ***\n" % ("OK" if success else "FAILED"))
+
+    def _log(self, msg):
+        with open(self._filename, 'a') as fd:
+            fd.write("[%s] %s" % (self._timestamp(), msg))
+
+        sys.stdout.write(msg)
+        sys.stdout.flush()
+
+    def _logln(self, msg):
+        self._log("%s\n" % msg)
+
+    def _timestamp(self):
+        return time.strftime("%Y.%m.%d %H:%M:%S")
