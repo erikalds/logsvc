@@ -39,6 +39,10 @@ logsvcd = None
 
 class Command:
     def __init__(self, command):
+        cmd_path = command[0] if type(command) == list else command
+        if not os.path.exists(cmd_path):
+            raise Exception("File not found: %s" % cmd_path)
+
         self._command = command
 
     def run(self, timeout):
