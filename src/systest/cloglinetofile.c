@@ -26,6 +26,7 @@
 
 #include "logsvcc/Host.h"
 #include "logsvcc/Log.h"
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
@@ -37,7 +38,18 @@ int main(int argc, char** argv)
     return -1;
 
   host = logsvc_connect_host("localhost", "cloglinetofile");
+  if (!host)
+  {
+    fprintf(stderr, "Error: could not connect to logsvc on localhost\n");
+    return -2;
+  }
+
   log = logsvc_open(argv[1], host);
+  if (!log)
+  {
+    fprintf(stderr, "Error: could not open logfile %s on localhost\n", argv[1]);
+    return -3;
+  }
 
   for (i = 2; i < argc; ++i)
     logsvc_logln(log, argv[i]);
