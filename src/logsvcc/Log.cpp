@@ -55,4 +55,6 @@ void logsvc_close(logsvc_Log* logfile)
 
 void logsvc_logln(logsvc_Log* logfile, const char* line)
 {
+  assert(logfile && logfile->impl);
+  reinterpret_cast<logsvc::Log*>(logfile->impl)->logln(line);
 }
