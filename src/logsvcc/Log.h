@@ -34,6 +34,7 @@ extern "C" {
 
 typedef struct logsvc_Log_t
 {
+  void* impl;
 } logsvc_Log;
 
 typedef struct logsvc_Host_t logsvc_Host;

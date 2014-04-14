@@ -26,13 +26,31 @@
 
 #include "logsvcc/Log.h"
 
+#include "logsvcc/Host.h"
+#include "logsvccpp/Log.h"
+#include <cassert>
+#include <memory>
+
 logsvc_Log* logsvc_open(const char* filename, logsvc_Host* host)
 {
-  return nullptr;
+  std::unique_ptr<logsvc_Log> log(new logsvc_Log);
+  try
+  {
+    assert(host && host->impl);
+    log->impl = new logsvc::Log(filename,
+                                *reinterpret_cast<logsvc::Host*>(host->impl));
+    return log.release();
+  }
+  catch (...)
+  {
+    return nullptr;
+  }
 }
 
 void logsvc_close(logsvc_Log* logfile)
 {
+  delete reinterpret_cast<logsvc::Log*>(logfile->impl);
+  delete logfile;
 }
 
 void logsvc_logln(logsvc_Log* logfile, const char* line)
