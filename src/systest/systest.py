@@ -198,6 +198,26 @@ def c_log_line_to_file_test():
     return check_logged_lines(fname, "cloglinetofile",
                               ['a', 'few', 'strings'])
 
+def py_log_line_to_file_test():
+    fname = "system_test_output_log.txt"
+    if os.path.exists(fname):
+        os.unlink(fname)
+
+    sys.path.append('./build')
+    try:
+        from logsvcpy import Log, Host
+        host = Host("pyapp", "localhost")
+        log = Log(fname, host)
+
+        log.logln('a')
+        log.logln('few')
+        log.logln('strings')
+
+        return check_logged_lines(fname, 'pyapp', ['a', 'few', 'strings'])
+
+    finally:
+        sys.path.remove(sys.path[-1])
+
 def hup_logsvcd():
     global logsvcd
 
@@ -230,6 +250,7 @@ class MyTestLoader(TestLoader):
             "199_log_line_to_file_test": log_line_to_file_test,
             "200_log_string_via_stream_test": log_string_via_stream_test,
             "300_c_log_line_to_file_test": c_log_line_to_file_test,
+            "300_py_log_line_to_file_test": py_log_line_to_file_test,
             "999_HUP_logsvcd" : hup_logsvcd
             }
         return tests
