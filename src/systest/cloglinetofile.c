@@ -31,6 +31,7 @@ int main(int argc, char** argv)
 {
   logsvc_Host* host;
   logsvc_Log* log;
+  int i;
 
   if (argc < 3)
     return -1;
@@ -38,7 +39,7 @@ int main(int argc, char** argv)
   host = logsvc_connect_host("localhost", "cloglinetofile");
   log = logsvc_open(argv[1], host);
 
-  for (int i = 2; i < argc; ++i)
+  for (i = 2; i < argc; ++i)
     logsvc_logln(log, argv[i]);
 
   logsvc_close(log);
