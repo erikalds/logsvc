@@ -38,7 +38,7 @@ int main(int argc, const char* argv[])
   logsvc::OutStream ost(log);
 
   ost << argv[2];
-  for (int i = 2; i < argc; ++i)
+  for (int i = 3; i < argc; ++i)
     ost << " " << argv[i];
 
   ost.flush();
