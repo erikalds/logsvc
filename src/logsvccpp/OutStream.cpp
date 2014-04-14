@@ -26,10 +26,50 @@
 
 #include "logsvccpp/OutStream.h"
 
+#include <streambuf>
+#include "logsvccpp/Log.h"
+
 namespace logsvc
 {
 
-  OutStream::OutStream(Log& log)
+  namespace {
+
+    class LogBuf : public std::basic_streambuf<char>
+    {
+    public:
+      LogBuf(Log& log) : log(log) {}
+
+      virtual int sync()
+      {
+        log.logln(buffer);
+        buffer.clear();
+        return 0;
+      }
+      virtual int_type
+      overflow(int_type ch = std::basic_streambuf<char>::traits_type::eof())
+      {
+        buffer.push_back(ch);
+        assert(std::basic_streambuf<char>::traits_type::eof() != 1);
+        return 1;
+      }
+
+      virtual std::streamsize xsputn(const char_type* s,
+                                     std::streamsize count)
+      {
+        buffer.insert(buffer.end(), s, s + count);
+        return count;
+      }
+
+    private:
+      Log& log;
+      std::string buffer;
+    };
+
+  }
+
+  OutStream::OutStream(Log& log) :
+    std::basic_ostream<char>(new LogBuf(log)),
+    the_rdbuf(rdbuf())
   {
   }
 

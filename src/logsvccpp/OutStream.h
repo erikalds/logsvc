@@ -28,6 +28,7 @@
 */
 
 #include <ostream>
+#include <memory>
 
 namespace logsvc
 {
@@ -38,6 +39,9 @@ namespace logsvc
   {
   public:
     OutStream(Log& log);
+
+  private:
+    std::unique_ptr<std::basic_streambuf<char> > the_rdbuf;
   };
 } // namespace logsvc
 
