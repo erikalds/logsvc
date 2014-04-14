@@ -281,7 +281,7 @@ class MyTestLoader(TestLoader):
             "020_run_OutStream_test": run_OutStream_test,
             "199_log_line_to_file_test": log_line_to_file_test,
             "200_log_string_via_stream_test": log_string_via_stream_test,
-            "300_log_line_to_file_test_c": c_log_line_to_file_test,
+            "300_c_log_line_to_file_test": c_log_line_to_file_test,
             "999_HUP_logsvcd" : hup_logsvcd
             }
         return tests
