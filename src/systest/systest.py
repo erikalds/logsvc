@@ -118,6 +118,50 @@ def start_logsvcd():
     else:
         return (False, proc.communicate()[1])
 
+def check_logged_lines(fname, app, lines):
+    od = dict(app=app)
+    if not os.path.exists(fname):
+        return (False, "   - %(app)s did not even create the file.\n" % od)
+
+    contents = None
+    with open(fname, 'r') as fd:
+        contents = fd.read()
+
+    mo_log_opened = re.search("Log opened by \"%(app)s\"" % od, contents)
+    mo_log_closed = re.search("Log closed by \"%(app)s\"" % od, contents)
+    mo_lines = [re.search("] %s\n" % x, contents) for x in lines]
+
+    report = ""
+    if not mo_log_opened:
+        report += "   - Missing \"Log opened by ...\" message.\n"
+    if not mo_log_closed:
+        report += "   - Missing \"Log closed by ...\" message.\n"
+    for i in range(len(mo_lines)):
+        if not mo_lines[i]:
+            report += "   - Missing logged message line %d.\n" % i
+
+    if mo_log_opened and mo_log_closed:
+        if mo_log_opened.start() > mo_log_closed.start():
+            report += "   - \"Log opened\" after \"Log closed\""
+
+    if mo_lines:
+        if mo_log_opened and mo_lines[0]:
+            if mo_log_opened.start() > mo_lines[0].start():
+                report += '   - "Log opened" after logged message line 1\n'
+        if mo_log_closed and mo_lines[0]:
+            if mo_log_closed.start() < mo_lines[0].start():
+                report += '   - "Log closed" before logged message line 1\n'
+        if len(mo_lines) > 1:
+            for i in range(1, len(mo_lines)):
+                if mo_lines[i - 1] and mo_lines[i]:
+                    if mo_lines[i - 1].start() > mo_lines[i].start():
+                        report += '   - Line %d before line %d' % (i, i - 1)
+
+    if report:
+        report += "\nLog contents was:\n" + contents + "\n"
+
+    return (not bool(report), report)
+
 def log_line_to_file_test():
     fname = "system_test_output_log.txt"
     if os.path.exists(fname):
@@ -127,43 +171,8 @@ def log_line_to_file_test():
     if not result[0]:
         return result
 
-    if not os.path.exists(fname):
-        return (False, "   - loglinetofile did not even create the file.\n")
-
-    contents = None
-    with open(fname, 'r') as fd:
-        contents = fd.read()
-
-    mo_log_opened = re.search("Log opened by \"loglinetofile\"", contents)
-    mo_log_closed = re.search("Log closed by \"loglinetofile\"", contents)
-    mo_line_1 = re.search("] a\n", contents)
-    mo_line_2 = re.search("] few\n", contents)
-    mo_line_3 = re.search("] strings\n", contents)
-
-    report = ""
-    if not mo_log_opened:
-        report += "   - Missing \"Log opened by ...\" message.\n"
-    if not mo_log_closed:
-        report += "   - Missing \"Log closed by ...\" message.\n"
-    if not mo_line_1:
-        report += "   - Missing logged message line 1.\n"
-    if not mo_line_2:
-        report += "   - Missing logged message line 2.\n"
-    if not mo_line_3:
-        report += "   - Missing logged message line 3.\n"
-    if mo_log_opened and mo_line_1 and mo_log_opened.start() > mo_line_1.start():
-        report += "   - Logged line 1 before \"Log opened\" message.\n"
-    if mo_line_2 and mo_line_1 and mo_line_1.start() > mo_line_2.start():
-        report += "   - Logged line 2 before logged line 1.\n"
-    if mo_line_3 and mo_line_2 and mo_line_2.start() > mo_line_3.start():
-        report += "   - Logged line 3 before logged line 2.\n"
-    if mo_log_closed and mo_line_3 and mo_log_closed.start() < mo_line_3.start():
-        report += "   - Logged line 3 after \"Log closed\" message.\n"
-
-    if report:
-        report += "\nLog contents was:\n" + contents + "\n"
-
-    return (not bool(report), report)
+    return check_logged_lines(fname, "loglinetofile",
+                              ["a", "few", "strings"])
 
 def log_string_via_stream_test():
     fname = "system_test_output_log.txt"
@@ -174,33 +183,7 @@ def log_string_via_stream_test():
     if not result[0]:
         return result
 
-    if not os.path.exists(fname):
-        return (False, "   - logviastream did not even create the file.\n")
-
-    contents = None
-    with open(fname, 'r') as fd:
-        contents = fd.read()
-
-    mo_log_opened = re.search("Log opened by \"logviastream\"", contents)
-    mo_log_closed = re.search("Log closed by \"logviastream\"", contents)
-    mo_string = re.search("a string", contents)
-
-    report = ""
-    if not mo_log_opened:
-        report += "   - Missing \"Log opened by ...\" message.\n"
-    if not mo_log_closed:
-        report += "   - Missing \"Log closed by ...\" message.\n"
-    if not mo_string:
-        report += "   - Missing logged message.\n"
-    if mo_log_opened and mo_string and mo_log_opened.start() > mo_string.start():
-        report += "   - Logged message before \"Log opened\" message.\n"
-    if mo_log_closed and mo_string and mo_log_closed.start() < mo_string.start():
-        report += "   - Logged message after \"Log closed\" message.\n"
-
-    if report:
-        report += "\nLog contents was:\n" + contents + "\n"
-
-    return (not bool(report), report)
+    return check_logged_lines(fname, "logviastream", ["a string"])
 
 def c_log_line_to_file_test():
     fname = "system_test_output_log.txt"
@@ -212,43 +195,8 @@ def c_log_line_to_file_test():
     if not result[0]:
         return result
 
-    if not os.path.exists(fname):
-        return (False, "   - cloglinetofile did not even create the file.\n")
-
-    contents = None
-    with open(fname, 'r') as fd:
-        contents = fd.read()
-
-    mo_log_opened = re.search("Log opened by \"cloglinetofile\"", contents)
-    mo_log_closed = re.search("Log closed by \"cloglinetofile\"", contents)
-    mo_line_1 = re.search("] a\n", contents)
-    mo_line_2 = re.search("] few\n", contents)
-    mo_line_3 = re.search("] strings\n", contents)
-
-    report = ""
-    if not mo_log_opened:
-        report += "   - Missing \"Log opened by ...\" message.\n"
-    if not mo_log_closed:
-        report += "   - Missing \"Log closed by ...\" message.\n"
-    if not mo_line_1:
-        report += "   - Missing logged message line 1.\n"
-    if not mo_line_2:
-        report += "   - Missing logged message line 2.\n"
-    if not mo_line_3:
-        report += "   - Missing logged message line 3.\n"
-    if mo_log_opened and mo_line_1 and mo_log_opened.start() > mo_line_1.start():
-        report += "   - Logged line 1 before \"Log opened\" message.\n"
-    if mo_line_2 and mo_line_1 and mo_line_1.start() > mo_line_2.start():
-        report += "   - Logged line 2 before logged line 1.\n"
-    if mo_line_3 and mo_line_2 and mo_line_2.start() > mo_line_3.start():
-        report += "   - Logged line 3 before logged line 2.\n"
-    if mo_log_closed and mo_line_3 and mo_log_closed.start() < mo_line_3.start():
-        report += "   - Logged line 3 after \"Log closed\" message.\n"
-
-    if report:
-        report += "\nLog contents was:\n" + contents + "\n"
-
-    return (not bool(report), report)
+    return check_logged_lines(fname, "cloglinetofile",
+                              ['a', 'few', 'strings'])
 
 def hup_logsvcd():
     global logsvcd
