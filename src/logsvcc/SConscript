@@ -1,0 +1,21 @@
+import os
+
+env = CoreEnvironment(LIBS=[
+        ],
+                      DEBUG=1)
+
+cpp_files = env.Glob('*.cpp')
+logsvcc = env.SharedLibrary("#/build/logsvcc", cpp_files)
+
+Export("logsvcc")
+env = CoreEnvironment(DEBUG=1,
+                      LIBS=[
+        "boost_filesystem",
+        "boost_regex",
+        "boost_system",
+        "boost_unit_test_framework",
+        ])
+
+env.TestLibrary(logsvcc)
+
+Return("logsvcc")

@@ -5,6 +5,7 @@ for library in [
     "network",
     "log",
     "logsvccpp",
+    "logsvcc",
     "logsvc_daemon",
     ]:
     path_to_SConscript = os.path.join(library, "SConscript")
