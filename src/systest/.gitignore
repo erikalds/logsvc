@@ -4,3 +4,4 @@ Log
 OutStream
 logviastream
 loglinetofile
+cloglinetofile

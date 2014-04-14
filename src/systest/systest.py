@@ -104,6 +104,9 @@ def compile_loglinetofile():
 def compile_logviastream():
     return make("logviastream")
 
+def compile_cloglinetofile():
+    return make("cloglinetofile")
+
 def start_logsvcd():
     global logsvcd
 
@@ -199,6 +202,54 @@ def log_string_via_stream_test():
 
     return (not bool(report), report)
 
+def c_log_line_to_file_test():
+    fname = "system_test_output_log.txt"
+    if os.path.exists(fname):
+        os.unlink(fname)
+
+    result = run(["systest/cloglinetofile", fname, "a", "few", "strings"],
+                 10)
+    if not result[0]:
+        return result
+
+    if not os.path.exists(fname):
+        return (False, "   - cloglinetofile did not even create the file.\n")
+
+    contents = None
+    with open(fname, 'r') as fd:
+        contents = fd.read()
+
+    mo_log_opened = re.search("Log opened by \"cloglinetofile\"", contents)
+    mo_log_closed = re.search("Log closed by \"cloglinetofile\"", contents)
+    mo_line_1 = re.search("] a\n", contents)
+    mo_line_2 = re.search("] few\n", contents)
+    mo_line_3 = re.search("] strings\n", contents)
+
+    report = ""
+    if not mo_log_opened:
+        report += "   - Missing \"Log opened by ...\" message.\n"
+    if not mo_log_closed:
+        report += "   - Missing \"Log closed by ...\" message.\n"
+    if not mo_line_1:
+        report += "   - Missing logged message line 1.\n"
+    if not mo_line_2:
+        report += "   - Missing logged message line 2.\n"
+    if not mo_line_3:
+        report += "   - Missing logged message line 3.\n"
+    if mo_log_opened and mo_line_1 and mo_log_opened.start() > mo_line_1.start():
+        report += "   - Logged line 1 before \"Log opened\" message.\n"
+    if mo_line_2 and mo_line_1 and mo_line_1.start() > mo_line_2.start():
+        report += "   - Logged line 2 before logged line 1.\n"
+    if mo_line_3 and mo_line_2 and mo_line_2.start() > mo_line_3.start():
+        report += "   - Logged line 3 before logged line 2.\n"
+    if mo_log_closed and mo_line_3 and mo_log_closed.start() < mo_line_3.start():
+        report += "   - Logged line 3 after \"Log closed\" message.\n"
+
+    if report:
+        report += "\nLog contents was:\n" + contents + "\n"
+
+    return (not bool(report), report)
+
 def hup_logsvcd():
     global logsvcd
 
@@ -223,12 +274,14 @@ class MyTestLoader(TestLoader):
             "010_compile_OutStream_test": compile_OutStream_test,
             "010_compile_loglinetofile": compile_loglinetofile,
             "010_compile_logviastream": compile_logviastream,
+            "011_compile_cloglinetofile": compile_cloglinetofile,
             "015_start_logsvcd": start_logsvcd,
             "020_run_Host_test": run_Host_test,
             "020_run_Log_test": run_Log_test,
             "020_run_OutStream_test": run_OutStream_test,
             "199_log_line_to_file_test": log_line_to_file_test,
             "200_log_string_via_stream_test": log_string_via_stream_test,
+            "300_log_line_to_file_test_c": c_log_line_to_file_test,
             "999_HUP_logsvcd" : hup_logsvcd
             }
         return tests

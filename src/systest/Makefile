@@ -28,5 +28,10 @@ loglinetofile: loglinetofile.o $(DEPLIBS)
 loglinetofile.o: loglinetofile.cpp ../logsvccpp/Log.h ../logsvccpp/Host.h ../logsvccpp/OutStream.h
 	g++ -c -o loglinetofile.o loglinetofile.cpp $(CPPFLAGS) -I..
 
+cloglinetofile: cloglinetofile.o $(CDEPLIBS)
+	gcc -o cloglinetofile cloglinetofile.o -L../build $(CLIBS)
+cloglinetofile.o: cloglinetofile.c ../logsvcc/Log.h ../logsvcc/Host.h
+	gcc -c -o cloglinetofile.o cloglinetofile.c $(CFLAGS) -I..
+
 clean:
 	rm -f Host.o Log.o OutStream.o logviastream.o Host Log OutStream logviastream loglinetofile.o loglinetofile.cpp
