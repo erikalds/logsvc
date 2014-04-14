@@ -25,12 +25,25 @@
 */
 
 #include "logsvcc/Host.h"
+#include "logsvccpp/Host.h"
+#include <memory>
 
 logsvc_Host* logsvc_connect_host(const char* hostname, const char* appname)
 {
-  return nullptr;
+  std::unique_ptr<logsvc_Host> host(new logsvc_Host);
+  try
+  {
+    host->impl = new logsvc::Host(appname, hostname);
+    return host.release();
+  }
+  catch (...)
+  {
+    return nullptr;
+  }
 }
 
 void logsvc_disconnect(logsvc_Host* host)
 {
+  delete reinterpret_cast<logsvc::Host*>(host->impl);
+  delete host;
 }

@@ -33,6 +33,7 @@ extern "C" {
 
 typedef struct logsvc_Host_t
 {
+  void* impl;
 } logsvc_Host;
 
 logsvc_Host* logsvc_connect_host(const char* hostname, const char* appname);

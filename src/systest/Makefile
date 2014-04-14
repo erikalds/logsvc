@@ -2,9 +2,9 @@ LIBS=-llogsvccpp -llog -lnetwork -lboost_system -lboost_filesystem -lpthread
 CPPFLAGS=-Wall -std=gnu++11
 DEPLIBS=../build/liblogsvccpp.so ../build/liblog.so ../build/libnetwork.so
 
-CLIBS=-llogsvcc
+CLIBS=-llogsvcc -llogsvccpp -llog -lnetwork -lboost_filesystem -lboost_system -lpthread
 CFLAGS=-Wall
-CDEPLIBS=../build/liblogsvcc.so
+CDEPLIBS=../build/liblogsvcc.so ../build/liblogsvccpp.so ../build/liblog.so ../build/libnetwork.so
 
 Host: Host.o $(DEPLIBS)
 	g++ -o Host Host.o -L../build $(LIBS)
