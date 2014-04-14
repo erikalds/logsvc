@@ -41,5 +41,7 @@ int main(int argc, const char* argv[])
   for (int i = 2; i < argc; ++i)
     ost << " " << argv[i];
 
+  ost.flush();
+
   return 0;
 }
