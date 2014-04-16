@@ -8,6 +8,8 @@ cpp_files = env.Glob('*.cpp')
 cpp_files += env.Glob(os.path.join("client", "*.cpp"))
 logsvccpp = env.SharedLibrary("#/build/logsvccpp", cpp_files)
 
+Export("logsvccpp")
+
 env = CoreEnvironment(DEBUG=1,
                       LIBS=[
         "boost_filesystem",

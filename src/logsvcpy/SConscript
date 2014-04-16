@@ -1,0 +1,23 @@
+import os
+
+env = CoreEnvironment(LIBS=['boost_filesystem',
+                            'boost_system',
+                            'boost_python',
+        ],
+                      DEBUG=1)
+
+env.Append(CPPPATH=["/usr/include/python2.7"])
+
+Import(Split("logsvccpp log network"))
+env.Prepend(LIBS=[logsvccpp, log, network])
+
+env['SHLIBPREFIX'] = ''
+
+cpp_files = env.Glob('*.cpp')
+logsvcpy = env.SharedLibrary("#/build/logsvcpy", cpp_files)
+
+Alias('logsvcpy', logsvcpy)
+
+Export("logsvcpy")
+
+Return("logsvcpy")
