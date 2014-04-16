@@ -57,7 +57,15 @@ namespace logsvc
     ConnectedLogFile::~ConnectedLogFile()
     {
       if (file)
-        connection.send(prot::CloseFile(*file));
+      {
+        std::future<std::unique_ptr<prot::Receivable>> recv
+          = connection.send(prot::CloseFile(*file));
+        recv.wait();
+        recv.get()->act(*this);
+        if (!error_string.empty())
+          std::cerr << "Error closing connected remote log file: "
+                    << error_string << ".\n";
+      }
     }
 
     void ConnectedLogFile::writeln(const std::string& message)
