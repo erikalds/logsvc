@@ -213,6 +213,8 @@ def py_log_line_to_file_test():
         log.logln('few')
         log.logln('strings')
 
+        log.close()
+
         return check_logged_lines(fname, 'pyapp', ['a', 'few', 'strings'])
 
     finally:
