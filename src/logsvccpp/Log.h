@@ -35,15 +35,12 @@ namespace logsvc
 
   class Host;
 
-  class Log
+  class Log : public boost::noncopyable
   {
   public:
     Log(const boost::filesystem::path& filename,
         Host& host);
     ~Log();
-
-    Log(const Log&) = delete;
-    Log& operator=(const Log&) = delete;
 
     void logln(const std::string& line);
 
