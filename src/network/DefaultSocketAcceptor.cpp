@@ -51,7 +51,6 @@ namespace network
       std::unique_ptr<DefaultSocket> api_socket(socket);
       if (!error)
       {
-        std::clog << "INFO [DefaultSocketAcceptor]: async accept succeeded." << std::endl;
         listener->accept_requested(std::move(api_socket));
       }
       else
@@ -67,7 +66,6 @@ namespace network
   void DefaultSocketAcceptor::async_accept(SocketAcceptListener& listener)
   {
     std::unique_ptr<DefaultSocket> api_socket(new DefaultSocket(io_service));
-    std::clog << "INFO [DefaultSocketAcceptor]: async accept is waiting..." << std::endl;
     boost::asio::ip::tcp::socket& asio_socket = api_socket->asio_socket();
     acceptor.async_accept(asio_socket,
                           boost::bind(handle_accept, api_socket.release(),

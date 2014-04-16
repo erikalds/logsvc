@@ -54,23 +54,16 @@ namespace network
     were_dying = true;
     if (the_socket.is_open())
     {
-      std::clog << "INFO [DefaultSocket]: shutdown socket..." << std::endl;
       boost::system::error_code error;
       the_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
       if (error)
         std::cerr << "ERROR [DefaultSocket]: Error occurred during socket shutdown: " << error.message() << std::endl;
-      std::clog << "INFO [DefaultSocket]: cancel socket..." << std::endl;
       the_socket.cancel(error);
       if (error)
         std::cerr << "ERROR [DefaultSocket]: Error occurred during socket cancel: " << error.message() << std::endl;
-      std::clog << "INFO [DefaultSocket]: close socket..." << std::endl;
       the_socket.close(error);
       if (error)
         std::cerr << "ERROR [DefaultSocket]: Error occurred during socket close: " << error.message() << std::endl;
-    }
-    else
-    {
-      std::clog << "INFO [DefaultSocket]: No need to close the socket, it was already closed." << std::endl;
     }
   }
 
@@ -83,7 +76,6 @@ namespace network
       return;
     }
 
-    std::clog << "INFO [DefaultSocket]: async_read " << read_bytes << " bytes..." << std::endl;
     boost::shared_array<char> buf(new char[read_bytes]);
     boost::asio::async_read(the_socket,
                             boost::asio::buffer(buf.get(), read_bytes),
@@ -105,12 +97,10 @@ namespace network
     if (!error)
     {
       std::string bytes(buf.get(), bytes_received);
-      std::clog << "INFO [DefaultSocket]: received " << bytes_received << " bytes: \"" << bytes << "\"" << std::endl;
       listener->bytes_received(bytes);
     }
     else
     {
-      std::clog << "ERROR [DefaultSocket]: error occurred during read: " << error.message() << std::endl;
       listener->error_occurred(error.message());
       notify_state_listeners_of_connection_lost();
     }
@@ -200,13 +190,11 @@ namespace network
 
     if (error)
     {
-      std::clog << "ERROR [DefaultSocket]: error occurred during write: " << error.message() << std::endl;
       listener->error_occurred(error.message());
       notify_state_listeners_of_connection_lost();
       return;
     }
 
-    std::clog << "INFO [DefaultSocket]: write succeeded." << std::endl;
     listener->write_succeeded();
 
     if (is_write_queue_empty())
@@ -222,7 +210,6 @@ namespace network
       return;
 
     const std::pair<std::string, SocketListener*>& to_write = front_of_write_queue();
-    std::clog << "INFO [DefaultSocket]: writing \"" << to_write.first << "\"" << std::endl;
     boost::asio::async_write(the_socket,
                              boost::asio::buffer(to_write.first.data(),
                                                  to_write.first.length()),

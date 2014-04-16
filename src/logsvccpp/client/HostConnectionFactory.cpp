@@ -116,7 +116,6 @@ namespace logsvc
                                  [&](const boost::system::error_code& error,
                                      boost::asio::ip::tcp::resolver::iterator /*iterator*/)
                                  {
-                                   std::cout << "Handling async_connect: " << error.message() << std::endl;
                                    if (error)
                                    {
                                      UnableToConnectError utce(error.message());
